@@ -127,7 +127,7 @@
 #define HAS_GL
 #define HAS_GLX
 #define HAS_LINUX_NETWORK
-#define HAS_SDL_AUDIO
+//#define HAS_SDL_AUDIO
 #define HAS_LIRC
 #define HAS_SDL_WIN_EVENTS
 #ifdef HAVE_LIBPULSE
@@ -135,6 +135,9 @@
 #endif
 #ifdef HAVE_LIBXRANDR
 #define HAS_XRANDR
+#endif
+#if !defined(HAVE_LIBSMBCLIENT)
+#undef HAS_FILESYSTEM_SMB
 #endif
 #endif
 

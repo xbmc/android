@@ -6,6 +6,12 @@ SO=libass-$(ARCH).so
 SLIB=$(SYSDIR)/$(SO)
 DIRS=..
 
+ifeq ( @HAVE_FONTCONFIG@, 1)
+FONTCONFIG_LIBS=-lfontconfig
+else
+FONTCONFIG_LIBS=
+endif
+
 .PHONY: compile
 
 ifeq ($(findstring osx,$(ARCH)), osx)
@@ -20,7 +26,7 @@ $(SLIB): ../libass/.libs/libass.dylib
 	$(MAKE) -C ..
 else
 $(SLIB): ../libass/.libs/libass.so
-	$(CXX) $(LDFLAGS) -lfontconfig -shared -fPIC -o $(SLIB) ../libass/.libs/*.o \
+	$(CXX) $(LDFLAGS) $(FONTCONFIG_LIBS) -shared -fPIC -o $(SLIB) ../libass/.libs/*.o \
 	  `cat ../../../xbmc/cores/DllLoader/exports/wrapper.def` \
 	  ../../../xbmc/cores/DllLoader/exports/wrapper.o
 

@@ -205,9 +205,11 @@ configure: configure.in
 	@./bootstrap
 
 # skin textures
+ifeq (@HAVE_SDL_IMAGE@, 1)
 skins: tools/TexturePacker/TexturePacker force
-ifneq (arm, @ARCH@)
-	 $(MAKE) -C $(CONFLUENCE_MEDIA)
+	$(MAKE) -C $(CONFLUENCE_MEDIA)
+else
+skins:
 endif
 
 xbmc/guilib/guilib.a: force
