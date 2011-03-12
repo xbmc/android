@@ -19,6 +19,7 @@
  *
  */
 
+#if defined(HAVE_LIBMYSQLCLIENT)
 #include <iostream>
 #include <string>
 #include <set>
@@ -1484,3 +1485,4 @@ void MysqlDataset::interrupt() {
 
 }//namespace
 
+#endif
