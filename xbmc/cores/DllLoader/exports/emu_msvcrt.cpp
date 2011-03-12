@@ -133,6 +133,8 @@ extern "C" void __stdcall init_emu_environ()
   dll_putenv("OS=win32");
 #elif defined(__APPLE__)
   dll_putenv("OS=darwin");
+#elif defined(__ANDROID__)
+  dll_putenv("OS=android");
 #elif defined(_LINUX)
   dll_putenv("OS=linux");
 #else
@@ -1148,7 +1150,7 @@ extern "C"
   FILE* dll_fopen(const char* filename, const char* mode)
   {
     FILE* file = NULL;
-#if defined(_LINUX) && !defined(__APPLE__)
+#if defined(_LINUX) && !defined(__APPLE__) && !defined(__ANDROID__)
     if (strcmp(filename, MOUNTED) == 0
     ||  strcmp(filename, MNTTAB) == 0)
     {
@@ -1256,7 +1258,7 @@ extern "C"
     {
       // it might be something else than a file, or the file is not emulated
       // let the operating system handle it
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__ANDROID__)
       return fseek(stream, offset, origin);
 #else
       return fseeko64(stream, offset, origin);
@@ -1321,7 +1323,7 @@ extern "C"
     {
       // it might be something else than a file, or the file is not emulated
       // let the operating system handle it
-#if defined(__APPLE__)
+#if defined(__APPLE__) | defined(__ANDROID__)
       return ftello(stream);
 #else
       return ftello64(stream);
@@ -1367,7 +1369,7 @@ extern "C"
       CLog::Log(LOGWARNING, "msvcrt.dll: dll_telli64 called, TODO: add 'int64 -> long' type checking");      //warning
 #ifndef _LINUX
       return (__int64)tell(fd);
-#elif defined(__APPLE__)
+#elif defined(__APPLE__) | defined(__ANDROID__)
       return lseek(fd, 0, SEEK_CUR);
 #else
       return lseek64(fd, 0, SEEK_CUR);
@@ -1544,7 +1546,7 @@ extern "C"
     int ret;
 
     ret = dll_fgetpos64(stream, &tmpPos);
-#if !defined(_LINUX) || defined(__APPLE__)
+#if !defined(_LINUX) || defined(__APPLE__) | defined(__ANDROID__)
     *pos = (fpos_t)tmpPos;
 #else
     pos->__pos = (off_t)tmpPos.__pos;
@@ -1557,7 +1559,7 @@ extern "C"
     CFile* pFile = g_emuFileWrapper.GetFileXbmcByStream(stream);
     if (pFile != NULL)
     {
-#if !defined(_LINUX) || defined(__APPLE__)
+#if !defined(_LINUX) || defined(__APPLE__) || defined(__ANDROID__)
       *pos = pFile->GetPosition();
 #else
       pos->__pos = pFile->GetPosition();
@@ -1579,7 +1581,7 @@ extern "C"
     int fd = g_emuFileWrapper.GetDescriptorByStream(stream);
     if (fd >= 0)
     {
-#if !defined(_LINUX) || defined(__APPLE__)
+#if !defined(_LINUX) || defined(__APPLE__) || defined(__ANDROID__)
       if (dll_lseeki64(fd, *pos, SEEK_SET) >= 0)
 #else
       if (dll_lseeki64(fd, (__off64_t)pos->__pos, SEEK_SET) >= 0)
@@ -1596,7 +1598,7 @@ extern "C"
     {
       // it might be something else than a file, or the file is not emulated
       // let the operating system handle it
-#if !defined(_LINUX) || defined(__APPLE__)
+#if !defined(_LINUX) || defined(__APPLE__) || defined(__ANDROID__)
       return fsetpos(stream, pos);
 #else
       return fsetpos64(stream, pos);
@@ -1612,7 +1614,7 @@ extern "C"
     if (fd >= 0)
     {
       fpos64_t tmpPos;
-#if !defined(_LINUX) || defined(__APPLE__)
+#if !defined(_LINUX) || defined(__APPLE__) || defined(__ANDROID__)
       tmpPos= *pos;
 #else
       tmpPos.__pos = (off64_t)(pos->__pos);
@@ -2087,10 +2089,18 @@ extern "C"
   }
 
 #ifdef _LINUX
+
+#if defined(__ANDROID__)
+  volatile int * __cdecl dll_errno(void)
+  {
+    return &errno;
+  }
+#else
   int * __cdecl dll_errno(void)
   {
     return &errno;
   }
+#endif
 
   int __cdecl dll_ioctl(int fd, unsigned long int request, va_list va)
   {
