@@ -617,6 +617,7 @@ else
     fi
     AC_CHECK_LIB([mysqlclient],[main],, AC_MSG_ERROR($missing_library))
     AC_CHECK_LIB([resolv],     [main],, AC_MSG_ERROR($missing_library))
+    AC_CHECK_LIB([rt],         [clock_gettime],, AC_MSG_ERROR($missing_library)) # android is said to have clock_gettime in libc.
   fi
 
   # don't combine with mysqlclient check in apple section above, Linux needs
@@ -628,35 +629,36 @@ else
   AC_CHECK_LIB([dl],         [main],, AC_MSG_ERROR($missing_library))
   AC_CHECK_LIB([jasper],     [main],, AC_MSG_ERROR($missing_library)) # check for cximage
   AC_CHECK_LIB([tiff],       [main],, AC_MSG_ERROR($missing_library))
-  AC_CHECK_LIB([rt],         [clock_gettime],, AC_MSG_ERROR($missing_library))
   AC_CHECK_LIB([SDL_image],  [main], AC_DEFINE([HAVE_SDL_IMAGE]; HAVE_SDL_IMAGE=1, 1, ["System has SDL_image"]), AC_MSG_RESULT("SDL_image not found."); HAVE_SDL_IMAGE=0)
 
-  PKG_CHECK_MODULES([ALSA],  [alsa],
-    [INCLUDES="$INCLUDES $ALSA_CFLAGS"; LIBS="$LIBS $ALSA_LIBS"],
-    AC_MSG_ERROR($missing_library))
-  PKG_CHECK_MODULES([ENCA],  [enca],
-    [INCLUDES="$INCLUDES $ENCA_CFLAGS"; LIBS="$LIBS $ENCA_LIBS"],
-    AC_MSG_ERROR($missing_library))
-  PKG_CHECK_MODULES([XT],    [xt],
-    [INCLUDES="$INCLUDES $XT_CFLAGS"; LIBS="$LIBS $XT_LIBS"],
-    AC_MSG_ERROR($missing_library))
-  PKG_CHECK_MODULES([XTST],  [xtst],
-    [INCLUDES="$INCLUDES $XTST_CFLAGS"; LIBS="$LIBS $XTST_LIBS"],
-    AC_MSG_ERROR($missing_library))
-  PKG_CHECK_MODULES([XEXT],  [xext],
-    [INCLUDES="$INCLUDES $XEXT_CFLAGS"; LIBS="$LIBS $XEXT_LIBS"],
-    AC_MSG_ERROR($missing_library))
-  PKG_CHECK_MODULES([XMU],   [xmu],
-    [INCLUDES="$INCLUDES $XMU_CFLAGS"; LIBS="$LIBS $XMU_LIBS"],
-    AC_MSG_ERROR($missing_library))
+  if test "$use_android" = "no" ; then
+    PKG_CHECK_MODULES([ALSA],  [alsa],
+      [INCLUDES="$INCLUDES $ALSA_CFLAGS"; LIBS="$LIBS $ALSA_LIBS"],
+      AC_MSG_ERROR($missing_library))
+    PKG_CHECK_MODULES([ENCA],  [enca],
+      [INCLUDES="$INCLUDES $ENCA_CFLAGS"; LIBS="$LIBS $ENCA_LIBS"],
+      AC_MSG_ERROR($missing_library))
+    PKG_CHECK_MODULES([XT],    [xt],
+      [INCLUDES="$INCLUDES $XT_CFLAGS"; LIBS="$LIBS $XT_LIBS"],
+      AC_MSG_ERROR($missing_library))
+    PKG_CHECK_MODULES([XTST],  [xtst],
+      [INCLUDES="$INCLUDES $XTST_CFLAGS"; LIBS="$LIBS $XTST_LIBS"],
+      AC_MSG_ERROR($missing_library))
+    PKG_CHECK_MODULES([XEXT],  [xext],
+      [INCLUDES="$INCLUDES $XEXT_CFLAGS"; LIBS="$LIBS $XEXT_LIBS"],
+      AC_MSG_ERROR($missing_library))
+    PKG_CHECK_MODULES([XMU],   [xmu],
+      [INCLUDES="$INCLUDES $XMU_CFLAGS"; LIBS="$LIBS $XMU_LIBS"],
+      AC_MSG_ERROR($missing_library))
+    PKG_CHECK_MODULES([DBUS],  [dbus-1],
+      [INCLUDES="$INCLUDES $DBUS_CFLAGS"; LIBS="$LIBS $DBUS_LIBS"],
+      AC_MSG_ERROR($missing_library))
+    PKG_CHECK_MODULES([SDL],   [sdl],
+      [INCLUDES="$INCLUDES $SDL_CFLAGS"; LIBS="$LIBS $SDL_LIBS"],
+      AC_MSG_ERROR($missing_library))
+  fi
   PKG_CHECK_MODULES([CURL],  [libcurl],
     [INCLUDES="$INCLUDES $CURL_CFLAGS"],
-    AC_MSG_ERROR($missing_library))
-  PKG_CHECK_MODULES([DBUS],  [dbus-1],
-    [INCLUDES="$INCLUDES $DBUS_CFLAGS"; LIBS="$LIBS $DBUS_LIBS"],
-    AC_MSG_ERROR($missing_library))
-  PKG_CHECK_MODULES([SDL],   [sdl],
-    [INCLUDES="$INCLUDES $SDL_CFLAGS"; LIBS="$LIBS $SDL_LIBS"],
     AC_MSG_ERROR($missing_library))
 fi
 
@@ -666,16 +668,19 @@ if [[ "$host_vendor" = "apple" ]]; then
   HOST_NOT_APPLE=0
 fi
 
-if test "$host_vendor" != "apple"; then
-  XB_FIND_SONAME([CURL],        [curl])
-  XB_FIND_SONAME([FLAC],        [FLAC])
-  XB_FIND_SONAME([MODPLUG],     [modplug])
-  XB_FIND_SONAME([MAD],         [mad])
+if test "$use_android" == "no" ; then
+  # there're problems getting the soname on android. is this neccesary?
+  if test "$host_vendor" != "apple" ; then
+    XB_FIND_SONAME([CURL],        [curl])
+    XB_FIND_SONAME([FLAC],        [FLAC])
+    XB_FIND_SONAME([MODPLUG],     [modplug])
+    XB_FIND_SONAME([MAD],         [mad])
+  fi
+  XB_FIND_SONAME([OGG],         [ogg])
+  XB_FIND_SONAME([VORBIS],      [vorbis])
+  XB_FIND_SONAME([VORBISENC],   [vorbisenc])
+  XB_FIND_SONAME([VORBISFILE],  [vorbisfile])
 fi
-XB_FIND_SONAME([OGG],         [ogg])
-XB_FIND_SONAME([VORBIS],      [vorbis])
-XB_FIND_SONAME([VORBISENC],   [vorbisenc])
-XB_FIND_SONAME([VORBISFILE],  [vorbisfile])
 
 # WebServer
 if test "$host_vendor" != "apple" ; then
@@ -1506,6 +1511,9 @@ XB_CONFIG_MODULE([lib/python], [
     sed -i bak -e "s/define _XOPEN_SOURCE_EXTENDED 1/undef _XOPEN_SOURCE_EXTENDED/" pyconfig.h &&
     echo "#define   SETPGRP_HAVE_ARG 1" >> pyconfig.h &&
     cp pyconfig.h Include
+  elif test "$use_android" != "no" ; then
+    echo "not using python"
+    USE_EXTERNAL_PYTHON=1
   else
     ./configure \
       --host=$host_alias \
