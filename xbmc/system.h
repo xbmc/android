@@ -28,10 +28,6 @@
 /*****************
  * All platforms
  *****************/
-#ifndef HAS_SDL
-#define HAS_SDL
-#endif
-
 #define HAS_DVD_SWSCALE
 #define HAS_DVDPLAYER
 #define HAS_EVENT_SERVER
@@ -63,6 +59,13 @@
 #define HAS_FILESYSTEM_SAP
 #define HAS_FILESYSTEM_VTP
 #define HAS_FILESYSTEM_HTSP
+
+/************************/
+/* Non-Android          */
+/************************/
+#if !defined(__ANDROID__)
+#define HAS_SDL
+#endif
 
 /**********************
  * Non-free Components
