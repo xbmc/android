@@ -220,7 +220,7 @@ FILE* xbp_freopen(const char *path, const char *mode, FILE *stream)
 FILE* xbp_fopen64(const char *filename, const char *mode)
 {
   CStdString strName = _P(filename);
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__ANDROID__)
   return fopen(strName.c_str(), mode);
 #else
   return fopen64(strName.c_str(), mode);
