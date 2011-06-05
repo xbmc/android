@@ -51,7 +51,7 @@ CGraphicContext::CGraphicContext(void) :
   m_bFullScreenVideo(false),
   m_bCalibrating(false), 
   m_Resolution(RES_INVALID), 
-  m_windowResolution(RES_INVALID),
+  /*m_windowResolution,*/
   m_guiScaleX(1.0f), 
   m_guiScaleY(1.0f) 
   /*,m_cameras, */ 
@@ -321,14 +321,19 @@ void CGraphicContext::SetVideoResolution(RESOLUTION res, bool forceUpdate)
     return;
   }
 
-  //pause the player during the refreshrate change
-  int delay = g_guiSettings.GetInt("videoplayer.pauseafterrefreshchange");
-  if (delay > 0 && g_guiSettings.GetBool("videoplayer.adjustrefreshrate") && g_application.IsPlayingVideo() && !g_application.IsPaused())
+  //only pause when switching monitor resolution/refreshrate,
+  //not when switching between fullscreen and windowed or when resizing the window
+  if ((res != RES_DESKTOP && res != RES_WINDOW) || (lastRes != RES_DESKTOP && lastRes != RES_WINDOW))
   {
-    g_application.m_pPlayer->Pause();
-    ThreadMessage msg = {TMSG_MEDIA_UNPAUSE};
-    CDelayedMessage* pauseMessage = new CDelayedMessage(msg, delay * 500);
-    pauseMessage->Create(true);
+    //pause the player during the refreshrate change
+    int delay = g_guiSettings.GetInt("videoplayer.pauseafterrefreshchange");
+    if (delay > 0 && g_guiSettings.GetBool("videoplayer.adjustrefreshrate") && g_application.IsPlayingVideo() && !g_application.IsPaused())
+    {
+      g_application.m_pPlayer->Pause();
+      ThreadMessage msg = {TMSG_MEDIA_UNPAUSE};
+      CDelayedMessage* pauseMessage = new CDelayedMessage(msg, delay * 100);
+      pauseMessage->Create(true);
+    }
   }
 
   if (res >= RES_DESKTOP)
@@ -538,7 +543,12 @@ void CGraphicContext::ApplyStateBlock()
   g_Windowing.ApplyStateBlock();
 }
 
-void CGraphicContext::SetScalingResolution(RESOLUTION res, bool needsScaling)
+const RESOLUTION_INFO &CGraphicContext::GetResInfo() const
+{
+  return g_settings.m_ResInfo[m_Resolution];
+}
+
+void CGraphicContext::SetScalingResolution(const RESOLUTION_INFO &res, bool needsScaling)
 {
   Lock();
   m_windowResolution = res;
@@ -553,8 +563,8 @@ void CGraphicContext::SetScalingResolution(RESOLUTION res, bool needsScaling)
     float fToHeight;
 
     {
-      fFromWidth = (float)g_settings.m_ResInfo[res].iWidth;
-      fFromHeight = (float)g_settings.m_ResInfo[res].iHeight;
+      fFromWidth = (float)res.iWidth;
+      fFromHeight = (float)res.iHeight;
       fToPosX = (float)g_settings.m_ResInfo[m_Resolution].Overscan.left;
       fToPosY = (float)g_settings.m_ResInfo[m_Resolution].Overscan.top;
       fToWidth = (float)g_settings.m_ResInfo[m_Resolution].Overscan.right - fToPosX;
@@ -603,7 +613,7 @@ void CGraphicContext::SetScalingResolution(RESOLUTION res, bool needsScaling)
   Unlock();
 }
 
-void CGraphicContext::SetRenderingResolution(RESOLUTION res, bool needsScaling)
+void CGraphicContext::SetRenderingResolution(const RESOLUTION_INFO &res, bool needsScaling)
 {
   Lock();
   SetScalingResolution(res, needsScaling);
@@ -626,16 +636,10 @@ void CGraphicContext::InvertFinalCoords(float &x, float &y) const
 
 float CGraphicContext::GetScalingPixelRatio() const
 {
-  if (m_Resolution == m_windowResolution)
-    return GetPixelRatio(m_windowResolution);
-
-  RESOLUTION checkRes = m_windowResolution;
-  if (checkRes == RES_INVALID)
-    checkRes = m_Resolution;
-  // resolutions are different - we want to return the aspect ratio of the video resolution
+  // assume the resolutions are different - we want to return the aspect ratio of the video resolution
   // but only once it's been corrected for the skin -> screen coordinates scaling
-  float winWidth = (float)g_settings.m_ResInfo[checkRes].iWidth;
-  float winHeight = (float)g_settings.m_ResInfo[checkRes].iHeight;
+  float winWidth = (float)m_windowResolution.iWidth;
+  float winHeight = (float)m_windowResolution.iHeight;
   float outWidth = (float)g_settings.m_ResInfo[m_Resolution].iWidth;
   float outHeight = (float)g_settings.m_ResInfo[m_Resolution].iHeight;
   float outPR = GetPixelRatio(m_Resolution);
@@ -651,9 +655,8 @@ void CGraphicContext::SetCameraPosition(const CPoint &camera)
   if (m_origins.size())
     cam += m_origins.top();
 
-  RESOLUTION windowRes = (m_windowResolution == RES_INVALID) ? m_Resolution : m_windowResolution;
-  cam.x *= (float)m_iScreenWidth / g_settings.m_ResInfo[windowRes].iWidth;
-  cam.y *= (float)m_iScreenHeight / g_settings.m_ResInfo[windowRes].iHeight;
+  cam.x *= (float)m_iScreenWidth / m_windowResolution.iWidth;
+  cam.y *= (float)m_iScreenHeight / m_windowResolution.iHeight;
 
   m_cameras.push(cam);
   UpdateCameraPosition(m_cameras.top());

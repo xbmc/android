@@ -1222,7 +1222,29 @@ void MysqlDataset::fill_fields() {
 
 
 //------------- public functions implementation -----------------//
-//FILE* file;
+bool MysqlDataset::dropIndex(const char *table, const char *index)
+{
+  string sql;
+  string sql_prepared;
+
+  sql = "SELECT * FROM information_schema.statistics WHERE TABLE_SCHEMA=DATABASE() AND table_name='%s' AND index_name='%s'";
+  sql_prepared = static_cast<MysqlDatabase*>(db)->prepare(sql.c_str(), table, index);
+
+  if (!query(sql_prepared))
+    return false;
+
+  if (num_rows())
+  {
+    sql = "ALTER TABLE %s DROP INDEX %s";
+    sql_prepared = static_cast<MysqlDatabase*>(db)->prepare(sql.c_str(), table, index);
+
+    if (exec(sql_prepared) != MYSQL_OK)
+      return false;
+  }
+
+  return true;
+}
+
 int MysqlDataset::exec(const string &sql) {
   if (!handle()) throw DbErrors("No Database Connection");
   string qry = sql;
@@ -1231,13 +1253,19 @@ int MysqlDataset::exec(const string &sql) {
 
   // enforce the "auto_increment" keyword to be appended to "integer primary key"
   size_t loc;
+
   if ( (loc=qry.find("integer primary key")) != string::npos)
   {
     qry = qry.insert(loc + 19, " auto_increment ");
   }
 
+  // force the charset and collation to UTF-8
+  if ( qry.find("CREATE TABLE") != string::npos )
+  {
+    qry += " CHARACTER SET utf8 COLLATE utf8_general_ci";
+  }
   // sqlite3 requires the BEGIN and END pragmas when creating triggers. mysql does not.
-  if ( qry.find("CREATE TRIGGER") != string::npos )
+  else if ( qry.find("CREATE TRIGGER") != string::npos )
   {
     if ( (loc=qry.find("BEGIN ")) != string::npos )
     {
@@ -1310,48 +1338,50 @@ bool MysqlDataset::query(const char *query) {
       field_value &v = res->at(i);
       switch (fields[i].type)
       {
-      case MYSQL_TYPE_LONGLONG:
-      case MYSQL_TYPE_DECIMAL:
-      case MYSQL_TYPE_TINY:
-      case MYSQL_TYPE_SHORT:
-      case MYSQL_TYPE_INT24:
-      case MYSQL_TYPE_LONG:
-        if (row[i] != NULL)
-        {
-          v.set_asInt(atoi(row[i]));
-        }
-        else
-        {
-          v.set_asInt(0);
-        }
-        break;
-      case MYSQL_TYPE_FLOAT:
-      case MYSQL_TYPE_DOUBLE:
-        if (row[i] != NULL)
-        {
-          v.set_asDouble(atof(row[i]));
-        }
-        else
-        {
-          v.set_asDouble(0);
-        }
-        break;
-      case MYSQL_TYPE_STRING:
-      case MYSQL_TYPE_VAR_STRING:
-      case MYSQL_TYPE_VARCHAR:
-        if (row[i] != NULL) v.set_asString((const char *)row[i] );
-        break;
-      case MYSQL_TYPE_TINY_BLOB:
-      case MYSQL_TYPE_MEDIUM_BLOB:
-      case MYSQL_TYPE_LONG_BLOB:
-      case MYSQL_TYPE_BLOB:
-        if (row[i] != NULL) v.set_asString((const char *)row[i]);
-        break;
-      case MYSQL_TYPE_NULL:
-      default:
-        v.set_asString("");
-        v.set_isNull();
-        break;
+        case MYSQL_TYPE_LONGLONG:
+        case MYSQL_TYPE_DECIMAL:
+        case MYSQL_TYPE_NEWDECIMAL:
+        case MYSQL_TYPE_TINY:
+        case MYSQL_TYPE_SHORT:
+        case MYSQL_TYPE_INT24:
+        case MYSQL_TYPE_LONG:
+          if (row[i] != NULL)
+          {
+            v.set_asInt(atoi(row[i]));
+          }
+          else
+          {
+            v.set_asInt(0);
+          }
+          break;
+        case MYSQL_TYPE_FLOAT:
+        case MYSQL_TYPE_DOUBLE:
+          if (row[i] != NULL)
+          {
+            v.set_asDouble(atof(row[i]));
+          }
+          else
+          {
+            v.set_asDouble(0);
+          }
+          break;
+        case MYSQL_TYPE_STRING:
+        case MYSQL_TYPE_VAR_STRING:
+        case MYSQL_TYPE_VARCHAR:
+          if (row[i] != NULL) v.set_asString((const char *)row[i] );
+          break;
+        case MYSQL_TYPE_TINY_BLOB:
+        case MYSQL_TYPE_MEDIUM_BLOB:
+        case MYSQL_TYPE_LONG_BLOB:
+        case MYSQL_TYPE_BLOB:
+          if (row[i] != NULL) v.set_asString((const char *)row[i]);
+          break;
+        case MYSQL_TYPE_NULL:
+        default:
+          CLog::Log(LOGDEBUG,"MYSQL: Unknown field type: %u", fields[i].type);
+          v.set_asString("");
+          v.set_isNull();
+          break;
       }
     }
     result.records.push_back(res);
@@ -1435,9 +1465,6 @@ void MysqlDataset::prev(void) {
 }
 
 void MysqlDataset::next(void) {
-#ifdef _XBOX
-  free_row();
-#endif
   Dataset::next();
   if (!eof())
       fill_fields();

@@ -23,28 +23,30 @@
 #include "music/MusicDatabase.h"
 #include "FileItem.h"
 #include "Util.h"
+#include "utils/URIUtils.h"
 #include "music/tags/MusicInfoTag.h"
 #include "music/Song.h"
 #include "Application.h"
+#include "filesystem/Directory.h"
 
 using namespace MUSIC_INFO;
 using namespace Json;
 using namespace JSONRPC;
+using namespace XFILE;
 
 JSON_STATUS CAudioLibrary::GetArtists(const CStdString &method, ITransportLayer *transport, IClient *client, const Value &parameterObject, Value &result)
 {
-  if (!(parameterObject.isObject() || parameterObject.isNull()))
-    return InvalidParams;
-
-  const Value param = ForceObject(parameterObject);
-  if (!ParameterIntOrNull(param, "genreid"))
-    return InvalidParams;
-
   CMusicDatabase musicdatabase;
   if (!musicdatabase.Open())
     return InternalError;
 
-  int genreID = ParameterAsInt(param, -1, "genreid");
+  int genreID = parameterObject["genreid"].asInt();
+
+  // Add "artist" to "fields" array by default
+  Value param = parameterObject;
+  if (!param.isMember("fields"))
+    param["fields"] = Value(arrayValue);
+  param["fields"].append("artist");
 
   CFileItemList items;
   if (musicdatabase.GetArtistsNav("", items, genreID, false))
@@ -56,25 +58,20 @@ JSON_STATUS CAudioLibrary::GetArtists(const CStdString &method, ITransportLayer 
 
 JSON_STATUS CAudioLibrary::GetAlbums(const CStdString &method, ITransportLayer *transport, IClient *client, const Value &parameterObject, Value &result)
 {
-  if (!(parameterObject.isObject() || parameterObject.isNull()))
-    return InvalidParams;
-
-  const Value param = ForceObject(parameterObject);
-  if (!(ParameterIntOrNull(param, "artistid") || ParameterIntOrNull(param, "genreid")))
-    return InvalidParams;
-
   CMusicDatabase musicdatabase;
   if (!musicdatabase.Open())
     return InternalError;
 
-  int artistID = ParameterAsInt(param, -1, "artistid");
-  int genreID  = ParameterAsInt(param, -1, "genreid");
-  int start = ParameterAsInt(param, -1, "start");
-  int end = ParameterAsInt(param, -1, "end");
+  int artistID = parameterObject["artistid"].asInt();
+  int genreID  = parameterObject["genreid"].asInt();
+  int start = parameterObject["limits"]["start"].asInt();
+  int end = parameterObject["limits"]["end"].asInt();
+  if (end == 0)
+    end = -1;
 
   CFileItemList items;
   if (musicdatabase.GetAlbumsNav("", items, genreID, artistID, start, end))
-    HandleFileItemList("albumid", false, "albums", items, param, result);
+    HandleFileItemList("albumid", false, "albums", items, parameterObject, result);
 
   musicdatabase.Close();
   return OK;
@@ -82,16 +79,7 @@ JSON_STATUS CAudioLibrary::GetAlbums(const CStdString &method, ITransportLayer *
 
 JSON_STATUS CAudioLibrary::GetAlbumDetails(const CStdString &method, ITransportLayer *transport, IClient *client, const Value &parameterObject, Value &result)
 {
-  if (!(parameterObject.isObject() || parameterObject.isNull()))
-    return InvalidParams;
-
-  const Value param = ForceObject(parameterObject);
-  if (!(ParameterIntOrNull(param, "albumid")))
-    return InvalidParams;
-
-  int albumID = ParameterAsInt(param, -1, "albumid");
-  if (albumID <= 0)
-    return InvalidParams;
+  int albumID = parameterObject["albumid"].asInt();
 
   CMusicDatabase musicdatabase;
   if (!musicdatabase.Open())
@@ -104,25 +92,14 @@ JSON_STATUS CAudioLibrary::GetAlbumDetails(const CStdString &method, ITransportL
     return InvalidParams;
   }
 
-  Json::Value validFields;
-  MakeFieldsList(parameterObject, validFields);
-
   CStdString path;
   musicdatabase.GetAlbumPath(albumID, path);
 
-  CFileItemPtr m_albumItem( new CFileItem(path, true) );
+  CFileItemPtr m_albumItem( new CFileItem(path, album) );
   m_albumItem->SetLabel(album.strAlbum);
-  m_albumItem->GetMusicInfoTag()->SetAlbum(album.strAlbum);
-  m_albumItem->GetMusicInfoTag()->SetAlbumArtist(album.strArtist);
-  m_albumItem->GetMusicInfoTag()->SetArtist(album.strArtist);
-  m_albumItem->GetMusicInfoTag()->SetYear(album.iYear);
-  m_albumItem->GetMusicInfoTag()->SetLoaded(true);
-  m_albumItem->GetMusicInfoTag()->SetRating('0' + (album.iRating + 1) / 2);
-  m_albumItem->GetMusicInfoTag()->SetGenre(album.strGenre);
-  m_albumItem->GetMusicInfoTag()->SetDatabaseId(albumID);
   CMusicDatabase::SetPropertiesFromAlbum(*m_albumItem, album);
   m_albumItem->SetMusicThumb();
-  HandleFileItem("albumid", false, "albumdetails", m_albumItem, parameterObject, validFields, result);
+  HandleFileItem("albumid", false, "albumdetails", m_albumItem, parameterObject, parameterObject["fields"], result, false);
 
   musicdatabase.Close();
   return OK;
@@ -130,24 +107,17 @@ JSON_STATUS CAudioLibrary::GetAlbumDetails(const CStdString &method, ITransportL
 
 JSON_STATUS CAudioLibrary::GetSongs(const CStdString &method, ITransportLayer *transport, IClient *client, const Value &parameterObject, Value &result)
 {
-  if (!(parameterObject.isObject() || parameterObject.isNull()))
-    return InvalidParams;
-
-  const Value param = ForceObject(parameterObject);
-  if (!(ParameterIntOrNull(param, "artistid") || ParameterIntOrNull(param, "albumid") || ParameterIntOrNull(param, "genreid")))
-    return InvalidParams;
-
   CMusicDatabase musicdatabase;
   if (!musicdatabase.Open())
     return InternalError;
 
-  int artistID = ParameterAsInt(param, -1, "artistid");
-  int albumID  = ParameterAsInt(param, -1, "albumid");
-  int genreID  = ParameterAsInt(param, -1, "genreid");
+  int artistID = parameterObject["artistid"].asInt();
+  int albumID  = parameterObject["albumid"].asInt();
+  int genreID  = parameterObject["genreid"].asInt();
 
   CFileItemList items;
   if (musicdatabase.GetSongsNav("", items, genreID, artistID, albumID))
-    HandleFileItemList("songid", true, "songs", items, param, result);
+    HandleFileItemList("songid", true, "songs", items, parameterObject, result);
 
   musicdatabase.Close();
   return OK;
@@ -155,16 +125,7 @@ JSON_STATUS CAudioLibrary::GetSongs(const CStdString &method, ITransportLayer *t
 
 JSON_STATUS CAudioLibrary::GetSongDetails(const CStdString &method, ITransportLayer *transport, IClient *client, const Value &parameterObject, Value &result)
 {
-  if (!(parameterObject.isObject() || parameterObject.isNull()))
-    return InvalidParams;
-
-  const Value param = ForceObject(parameterObject);
-  if (!(ParameterIntOrNull(param, "songid")))
-    return InvalidParams;
-
-  int idSong = ParameterAsInt(param, -1, "songid");
-  if (idSong <= 0)
-    return InvalidParams;
+  int idSong = parameterObject["songid"].asInt();
 
   CMusicDatabase musicdatabase;
   if (!musicdatabase.Open())
@@ -177,9 +138,7 @@ JSON_STATUS CAudioLibrary::GetSongDetails(const CStdString &method, ITransportLa
     return InvalidParams;
   }
 
-  Json::Value validFields;
-  MakeFieldsList(parameterObject, validFields);
-  HandleFileItem("songid", false, "songdetails", CFileItemPtr( new CFileItem(song) ), parameterObject, validFields, result);
+  HandleFileItem("songid", false, "songdetails", CFileItemPtr( new CFileItem(song) ), parameterObject, parameterObject["fields"], result, false);
 
   musicdatabase.Close();
   return OK;
@@ -187,18 +146,19 @@ JSON_STATUS CAudioLibrary::GetSongDetails(const CStdString &method, ITransportLa
 
 JSON_STATUS CAudioLibrary::GetGenres(const CStdString &method, ITransportLayer *transport, IClient *client, const Value &parameterObject, Value &result)
 {
-  if (!(parameterObject.isObject() || parameterObject.isNull()))
-    return InvalidParams;
-
-  const Value param = ForceObject(parameterObject);
-
   CMusicDatabase musicdatabase;
   if (!musicdatabase.Open())
     return InternalError;
 
+  // Add "genre" to "fields" array by default
+  Value param = parameterObject;
+  if (!param.isMember("fields"))
+    param["fields"] = Value(arrayValue);
+  param["fields"].append("genre");
+
   CFileItemList items;
   if (musicdatabase.GetGenresNav("", items))
-    HandleFileItemList("genreid", true, "genres", items, param, result);
+    HandleFileItemList("genreid", false, "genres", items, param, result);
 
   musicdatabase.Close();
   return OK;
@@ -210,6 +170,25 @@ JSON_STATUS CAudioLibrary::ScanForContent(const CStdString &method, ITransportLa
   return ACK;
 }
 
+bool CAudioLibrary::FillFileItem(const CStdString &strFilename, CFileItem &item)
+{
+  CMusicDatabase musicdatabase;
+  bool status = false;
+  if (!strFilename.empty() && !CDirectory::Exists(strFilename) && musicdatabase.Open())
+  {
+    CSong song;
+    if (musicdatabase.GetSongByFileName(strFilename, song))
+    {
+      item = CFileItem(song);
+      status = true;
+    }
+
+    musicdatabase.Close();
+  }
+
+  return status;
+}
+
 bool CAudioLibrary::FillFileItemList(const Value &parameterObject, CFileItemList &list)
 {
   CMusicDatabase musicdatabase;
@@ -217,25 +196,29 @@ bool CAudioLibrary::FillFileItemList(const Value &parameterObject, CFileItemList
 
   if (musicdatabase.Open())
   {
-    if (parameterObject["artistid"].isInt() || parameterObject["albumid"].isInt() || parameterObject["genreid"].isInt())
-    {
-      int artistID = ParameterAsInt(parameterObject, -1, "artistid");
-      int albumID  = ParameterAsInt(parameterObject, -1, "albumid");
-      int genreID  = ParameterAsInt(parameterObject, -1, "genreid");
+    CStdString file       = parameterObject["file"].asString();
+    int artistID          = parameterObject["artistid"].asInt();
+    int albumID           = parameterObject["albumid"].asInt();
+    int genreID           = parameterObject["genreid"].asInt();
 
-      success = musicdatabase.GetSongsNav("", list, genreID, artistID, albumID);
-    }
-    if (parameterObject["songid"].isInt())
+    CFileItem fileItem;
+    if (FillFileItem(file, fileItem))
     {
-      int songID = ParameterAsInt(parameterObject, -1, "songid");
-      if (songID != -1)
+      success = true;
+      list.Add(CFileItemPtr(new CFileItem(fileItem)));
+    }
+
+    if (artistID != -1 || albumID != -1 || genreID != -1)
+      success |= musicdatabase.GetSongsNav("", list, genreID, artistID, albumID);
+
+    int songID = parameterObject.get("songid", -1).asInt();
+    if (songID != -1)
+    {
+      CSong song;
+      if (musicdatabase.GetSongById(songID, song))
       {
-        CSong song;
-        if (musicdatabase.GetSongById(songID, song))
-        {
-          list.Add(CFileItemPtr(new CFileItem(song)));
-          success = true;
-        }
+        list.Add(CFileItemPtr(new CFileItem(song)));
+        success = true;
       }
     }
 

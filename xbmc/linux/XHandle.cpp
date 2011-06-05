@@ -19,11 +19,10 @@
  *
  */
 
-#include <SDL/SDL.h>
-
 #include "XHandle.h"
 #include "XThreadUtils.h"
-#include "../utils/log.h"
+#include "utils/log.h"
+#include "threads/XBMC_mutex.h"
 
 int CXHandle::m_objectTracker[10] = {0};
 

@@ -24,6 +24,7 @@
 #include "XBPyThread.h"
 #include "cores/IPlayer.h"
 #include "threads/CriticalSection.h"
+#include "addons/IAddon.h"
 
 #include <vector>
 
@@ -64,8 +65,8 @@ public:
 
   int ScriptsSize();
   int GetPythonScriptId(int scriptPosition);
-  int evalFile(const CStdString &src);
-  int evalFile(const CStdString &src, const std::vector<CStdString> &argv);
+  int evalFile(const CStdString &src, ADDON::AddonPtr addon);
+  int evalFile(const CStdString &src, const std::vector<CStdString> &argv, ADDON::AddonPtr addon);
   int evalString(const CStdString &src, const std::vector<CStdString> &argv);
 
   bool isRunning(int scriptId);
@@ -80,7 +81,7 @@ public:
 
   // inject xbmc stuff into the interpreter.
   // should be called for every new interpreter
-  void InitializeInterpreter();
+  void InitializeInterpreter(ADDON::AddonPtr addon);
 
   // remove modules and references when interpreter done
   void DeInitializeInterpreter();
@@ -98,7 +99,7 @@ public:
   // returns -1 if no scripts exist with specified filename
   int getScriptId(const CStdString &strFile);
 
-  PyThreadState *getMainThreadState();
+  void* getMainThreadState();
 
   bool m_bLogin;
   CCriticalSection    m_critSection;
@@ -106,7 +107,7 @@ private:
   bool              FileExist(const char* strFile);
 
   int               m_nextid;
-  PyThreadState*    m_mainThreadState;
+  void*             m_mainThreadState;
   ThreadIdentifier  m_ThreadId;
   bool              m_bInitialized;
   HANDLE            m_hEvent;

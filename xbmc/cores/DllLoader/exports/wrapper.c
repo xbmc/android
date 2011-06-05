@@ -40,13 +40,16 @@
 #include <sys/statvfs.h>
 #endif
 
-#if defined(__APPLE__) || defined(__ANDROID__)
+#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__ANDROID__)
 typedef int64_t   off64_t;
 typedef off_t     __off_t;
 typedef off64_t   __off64_t;
-typedef fpos_t fpos64_t;
-#define stat64 stat
+typedef fpos_t    fpos64_t;
+#define stat64    stat
 #define statvfs64 statvfs
+#if defined(__arm__)
+#define _G_va_list va_list
+#endif
 #endif
 
 #ifdef _LINUX
@@ -375,6 +378,11 @@ int __wrap_ungetc(int c, FILE *stream)
   return dll_ungetc(c, stream);
 }
 
+int __wrap_getc(FILE *stream)
+{
+  return dll_getc(stream);
+}
+
 int __wrap_ioctl(int d, unsigned long int request, ...)
 {
     int res;
@@ -385,7 +393,7 @@ int __wrap_ioctl(int d, unsigned long int request, ...)
     return res;
 } 
 
-int __wrap_stat(const char *path, struct _stat *buffer)
+int __wrap__stat(const char *path, struct _stat *buffer)
 {
   return dll_stat(path, buffer);
 }

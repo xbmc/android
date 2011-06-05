@@ -145,8 +145,8 @@ public:
   bool GetTop100(const CStdString& strBaseDir, CFileItemList& items);
   bool GetTop100Albums(VECALBUMS& albums);
   bool GetTop100AlbumSongs(const CStdString& strBaseDir, CFileItemList& item);
-  bool GetRecentlyAddedAlbums(VECALBUMS& albums);
-  bool GetRecentlyAddedAlbumSongs(const CStdString& strBaseDir, CFileItemList& item);
+  bool GetRecentlyAddedAlbums(VECALBUMS& albums, unsigned int limit=0);
+  bool GetRecentlyAddedAlbumSongs(const CStdString& strBaseDir, CFileItemList& item, unsigned int limit=0);
   bool GetRecentlyPlayedAlbums(VECALBUMS& albums);
   bool GetRecentlyPlayedAlbumSongs(const CStdString& strBaseDir, CFileItemList& item);
   bool IncrTop100CounterByFileName(const CStdString& strFileName1);
@@ -174,9 +174,9 @@ public:
   bool GetAlbumThumb(int idAlbum, CStdString &thumb);
   bool GetArtistPath(int idArtist, CStdString &path);
 
-  bool GetGenreById(int idGenre, CStdString& strGenre);
-  bool GetArtistById(int idArtist, CStdString& strArtist);
-  bool GetAlbumById(int idAlbum, CStdString& strAlbum);
+  CStdString GetGenreById(int id);
+  CStdString GetArtistById(int id);
+  CStdString GetAlbumById(int id);
 
   int GetArtistByName(const CStdString& strArtist);
   int GetAlbumByName(const CStdString& strAlbum, const CStdString& strArtist="");

@@ -64,9 +64,6 @@
 #define VIEW_MODE_ORIGINAL      5
 #define VIEW_MODE_CUSTOM        6
 
-#define STACK_NONE          0
-#define STACK_SIMPLE        1
-
 #define VIDEO_SHOW_ALL 0
 #define VIDEO_SHOW_UNWATCHED 1
 #define VIDEO_SHOW_WATCHED 2
@@ -156,6 +153,7 @@ public:
   CStdString m_pictureExtensions;
   CStdString m_musicExtensions;
   CStdString m_videoExtensions;
+  CStdString m_discStubExtensions;
 
   CStdString m_logFolder;
 
@@ -204,7 +202,7 @@ public:
 
   int m_iVideoStartWindow;
 
-  int m_iMyVideoStack;
+  bool m_videoStacking;
 
   int iAdditionalSubtitleDirectoryChecked;
 
@@ -239,9 +237,7 @@ public:
   CStdString m_defaultMusicSource;
   CStdString m_defaultPictureSource;
   CStdString m_defaultFileSource;
-  CStdString m_defaultVideoSource;
   CStdString m_defaultMusicLibSource;
-  CStdString m_defaultVideoLibSource;
 
   CStdString m_UPnPUUIDServer;
   int        m_UPnPPortServer;

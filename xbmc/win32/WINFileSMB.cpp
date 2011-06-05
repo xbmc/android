@@ -24,8 +24,8 @@
 
 #include <sys/stat.h>
 #include <io.h>
-#include "log.h"
-#include "CharsetConverter.h"
+#include "utils/log.h"
+#include "utils/CharsetConverter.h"
 #include "utils/URIUtils.h"
 #include "WINSMBDirectory.h"
 
@@ -314,7 +314,7 @@ void CWINFileSMB::Flush()
   ::FlushFileBuffers(m_hFile);
 }
 
-int CWINFileSMB::IoControl(int request, void* param)
+int CWINFileSMB::IoControl(EIoControl request, void* param)
 { 
   return -1;
 }

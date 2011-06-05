@@ -23,12 +23,14 @@
 #include "dialog.h"
 #include "winxml.h"
 #include "pyutil.h"
+#include "pythreadstate.h"
 #include "action.h"
 #include "GUIPythonWindow.h"
 #include "guilib/GUIButtonControl.h"
 #include "guilib/GUICheckMarkControl.h"
 #include "guilib/GUIRadioButtonControl.h"
 #include "guilib/GUIWindowManager.h"
+#include "settings/Settings.h"
 #include "Application.h"
 #include "threads/SingleLock.h"
 
@@ -43,6 +45,16 @@ using namespace std;
 #pragma const_seg("PY_RDATA")
 #endif
 
+/**
+ * A CSingleLock that will relinquish the GIL during the time
+ *  it takes to obtain the CriticalSection
+ */
+class GilSafeSingleLock : public CPyThreadState, public CSingleLock
+{
+public:
+  GilSafeSingleLock(const CCriticalSection& critSec) : CPyThreadState(true), CSingleLock(critSec) { CPyThreadState::Restore(); }
+};
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -54,7 +66,7 @@ namespace PYXBMC
   // used by Dialog to to create a new dialogWindow
   bool Window_CreateNewWindow(Window* pWindow, bool bAsDialog)
   {
-    CSingleLock lock(g_graphicsContext);
+    GilSafeSingleLock lock(g_graphicsContext);
 
     if (pWindow->iWindowId != -1)
     {
@@ -133,7 +145,7 @@ namespace PYXBMC
     }
 
     // lock xbmc GUI before accessing data from it
-    CSingleLock lock(g_graphicsContext);
+    GilSafeSingleLock lock(g_graphicsContext);
 
     // check if control exists
     CGUIControl* pGUIControl = (CGUIControl*)self->pWindow->GetControl(iControlId);
@@ -321,7 +333,7 @@ namespace PYXBMC
 
   void Window_Dealloc(Window* self)
   {
-    CSingleLock lock(g_graphicsContext);
+    GilSafeSingleLock lock(g_graphicsContext);
     if (self->bIsPythonWindow)
     {
       // first change to an existing window
@@ -389,18 +401,16 @@ namespace PYXBMC
     // if it's a dialog, we have to activate it a bit different
     if (WindowDialog_Check(self) || WindowXMLDialog_Check(self))
     {
-      Py_BEGIN_ALLOW_THREADS
+      CPyThreadState pyState;
       ThreadMessage tMsg = {TMSG_GUI_PYTHON_DIALOG, WindowXMLDialog_Check(self) ? 1 : 0, 1};
       tMsg.lpVoid = self->pWindow;
       g_application.getApplicationMessenger().SendMessage(tMsg, true);
-      Py_END_ALLOW_THREADS
     }
     else
     {
-      Py_BEGIN_ALLOW_THREADS
+      CPyThreadState pyState;
       vector<CStdString> params;
       g_application.getApplicationMessenger().ActivateWindow(self->iWindowId, params, false);
-      Py_END_ALLOW_THREADS
     }
 
     Py_INCREF(Py_None);
@@ -429,18 +439,16 @@ namespace PYXBMC
     // if it's a dialog, we have to close it a bit different
     if (WindowDialog_Check(self) || WindowXMLDialog_Check(self))
     {
-      Py_BEGIN_ALLOW_THREADS
+      CPyThreadState pyState;
       ThreadMessage tMsg = {TMSG_GUI_PYTHON_DIALOG, WindowXMLDialog_Check(self) ? 1 : 0, 0};
       tMsg.lpVoid = self->pWindow;
       g_application.getApplicationMessenger().SendMessage(tMsg, true);
-      Py_END_ALLOW_THREADS
     }
     else
     {
-      Py_BEGIN_ALLOW_THREADS
+      CPyThreadState pyState;
       vector<CStdString> params;
       g_application.getApplicationMessenger().ActivateWindow(self->iOldWindowId, params, false);
-      Py_END_ALLOW_THREADS
     }
     self->iOldWindowId = 0;
 
@@ -509,14 +517,13 @@ namespace PYXBMC
       {
         PyXBMC_MakePendingCalls();
 
-        Py_BEGIN_ALLOW_THREADS
+        CPyThreadState pyState;
         if (WindowXML_Check(self))
           ((CGUIPythonWindowXML*)self->pWindow)->WaitForActionEvent(INFINITE);
         else if (WindowXMLDialog_Check(self))
           ((CGUIPythonWindowXMLDialog*)self->pWindow)->WaitForActionEvent(INFINITE);
         else
           ((CGUIPythonWindow*)self->pWindow)->WaitForActionEvent(INFINITE);
-        Py_END_ALLOW_THREADS
       }
     }
     Py_INCREF(Py_None);
@@ -562,7 +569,7 @@ namespace PYXBMC
     }
 
     // lock xbmc GUI before accessing data from it
-    CSingleLock lock(g_graphicsContext);
+    GilSafeSingleLock lock(g_graphicsContext);
     pControl->iParentId = self->iWindowId;
     // assign control id, if id is already in use, try next id
     do pControl->iControlId = ++self->iCurrentControlId;
@@ -711,7 +718,7 @@ namespace PYXBMC
 
   PyObject* Window_GetFocus(Window *self, PyObject *args)
   {
-    CSingleLock lock(g_graphicsContext);
+    GilSafeSingleLock lock(g_graphicsContext);
 
     int iControlId = self->pWindow->GetFocusedControlID();
     if(iControlId == -1)
@@ -732,7 +739,7 @@ namespace PYXBMC
 
   PyObject* Window_GetFocusId(Window *self, PyObject *args)
   {
-    CSingleLock lock(g_graphicsContext);
+    GilSafeSingleLock lock(g_graphicsContext);
     int iControlId = self->pWindow->GetFocusedControlID();
     if(iControlId == -1)
     {
@@ -761,7 +768,7 @@ namespace PYXBMC
       PyErr_SetString(PyExc_TypeError, "Object should be of type Control");
       return NULL;
     }
-    CSingleLock lock(g_graphicsContext);
+    GilSafeSingleLock lock(g_graphicsContext);
     if(!self->pWindow->GetControl(pControl->iControlId))
     {
       PyErr_SetString(PyExc_RuntimeError, "Control does not exist in window");
@@ -856,8 +863,8 @@ namespace PYXBMC
       return NULL;
     }
 
-    CSingleLock lock(g_graphicsContext);
-    self->pWindow->SetCoordsRes((RESOLUTION)res);
+    GilSafeSingleLock lock(g_graphicsContext);
+    self->pWindow->SetCoordsRes(g_settings.m_ResInfo[res]);
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -900,7 +907,7 @@ namespace PYXBMC
     if (!PyXBMCGetUnicodeString(uText, value, 1))
       return NULL;
 
-    CSingleLock lock(g_graphicsContext);
+    GilSafeSingleLock lock(g_graphicsContext);
     CStdString lowerKey = key;
 
     self->pWindow->SetProperty(lowerKey.ToLower(), uText);
@@ -937,7 +944,7 @@ namespace PYXBMC
       return NULL;    }
     if (!key) return NULL;
 
-    CSingleLock lock(g_graphicsContext);
+    GilSafeSingleLock lock(g_graphicsContext);
     CStdString lowerKey = key;
     string value = self->pWindow->GetProperty(lowerKey.ToLower());
 
@@ -972,7 +979,7 @@ namespace PYXBMC
       return NULL;
     }
     if (!key) return NULL;
-    CSingleLock lock(g_graphicsContext);
+    GilSafeSingleLock lock(g_graphicsContext);
 
     CStdString lowerKey = key;
     self->pWindow->SetProperty(lowerKey.ToLower(), "");
@@ -990,7 +997,7 @@ namespace PYXBMC
 
   PyObject* Window_ClearProperties(Window *self, PyObject *args)
   {
-    CSingleLock lock(g_graphicsContext);
+    GilSafeSingleLock lock(g_graphicsContext);
     self->pWindow->ClearProperties();
 
     Py_INCREF(Py_None);

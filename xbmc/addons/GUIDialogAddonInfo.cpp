@@ -127,7 +127,8 @@ void CGUIDialogAddonInfo::UpdateControls()
   // TODO: System addons should be able to be disabled
   bool canDisable = isInstalled && !isSystem && !m_localAddon->IsInUse();
   bool canInstall = !isInstalled && m_item->GetProperty("Addon.Broken").IsEmpty();
-                     
+  bool isRepo = (isInstalled && m_localAddon->Type() == ADDON_REPOSITORY) || (m_addon && m_addon->Type() == ADDON_REPOSITORY);
+
   CONTROL_ENABLE_ON_CONDITION(CONTROL_BTN_INSTALL, canDisable || canInstall);
   SET_CONTROL_LABEL(CONTROL_BTN_INSTALL, isInstalled ? 24037 : 24038);
 
@@ -136,13 +137,13 @@ void CGUIDialogAddonInfo::UpdateControls()
 
   CONTROL_ENABLE_ON_CONDITION(CONTROL_BTN_UPDATE, isUpdatable);
   CONTROL_ENABLE_ON_CONDITION(CONTROL_BTN_SETTINGS, isInstalled && m_localAddon->HasSettings());
-  CONTROL_ENABLE_ON_CONDITION(CONTROL_BTN_CHANGELOG, m_addon->Type() != ADDON_REPOSITORY);
+  CONTROL_ENABLE_ON_CONDITION(CONTROL_BTN_CHANGELOG, !isRepo);
 }
 
 void CGUIDialogAddonInfo::OnUpdate()
 {
   CStdString referer;
-  referer.Format("Referer=%s-%s.zip",m_localAddon->ID().c_str(),m_localAddon->Version().str.c_str());
+  referer.Format("Referer=%s-%s.zip",m_localAddon->ID().c_str(),m_localAddon->Version().c_str());
   CAddonInstaller::Get().Install(m_addon->ID(), true, referer); // force install
   Close();
 }
@@ -162,11 +163,8 @@ void CGUIDialogAddonInfo::OnUninstall()
   CAddonDatabase database;
   database.Open();
   database.DisableAddon(m_localAddon->ID(), false);
-
-  CFileItemList list;
-  list.Add(CFileItemPtr(new CFileItem(m_localAddon->Path(),true)));
-  list[0]->Select(true);
-  CJobManager::GetInstance().AddJob(new CFileOperationJob(CFileOperationJob::ActionDelete,list,""), &CAddonInstaller::Get());
+  CJobManager::GetInstance().AddJob(new CAddonUnInstallJob(m_localAddon),
+                                    &CAddonInstaller::Get());
   CAddonMgr::Get().RemoveAddon(m_localAddon->ID());
   Close();
 }
@@ -234,27 +232,26 @@ bool CGUIDialogAddonInfo::SetItem(const CFileItemPtr& item)
   *m_item = *item;
 
   // grab the local addon, if it's available
-  m_addon.reset();
-  if (CAddonMgr::Get().GetAddon(item->GetProperty("Addon.ID"), m_addon)) // sets m_addon if installed regardless of enabled state
+  m_localAddon.reset();
+  if (CAddonMgr::Get().GetAddon(item->GetProperty("Addon.ID"), m_localAddon)) // sets m_addon if installed regardless of enabled state
     m_item->SetProperty("Addon.Enabled", "true");
   else
     m_item->SetProperty("Addon.Enabled", "false");
   m_item->SetProperty("Addon.Installed", m_addon ? "true" : "false");
-  m_localAddon = m_addon;
 
-  if (!m_addon)
-  { // coming from a repository
-    CAddonDatabase database;
-    database.Open();
-    if (!database.GetAddon(item->GetProperty("Addon.ID"),m_addon))
-      return false; // can't find the addon
-  }
+  CAddonDatabase database;
+  database.Open();
+  database.GetAddon(item->GetProperty("Addon.ID"),m_addon);
+
   if (TranslateType(item->GetProperty("Addon.intType")) == ADDON_REPOSITORY)
   {
     CAddonDatabase database;
     database.Open();
     VECADDONS addons;
-    database.GetRepository(m_addon->ID(), addons);
+    if (m_addon)
+      database.GetRepository(m_addon->ID(), addons);
+    else if (m_localAddon) // sanity
+      database.GetRepository(m_localAddon->ID(), addons);
     int tot=0;
     for (int i = ADDON_UNKNOWN+1;i<ADDON_VIZ_LIBRARY;++i)
     {

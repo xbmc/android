@@ -31,9 +31,11 @@
   #include <sstream>
   #include <X11/extensions/Xrandr.h>
   #define NVSETTINGSCMD "nvidia-settings -nt -q RefreshRate3"
-#elif defined(__APPLE__)
+#elif defined(__APPLE__) && !defined(__arm__)
   #include <QuartzCore/CVDisplayLink.h>
   #include "CocoaInterface.h"
+#elif defined(__APPLE__) && defined(__arm__)
+  #include "WindowingFactory.h"
 #elif defined(_WIN32) && defined(HAS_DX)
   #pragma comment (lib,"d3d9.lib")
   #if (D3DX_SDK_VERSION >= 42) //aug 2009 sdk and up there is no dxerr9 anymore
@@ -223,7 +225,7 @@ bool CVideoReferenceClock::SetupGLX()
 
   m_vInfo = NULL;
   m_Context = NULL;
-  m_Window = NULL;
+  m_Window = 0;
 
   CLog::Log(LOGDEBUG, "CVideoReferenceClock: Setting up GLX");
 
@@ -441,7 +443,7 @@ void CVideoReferenceClock::CleanupGLX()
   if (m_Window)
   {
     XDestroyWindow(m_Dpy, m_Window);
-    m_Window = NULL;
+    m_Window = 0;
   }
 
   //ati saves the Display* in their libGL, if we close it here, we crash
@@ -782,7 +784,7 @@ void CVideoReferenceClock::CleanupD3D()
 }
 
 #elif defined(__APPLE__)
-
+#if !defined(__arm__)
 // Called by the Core Video Display Link whenever it's appropriate to render a frame.
 static CVReturn DisplayLinkCallBack(CVDisplayLinkRef displayLink, const CVTimeStamp* inNow, const CVTimeStamp* inOutputTime, CVOptionFlags flagsIn, CVOptionFlags* flagsOut, void* displayLinkContext)
 {
@@ -802,7 +804,7 @@ static CVReturn DisplayLinkCallBack(CVDisplayLinkRef displayLink, const CVTimeSt
 
   return kCVReturnSuccess;
 }
-
+#endif
 bool CVideoReferenceClock::SetupCocoa()
 {
   CLog::Log(LOGDEBUG, "CVideoReferenceClock: setting up Cocoa");
@@ -812,12 +814,18 @@ bool CVideoReferenceClock::SetupCocoa()
   m_MissedVblanks = 0;
   m_RefreshRate = 60;              //init the refreshrate so we don't get any division by 0 errors
 
+  #if defined(__arm__)
+  {
+    g_Windowing.InitDisplayLink();
+  }
+  #else
   if (!Cocoa_CVDisplayLinkCreate((void*)DisplayLinkCallBack, reinterpret_cast<void*>(this)))
   {
     CLog::Log(LOGDEBUG, "CVideoReferenceClock: Cocoa_CVDisplayLinkCreate failed");
     return false;
   }
   else
+  #endif
   {
     UpdateRefreshrate(true);
     return true;
@@ -836,7 +844,11 @@ void CVideoReferenceClock::RunCocoa()
 void CVideoReferenceClock::CleanupCocoa()
 {
   CLog::Log(LOGDEBUG, "CVideoReferenceClock: cleaning up Cocoa");
-  Cocoa_CVDisplayLinkRelease();
+  #if defined(__arm__)
+    g_Windowing.DeinitDisplayLink();
+  #else
+    Cocoa_CVDisplayLinkRelease();
+  #endif
 }
 
 void CVideoReferenceClock::VblankHandler(int64_t nowtime, double fps)
@@ -868,6 +880,7 @@ void CVideoReferenceClock::VblankHandler(int64_t nowtime, double fps)
   SingleLock.Leave();
 
   SendVblankSignal();
+  UpdateRefreshrate();
 }
 #endif
 
@@ -1049,7 +1062,11 @@ bool CVideoReferenceClock::UpdateRefreshrate(bool Forced /*= false*/)
   return false;
 
 #elif defined(__APPLE__)
-  int RefreshRate = MathUtils::round_int(Cocoa_GetCVDisplayLinkRefreshPeriod());
+  #if defined(__arm__)
+    int RefreshRate = round(g_Windowing.GetDisplayLinkFPS() + 0.5);
+  #else
+    int RefreshRate = MathUtils::round_int(Cocoa_GetCVDisplayLinkRefreshPeriod());
+  #endif
 
   if (RefreshRate != m_RefreshRate || Forced)
   {

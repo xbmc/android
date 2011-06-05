@@ -64,7 +64,7 @@ CPowerManager::~CPowerManager()
 
 void CPowerManager::Initialize()
 {
-#ifdef __APPLE__
+#if defined(__APPLE__)
   m_instance = new CCocoaPowerSyscall();
 #elif defined(_LINUX) && defined(HAS_DBUS)
   if (CConsoleUPowerSyscall::HasDeviceConsoleKit())
@@ -207,6 +207,7 @@ void CPowerManager::OnSleep()
 
   g_application.StopPlaying();
   g_application.StopShutdownTimer();
+  g_application.StopScreenSaverTimer();
 }
 
 void CPowerManager::OnWake()

@@ -35,6 +35,7 @@
 #include "PlatformInclude.h"
 #endif
 #include "Event.h"
+#include "utils/StdString.h"
 
 class IRunnable
 {
@@ -53,8 +54,8 @@ public:
 class CThread
 {
 public:
-  CThread();
-  CThread(IRunnable* pRunnable);
+  CThread(const char* ThreadName = NULL);
+  CThread(IRunnable* pRunnable, const char* ThreadName = NULL);
   virtual ~CThread();
   void Create(bool bAutoDelete = false, unsigned stacksize = 0);
   bool WaitForThreadExit(unsigned int milliseconds);
@@ -91,6 +92,9 @@ protected:
   HANDLE m_ThreadHandle;
 
 private:
+  CStdString GetTypeName(void);
+
+private:
   ThreadIdentifier ThreadId() const;
   bool m_bAutoDelete;
   HANDLE m_StopEvent;
@@ -101,6 +105,8 @@ private:
   unsigned __int64 m_iLastUsage;
   unsigned __int64 m_iLastTime;
   float m_fLastUsage;
+
+  CStdString m_ThreadName;
 
 private:
 #ifndef _WIN32

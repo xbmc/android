@@ -25,14 +25,58 @@
 #include "File.h"
 #include "URL.h"
 
-#include "CacheMemBuffer.h"
+#include "CacheCircular.h"
 #include "threads/SingleLock.h"
 #include "utils/log.h"
+#include "utils/TimeUtils.h"
+#include "settings/AdvancedSettings.h"
 
 using namespace AUTOPTR;
 using namespace XFILE;
 
 #define READ_CACHE_CHUNK_SIZE (64*1024)
+
+class CWriteRate
+{
+public:
+  CWriteRate()
+  {
+    m_stamp = CTimeUtils::GetTimeMS();
+    m_pos   = 0;
+    m_pause = 0;
+  }
+
+  void Reset(int64_t pos)
+  {
+    m_stamp = CTimeUtils::GetTimeMS();
+    m_pos   = pos;
+  }
+
+  unsigned Rate(int64_t pos, unsigned int time_bias = 0)
+  {
+    const unsigned ts = CTimeUtils::GetTimeMS() + time_bias;
+    if(ts == m_stamp)
+      return 0;
+    return (unsigned)(1000 * (pos - m_pos) / (ts - m_stamp));
+  }
+
+  void Pause()
+  {
+    m_pause = CTimeUtils::GetTimeMS();
+  }
+
+  void Resume()
+  {
+    m_stamp += CTimeUtils::GetTimeMS() - m_pause;
+    m_pause  = 0;
+  }
+
+private:
+  unsigned m_stamp;
+  int64_t  m_pos;
+  unsigned m_pause;
+};
+
 
 CFileCache::CFileCache()
 {
@@ -40,8 +84,14 @@ CFileCache::CFileCache()
    m_nSeekResult = 0;
    m_seekPos = 0;
    m_readPos = 0;
-   m_pCache = new CacheMemBuffer();
+   m_writePos = 0;
+   if(g_advancedSettings.m_cacheMemBufferSize == 0)
+     m_pCache = new CSimpleFileCache();
+   else
+     m_pCache = new CCacheCircular(g_advancedSettings.m_cacheMemBufferSize
+                                 , std::max<unsigned int>( g_advancedSettings.m_cacheMemBufferSize / 4, 1024 * 1024));
    m_seekPossible = 0;
+   m_cacheFull = false;
 }
 
 CFileCache::CFileCache(CCacheStrategy *pCache, bool bDeleteCache)
@@ -50,6 +100,7 @@ CFileCache::CFileCache(CCacheStrategy *pCache, bool bDeleteCache)
   m_bDeleteCache = bDeleteCache;
   m_seekPos = 0;
   m_readPos = 0;
+  m_writePos = 0;
   m_nSeekResult = 0;
 }
 
@@ -106,9 +157,13 @@ bool CFileCache::Open(const CURL& url)
   }
 
   // check if source can seek
-  m_seekPossible = m_source.Seek(0, SEEK_POSSIBLE);
+  m_seekPossible = m_source.IoControl(IOCTRL_SEEK_POSSIBLE, NULL);
 
   m_readPos = 0;
+  m_writePos = 0;
+  m_writeRate = 1024 * 1024;
+  m_writeRateActual = 0;
+  m_cacheFull = false;
   m_seekEvent.Reset();
   m_seekEnded.Reset();
 
@@ -135,6 +190,9 @@ void CFileCache::Process()
     return;
   }
 
+  CWriteRate limiter;
+  CWriteRate average;
+
   while(!m_bStop)
   {
     // check for seek events
@@ -146,12 +204,37 @@ void CFileCache::Process()
       if (m_nSeekResult != m_seekPos)
       {
         CLog::Log(LOGERROR,"%s, error %d seeking. seek returned %"PRId64, __FUNCTION__, (int)GetLastError(), m_nSeekResult);
-        m_seekPossible = m_source.Seek(0, SEEK_POSSIBLE);
+        m_seekPossible = m_source.IoControl(IOCTRL_SEEK_POSSIBLE, NULL);
       }
       else
+      {
         m_pCache->Reset(m_seekPos);
+        average.Reset(m_seekPos);
+        limiter.Reset(m_seekPos);
+        m_writePos = m_seekPos;
+        m_readPos = m_seekPos;
+        m_cacheFull = false;
+      }
 
       m_seekEnded.Set();
+    }
+
+    while(m_writeRate)
+    {
+      if(m_writePos - m_readPos < m_writeRate)
+      {
+        limiter.Reset(m_writePos);
+        break;
+      }
+
+      if(limiter.Rate(m_writePos) < m_writeRate)
+        break;
+
+      if(m_seekEvent.WaitMSec(100))
+      {
+        m_seekEvent.Set();
+        break;
+      }
     }
 
     int iRead = m_source.Read(buffer.get(), chunksize);
@@ -190,7 +273,14 @@ void CFileCache::Process()
         break;
       }
       else if (iWrite == 0)
+      {
+        m_cacheFull = true;
+        average.Pause();
         m_pCache->m_space.WaitMSec(5);
+        average.Resume();
+      }
+      else
+        m_cacheFull = false;
 
       iTotalWrite += iWrite;
 
@@ -201,6 +291,12 @@ void CFileCache::Process()
         break;
       }
     }
+
+    m_writePos += iTotalWrite;
+
+    // under estimate write rate by a second, to
+    // avoid uncertainty at start of caching
+    m_writeRateActual = average.Rate(m_writePos, 1000);
   }
 }
 
@@ -258,7 +354,7 @@ retry:
     return 0;
   }
 
-  if (iRc == CACHE_RC_EOF || iRc == 0)
+  if (iRc == 0)
     return 0;
 
   // unknown error code
@@ -281,15 +377,13 @@ int64_t CFileCache::Seek(int64_t iFilePosition, int iWhence)
     iTarget = GetLength() + iTarget;
   else if (iWhence == SEEK_CUR)
     iTarget = iCurPos + iTarget;
-  else if (iWhence == SEEK_POSSIBLE)
-    return m_seekPossible;
   else if (iWhence != SEEK_SET)
     return -1;
 
   if (iTarget == m_readPos)
     return m_readPos;
 
-  if ((m_nSeekResult = m_pCache->Seek(iTarget, SEEK_SET)) != iTarget)
+  if ((m_nSeekResult = m_pCache->Seek(iTarget)) != iTarget)
   {
     if(m_seekPossible == 0)
       return m_nSeekResult;
@@ -302,11 +396,9 @@ int64_t CFileCache::Seek(int64_t iFilePosition, int iWhence)
       return -1;
     }
     m_seekEvent.Reset();
-    m_seekPos = -1;
   }
-
-  if (m_nSeekResult >= 0)
-    m_readPos = m_nSeekResult;
+  else
+    m_readPos = iTarget;
 
   return m_nSeekResult;
 }
@@ -332,13 +424,6 @@ int64_t CFileCache::GetLength()
   return m_source.GetLength();
 }
 
-ICacheInterface* CFileCache::GetCache()
-{
-  if(m_pCache)
-    return m_pCache->GetInterface();
-  return NULL;
-}
-
 void CFileCache::StopThread(bool bWait /*= true*/)
 {
   m_bStop = true;
@@ -353,4 +438,28 @@ CStdString CFileCache::GetContent()
     return IFile::GetContent();
 
   return m_source.GetImplemenation()->GetContent();
+}
+
+int CFileCache::IoControl(EIoControl request, void* param)
+{
+  if(request == IOCTRL_CACHE_STATUS)
+  {
+    SCacheStatus* status = (SCacheStatus*)param;
+    status->forward = m_pCache->WaitForData(0, 0);
+    status->maxrate = m_writeRate;
+    status->currate = m_writeRateActual;
+    status->full    = m_cacheFull;
+    return 0;
+  }
+
+  if(request == IOCTRL_CACHE_SETRATE)
+  {
+    m_writeRate = *(unsigned*)param;
+    return 0;
+  }
+
+  if(request == IOCTRL_SEEK_POSSIBLE)
+    return m_seekPossible;
+
+  return -1;
 }

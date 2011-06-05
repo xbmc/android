@@ -31,8 +31,8 @@
 #include "settings/AdvancedSettings.h"
 #include "threads/SingleLock.h"
 #include "utils/log.h"
-#include "FileSystem/File.h"
-#include "MathUtils.h"
+#include "filesystem/File.h"
+#include "utils/MathUtils.h"
 #include "cores/dvdplayer/DVDCodecs/Video/DXVA.h"
 #include "VideoShaders/WinVideoFilter.h"
 #include "DllSwScale.h"
@@ -206,6 +206,8 @@ bool CWinRenderer::Configure(unsigned int width, unsigned int height, unsigned i
     // need to recreate textures
     m_NumYV12Buffers    = 0;
     m_iYV12RenderBuffer = 0;
+    // reinitialize the filters/shaders
+    m_bFilterInitialized = false;
   }
 
   m_fps = fps;

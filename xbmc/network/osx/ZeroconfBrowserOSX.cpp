@@ -26,6 +26,9 @@
 #include <guilib/GUIMessage.h>
 #include <GUIUserMessages.h>
 
+#include <arpa/inet.h>
+#include <netinet/in.h>
+
 namespace
 {
   CStdString CFStringToCStdString(const CFStringRef cfstr)
@@ -96,8 +99,12 @@ namespace
 CZeroconfBrowserOSX::CZeroconfBrowserOSX():m_runloop(0)
 {
   //aquire the main threads event loop
+#if !defined(__arm__)
   EventLoopRef ref = GetMainEventLoop();
   m_runloop = (CFRunLoopRef)GetCFRunLoopFromEventLoop(ref);
+#else
+  m_runloop = CFRunLoopGetMain();
+#endif
 }
 
 CZeroconfBrowserOSX::~CZeroconfBrowserOSX()
@@ -146,7 +153,7 @@ void CZeroconfBrowserOSX::BrowserCallback(CFNetServiceBrowserRef browser, CFOpti
     }
   } else
   {
-    CLog::Log(LOGERROR, "CZeroconfBrowserOSX::BrowserCallback returned (domain = %d, error = %ld)\n", error->domain, error->error);
+    CLog::Log(LOGERROR, "CZeroconfBrowserOSX::BrowserCallback returned (domain = %d, error = %ld)\n", (int)error->domain, error->error);
   }
 }
 
@@ -226,7 +233,7 @@ bool CZeroconfBrowserOSX::doAddServiceType(const CStdString& fcr_service_type)
     CFNetServiceBrowserUnscheduleFromRunLoop(p_browser, m_runloop, kCFRunLoopCommonModes);         
     CFRelease(p_browser);
     p_browser = NULL;
-    CLog::Log(LOGERROR, "CFNetServiceBrowserSearchForServices returned (domain = %d, error = %ld)\n", error.domain, error.error);
+    CLog::Log(LOGERROR, "CFNetServiceBrowserSearchForServices returned (domain = %d, error = %ld)\n", (int)error.domain, error.error);
   } else
   {
     //store the browser

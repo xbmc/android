@@ -21,7 +21,7 @@
 #include "Thread.h"
 #ifndef _LINUX
 #include <process.h>
-#include "win32exception.h"
+#include "utils/win32exception.h"
 #ifndef _MT
 #pragma message( "Please compile using multithreaded run-time libraries" )
 #endif
@@ -33,10 +33,15 @@ typedef unsigned (WINAPI *PBEGINTHREADEX_THREADFUNC)(LPVOID lpThreadParameter);
 typedef int (*PBEGINTHREADEX_THREADFUNC)(LPVOID lpThreadParameter);
 #endif
 
+#if defined(__GNUC__) && !defined(__clang__)
+#include <cxxabi.h>
+using namespace __cxxabiv1;
+#endif
+
 #include "utils/log.h"
 #include "utils/TimeUtils.h"
 
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__FreeBSD__)
 //
 // Use pthread's built-in support for TLS, it's more portable.
 //
@@ -57,9 +62,9 @@ static void MakeTlsKeys()
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-CThread::CThread()
+CThread::CThread(const char* ThreadName)
 {
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__FreeBSD__)
   // Initialize thread local storage and local thread pointer.
   pthread_once(&keyOnce, MakeTlsKeys);
 #endif
@@ -75,11 +80,14 @@ CThread::CThread()
   m_StopEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
 
   m_pRunnable=NULL;
+
+  if (ThreadName)
+    m_ThreadName = ThreadName;
 }
 
-CThread::CThread(IRunnable* pRunnable)
+CThread::CThread(IRunnable* pRunnable, const char* ThreadName)
 {
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__FreeBSD__)
   // Initialize thread local storage and local thread pointer.
   pthread_once(&keyOnce, MakeTlsKeys);
 #endif
@@ -95,6 +103,9 @@ CThread::CThread(IRunnable* pRunnable)
   m_StopEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
 
   m_pRunnable=pRunnable;
+
+  if (ThreadName)
+    m_ThreadName = ThreadName;
 }
 
 CThread::~CThread()
@@ -110,7 +121,7 @@ CThread::~CThread()
 }
 
 #ifdef _LINUX
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__FreeBSD__)
 // Use pthread-based TLS.
 #define LOCAL_THREAD ((CThread* )pthread_getspecific(tlsLocalThread))
 #else
@@ -120,7 +131,7 @@ __thread CThread* pLocalThread = NULL;
 #endif
 void CThread::term_handler (int signum)
 {
-  CLog::Log(LOGERROR,"thread 0x%lx (%lu) got signal %d. calling OnException and terminating thread abnormally.", pthread_self(), pthread_self(), signum);
+  CLog::Log(LOGERROR,"thread 0x%lx (%lu) got signal %d. calling OnException and terminating thread abnormally.", (long unsigned int)pthread_self(), (long unsigned int)pthread_self(), signum);
   if (LOCAL_THREAD)
   {
     LOCAL_THREAD->m_bStop = TRUE;
@@ -145,13 +156,16 @@ DWORD WINAPI CThread::staticThread(LPVOID* data)
     return 1;
   }
 
-  CLog::Log(LOGDEBUG,"thread start, auto delete: %d",pThread->IsAutoDelete());
+  if (pThread->m_ThreadName.IsEmpty())
+    pThread->SetName(pThread->GetTypeName().c_str());
+
+  CLog::Log(LOGDEBUG,"Thread %s start, auto delete: %d", pThread->m_ThreadName.c_str(), pThread->IsAutoDelete());
 
 #ifndef _LINUX
   /* install win32 exception translator */
   win32_exception::install_handler();
 #else
-#ifndef __APPLE__
+#if !defined(__APPLE__) && !defined(__FreeBSD__)
   pLocalThread = pThread;
 #endif
   struct sigaction action;
@@ -163,7 +177,7 @@ DWORD WINAPI CThread::staticThread(LPVOID* data)
 #endif
 
 
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__FreeBSD__)
   // Set the TLS.
   pthread_setspecific(tlsLocalThread, (void*)pThread);
 #endif
@@ -186,7 +200,7 @@ DWORD WINAPI CThread::staticThread(LPVOID* data)
 #endif
   catch(...)
   {
-    CLog::Log(LOGERROR, "%s - Unhandled exception caught in thread startup, aborting. auto delete: %d", __FUNCTION__, pThread->IsAutoDelete());
+    CLog::Log(LOGERROR, "%s - thread %s, Unhandled exception caught in thread startup, aborting. auto delete: %d", __FUNCTION__, pThread->m_ThreadName.c_str(), pThread->IsAutoDelete());
     if( pThread->IsAutoDelete() )
     {
       delete pThread;
@@ -213,7 +227,7 @@ DWORD WINAPI CThread::staticThread(LPVOID* data)
 #endif
   catch(...)
   {
-    CLog::Log(LOGERROR, "%s - Unhandled exception caught in thread process, attemping cleanup in OnExit", __FUNCTION__);
+    CLog::Log(LOGERROR, "%s - thread %s, Unhandled exception caught in thread process, attemping cleanup in OnExit", __FUNCTION__, pThread->m_ThreadName.c_str());
   }
 
   try
@@ -232,17 +246,17 @@ DWORD WINAPI CThread::staticThread(LPVOID* data)
 #endif
   catch(...)
   {
-    CLog::Log(LOGERROR, "%s - Unhandled exception caught in thread exit", __FUNCTION__);
+    CLog::Log(LOGERROR, "%s - thread %s, Unhandled exception caught in thread exit", __FUNCTION__, pThread->m_ThreadName.c_str());
   }
 
   if ( pThread->IsAutoDelete() )
   {
-    CLog::Log(LOGDEBUG,"Thread %"PRIu64" terminating (autodelete)", (uint64_t)CThread::GetCurrentThreadId());
+    CLog::Log(LOGDEBUG,"Thread %s %"PRIu64" terminating (autodelete)", pThread->m_ThreadName.c_str(), (uint64_t)CThread::GetCurrentThreadId());
     delete pThread;
     pThread = NULL;
   }
   else
-    CLog::Log(LOGDEBUG,"Thread %"PRIu64" terminating", (uint64_t)CThread::GetCurrentThreadId());
+    CLog::Log(LOGDEBUG,"Thread %s %"PRIu64" terminating", pThread->m_ThreadName.c_str(), (uint64_t)CThread::GetCurrentThreadId());
 
 // DXMERGE - this looks like it might have used to have been useful for something...
 //  g_graphicsContext.DeleteThreadContext();
@@ -341,7 +355,7 @@ void CThread::SetPrioritySched_RR(void)
 
   // make thread fixed, set to 'true' for a non-fixed thread
   theFixedPolicy.timeshare = false;
-  result = thread_policy_set(pthread_mach_thread_np(ThreadId()), THREAD_EXTENDED_POLICY, 
+  result = thread_policy_set(pthread_mach_thread_np(ThreadId()), THREAD_EXTENDED_POLICY,
     (thread_policy_t)&theFixedPolicy, THREAD_EXTENDED_POLICY_COUNT);
 
   int policy;
@@ -405,6 +419,8 @@ int CThread::GetNormalPriority(void)
 
 void CThread::SetName( LPCTSTR szThreadName )
 {
+  m_ThreadName = szThreadName;
+
 #ifdef _WIN32
   const unsigned int MS_VC_EXCEPTION = 0x406d1388;
   struct THREADNAME_INFO
@@ -428,6 +444,34 @@ void CThread::SetName( LPCTSTR szThreadName )
   {
   }
 #endif
+}
+
+// Get the thread name using the implementation dependant typeid() class
+// and attempt to clean it.
+CStdString CThread::GetTypeName(void)
+{
+  CStdString name = typeid(*this).name();
+ 
+#if defined(_MSC_VER)
+  // Visual Studio 2010 returns the name as "class CThread" etc
+  if (name.substr(0, 6) == "class ")
+    name = name.Right(name.length() - 6);
+#elif defined(__GNUC__) && !defined(__clang__)
+  // gcc provides __cxa_demangle to demangle the name
+  char* demangled = NULL;
+  int   status;
+
+  demangled = __cxa_demangle(name.c_str(), NULL, 0, &status);
+  if (status == 0)
+    name = demangled;
+  else
+    CLog::Log(LOGDEBUG,"%s, __cxa_demangle(%s) failed with status %d", __FUNCTION__, name.c_str(), status);
+
+  if (demangled)
+    free(demangled);
+#endif
+
+  return name;
 }
 
 bool CThread::WaitForThreadExit(unsigned int milliseconds)

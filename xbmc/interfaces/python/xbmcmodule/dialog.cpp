@@ -19,27 +19,12 @@
  *
  */
 
-#if (defined HAVE_CONFIG_H) && (!defined WIN32)
-  #include "config.h"
-#endif
 #include "dialog.h"
-#if (defined USE_EXTERNAL_PYTHON)
-  #if (defined HAVE_LIBPYTHON2_6)
-    #include <python2.6/Python.h>
-  #elif (defined HAVE_LIBPYTHON2_5)
-    #include <python2.5/Python.h>
-  #elif (defined HAVE_LIBPYTHON2_4)
-    #include <python2.4/Python.h>
-  #else
-    #error "Could not determine version of Python to use."
-  #endif
-#else
-  #include "python/Include/Python.h"
-#endif
-#include "../XBPythonDll.h"
+
 #include "Application.h"
 #include "settings/Settings.h"
 #include "pyutil.h"
+#include "pythreadstate.h"
 #include "dialogs/GUIDialogFileBrowser.h"
 #include "dialogs/GUIDialogNumeric.h"
 #include "dialogs/GUIDialogGamepad.h"
@@ -203,7 +188,9 @@ namespace PYXBMC
       utf8Line[2] += "|.rar|.zip";
 
     value = cDefault;
-    Py_BEGIN_ALLOW_THREADS
+
+    CPyThreadState pyState;
+
     if (browsetype == 1)
     {
       if (enableMultiple)
@@ -220,7 +207,8 @@ namespace PYXBMC
     }
     else
       CGUIDialogFileBrowser::ShowAndGetDirectory(*shares, utf8Line[0], value, browsetype != 0);
-    Py_END_ALLOW_THREADS
+
+    pyState.Restore();
 
     if (enableMultiple && (browsetype == 1 || browsetype == 2))
     {

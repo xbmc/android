@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="win32">
@@ -229,15 +229,15 @@
     <Filter Include="guilib\Rendering\GL">
       <UniqueIdentifier>{9592a005-d33b-48d1-8462-d95c42c383c2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="libs\SlingboxLib">
+      <UniqueIdentifier>{dfa70c36-927b-4540-b505-35919e64eb3d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\xbmc\win32\pch.cpp">
       <Filter>win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\xbmc\win32\strverscmp.cpp">
-      <Filter>win32</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\xbmc\win32\Win32DelayedDllLoad.cpp">
       <Filter>win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\xbmc\win32\WIN32Util.cpp">
@@ -462,9 +462,6 @@
     <ClCompile Include="..\..\xbmc\cores\paplayer\ADPCMCodec.cpp">
       <Filter>cores\paplayer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\xbmc\cores\paplayer\AIFFcodec.cpp">
-      <Filter>cores\paplayer</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\xbmc\cores\paplayer\ASAPCodec.cpp">
       <Filter>cores\paplayer</Filter>
     </ClCompile>
@@ -562,9 +559,6 @@
       <Filter>cores\DllLoader\exports</Filter>
     </ClCompile>
     <ClCompile Include="..\..\xbmc\cores\DllLoader\exports\emu_msvcrt.cpp">
-      <Filter>cores\DllLoader\exports</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\xbmc\cores\DllLoader\exports\exports_python_win32.cpp">
       <Filter>cores\DllLoader\exports</Filter>
     </ClCompile>
     <ClCompile Include="..\..\xbmc\cores\DllLoader\exports\win32-dirent.cpp">
@@ -738,9 +732,6 @@
     <ClCompile Include="..\..\xbmc\FileSystem\FileTuxBox.cpp">
       <Filter>filesystem</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\xbmc\FileSystem\FileXBMSP.cpp">
-      <Filter>filesystem</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\xbmc\FileSystem\FileZip.cpp">
       <Filter>filesystem</Filter>
     </ClCompile>
@@ -858,6 +849,9 @@
     <ClCompile Include="..\..\xbmc\FileSystem\StackDirectory.cpp">
       <Filter>filesystem</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\xbmc\FileSystem\SourcesDirectory.cpp">
+      <Filter>filesystem</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\xbmc\FileSystem\UPnPDirectory.cpp">
       <Filter>filesystem</Filter>
     </ClCompile>
@@ -877,9 +871,6 @@
       <Filter>filesystem</Filter>
     </ClCompile>
     <ClCompile Include="..\..\xbmc\FileSystem\VTPSession.cpp">
-      <Filter>filesystem</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\xbmc\FileSystem\XBMSDirectory.cpp">
       <Filter>filesystem</Filter>
     </ClCompile>
     <ClCompile Include="..\..\xbmc\FileSystem\ZipDirectory.cpp">
@@ -1526,9 +1517,6 @@
     <ClCompile Include="..\..\xbmc\interfaces\python\XBPyThread.cpp">
       <Filter>interfaces\python</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\xbmc\win32\WIN32XBPythonDll.cpp">
-      <Filter>interfaces\python</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\xbmc\music\dialogs\GUIDialogMusicInfo.cpp">
       <Filter>music\dialogs</Filter>
     </ClCompile>
@@ -1844,9 +1832,6 @@
     <ClCompile Include="..\..\xbmc\storage\cdioSupport.cpp">
       <Filter>storage</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\xbmc\storage\DetectDVDType.cpp">
-      <Filter>storage</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\xbmc\storage\IoSupport.cpp">
       <Filter>storage</Filter>
     </ClCompile>
@@ -1884,9 +1869,6 @@
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\..\xbmc\utils\AliasShortcutUtils.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\xbmc\utils\ArabicShaping.cpp">
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\..\xbmc\utils\Archive.cpp">
@@ -2073,9 +2055,6 @@
       <Filter>video\windows</Filter>
     </ClCompile>
     <ClCompile Include="..\..\xbmc\video\windows\GUIWindowVideoBase.cpp">
-      <Filter>video\windows</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\xbmc\video\windows\GUIWindowVideoFiles.cpp">
       <Filter>video\windows</Filter>
     </ClCompile>
     <ClCompile Include="..\..\xbmc\video\windows\GUIWindowVideoNav.cpp">
@@ -2309,9 +2288,6 @@
     <ClCompile Include="..\..\xbmc\CueDocument.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\xbmc\DateTime.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\xbmc\DynamicDll.cpp">
       <Filter>utils</Filter>
     </ClCompile>
@@ -2455,6 +2431,37 @@
     </ClCompile>
     <ClCompile Include="..\..\xbmc\cores\VideoRenderers\RenderCapture.cpp">
       <Filter>cores\VideoRenderers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\SlingboxLib\SlingboxLib.cpp">
+      <Filter>libs\SlingboxLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\xbmc\filesystem\Slingbox.cpp">
+      <Filter>filesystem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\xbmc\dialogs\GUIDialogPlayEject.cpp">
+      <Filter>dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\xbmc\interfaces\json-rpc\JSONServiceDescription.cpp">
+      <Filter>interfaces\json-rpc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\xbmc\XBDateTime.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\xbmc\win32\Win32DelayedDllLoad.cpp">
+      <Filter>win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\xbmc\win32\win32env.cpp">
+      <Filter>win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\xbmc\utils\RecentlyAddedJob.cpp" />
+    <ClCompile Include="..\..\xbmc\interfaces\json-rpc\InputOperations.cpp">
+      <Filter>interfaces\json-rpc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\xbmc\filesystem\CacheCircular.cpp">
+      <Filter>filesystem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\xbmc\input\XBMC_keytable.cpp">
+      <Filter>input</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -2785,9 +2792,6 @@
     <ClInclude Include="..\..\xbmc\cores\paplayer\ADPCMCodec.h">
       <Filter>cores\paplayer</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\xbmc\cores\paplayer\AIFFcodec.h">
-      <Filter>cores\paplayer</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\xbmc\cores\paplayer\ASAPCodec.h">
       <Filter>cores\paplayer</Filter>
     </ClInclude>
@@ -3079,9 +3083,6 @@
     <ClInclude Include="..\..\xbmc\FileSystem\FileTuxBox.h">
       <Filter>filesystem</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\xbmc\FileSystem\FileXBMSP.h">
-      <Filter>filesystem</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\xbmc\FileSystem\FileZip.h">
       <Filter>filesystem</Filter>
     </ClInclude>
@@ -3184,6 +3185,9 @@
     <ClInclude Include="..\..\xbmc\FileSystem\StackDirectory.h">
       <Filter>filesystem</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\xbmc\FileSystem\SourcesDirectory.h">
+      <Filter>filesystem</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\xbmc\FileSystem\UPnPDirectory.h">
       <Filter>filesystem</Filter>
     </ClInclude>
@@ -3200,9 +3204,6 @@
       <Filter>filesystem</Filter>
     </ClInclude>
     <ClInclude Include="..\..\xbmc\FileSystem\VTPSession.h">
-      <Filter>filesystem</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\xbmc\FileSystem\XBMSDirectory.h">
       <Filter>filesystem</Filter>
     </ClInclude>
     <ClInclude Include="..\..\xbmc\FileSystem\ZipDirectory.h">
@@ -3441,9 +3442,6 @@
     </ClInclude>
     <ClInclude Include="..\..\xbmc\music\karaoke\karaokewindowbackground.h">
       <Filter>music\karaoke</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\win32\sqlite\sqlite3.h">
-      <Filter>libs\sqlite</Filter>
     </ClInclude>
     <ClInclude Include="..\..\xbmc\dbwrappers\Database.h">
       <Filter>database</Filter>
@@ -3966,9 +3964,6 @@
     <ClInclude Include="..\..\xbmc\interfaces\python\XBPython.h">
       <Filter>interfaces\python</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\xbmc\interfaces\python\XBPythonDll.h">
-      <Filter>interfaces\python</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\xbmc\interfaces\python\XBPyThread.h">
       <Filter>interfaces\python</Filter>
     </ClInclude>
@@ -4314,9 +4309,6 @@
     <ClInclude Include="..\..\xbmc\storage\cdioSupport.h">
       <Filter>storage</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\xbmc\storage\DetectDVDType.h">
-      <Filter>storage</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\xbmc\storage\IoSupport.h">
       <Filter>storage</Filter>
     </ClInclude>
@@ -4357,9 +4349,6 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\..\xbmc\utils\AliasShortcutUtils.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\xbmc\utils\ArabicShaping.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\..\xbmc\utils\Archive.h">
@@ -4569,9 +4558,6 @@
     <ClInclude Include="..\..\xbmc\video\windows\GUIWindowVideoBase.h">
       <Filter>video\windows</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\xbmc\video\windows\GUIWindowVideoFiles.h">
-      <Filter>video\windows</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\xbmc\video\windows\GUIWindowVideoNav.h">
       <Filter>video\windows</Filter>
     </ClInclude>
@@ -4752,9 +4738,6 @@
     <ClInclude Include="..\..\xbmc\CueDocument.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\xbmc\DateTime.h">
-      <Filter>utils</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\xbmc\DynamicDll.h">
       <Filter>utils</Filter>
     </ClInclude>
@@ -4910,6 +4893,34 @@
     </ClInclude>
     <ClInclude Include="..\..\xbmc\utils\GlobalsHandling.h">
       <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\lib\SlingboxLib\SlingboxLib.h">
+      <Filter>libs\SlingboxLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\xbmc\filesystem\Slingbox.h">
+      <Filter>filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\xbmc\filesystem\CacheCircular.h">
+      <Filter>filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\xbmc\dialogs\GUIDialogPlayEject.h">
+      <Filter>dialogs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\xbmc\interfaces\json-rpc\JSONServiceDescription.h">
+      <Filter>interfaces\json-rpc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\xbmc\interfaces\json-rpc\ServiceDescription.h">
+      <Filter>interfaces\json-rpc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\xbmc\XBDateTime.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\xbmc\utils\RecentlyAddedJob.h" />
+    <ClInclude Include="..\..\xbmc\interfaces\json-rpc\InputOperations.h">
+      <Filter>interfaces\json-rpc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\xbmc\input\XBMC_keytable.h">
+      <Filter>input</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

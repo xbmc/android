@@ -24,14 +24,14 @@
 
 #ifndef _WIN32
 
-#include "utils/StdString.h"
-#include <SDL/SDL_mutex.h>
+#include <list>
 #include <pthread.h>
 
 #include "PlatformDefs.h"
 #include "XHandlePublic.h"
 #include "threads/Semaphore.hpp"
-#include <list>
+#include "threads/XBMC_mutex.h"
+#include "utils/StdString.h"
 
 struct CXHandle {
 

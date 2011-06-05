@@ -209,6 +209,7 @@ int CGUIInfoManager::TranslateSingleString(const CStdString &strCondition)
     else if (strTest.Equals("player.cachelevel")) ret = PLAYER_CACHELEVEL;
     else if (strTest.Equals("player.seekbar")) ret = PLAYER_SEEKBAR;
     else if (strTest.Equals("player.progress")) ret = PLAYER_PROGRESS;
+    else if (strTest.Equals("player.progresscache")) ret = PLAYER_PROGRESS_CACHE;
     else if (strTest.Equals("player.seeking")) ret = PLAYER_SEEKING;
     else if (strTest.Equals("player.showtime")) ret = PLAYER_SHOWTIME;
     else if (strTest.Equals("player.showcodec")) ret = PLAYER_SHOWCODEC;
@@ -368,6 +369,7 @@ int CGUIInfoManager::TranslateSingleString(const CStdString &strCondition)
     else if (strTest.Equals("system.ismaster")) ret = SYSTEM_ISMASTER;
     else if (strTest.Equals("system.internetstate")) ret = SYSTEM_INTERNET_STATE;
     else if (strTest.Equals("system.loggedon")) ret = SYSTEM_LOGGEDON;
+    else if (strTest.Equals("system.showexitbutton")) ret = SYSTEM_SHOW_EXIT_BUTTON;
     else if (strTest.Equals("system.hasdrivef")) ret = SYSTEM_HAS_DRIVE_F;
     else if (strTest.Equals("system.hasdriveg")) ret = SYSTEM_HAS_DRIVE_G;
     else if (strTest.Equals("system.kernelversion")) ret = SYSTEM_KERNEL_VERSION;
@@ -399,7 +401,6 @@ int CGUIInfoManager::TranslateSingleString(const CStdString &strCondition)
     else if (strTest.Equals("system.profilecount")) ret = SYSTEM_PROFILECOUNT;
     else if (strTest.Equals("system.progressbar")) ret = SYSTEM_PROGRESS_BAR;
     else if (strTest.Equals("system.platform.linux")) ret = SYSTEM_PLATFORM_LINUX;
-    else if (strTest.Equals("system.platform.xbox")) ret = SYSTEM_PLATFORM_XBOX;
     else if (strTest.Equals("system.platform.windows")) ret = SYSTEM_PLATFORM_WINDOWS;
     else if (strTest.Equals("system.platform.osx")) ret = SYSTEM_PLATFORM_OSX;
     else if (strTest.Left(15).Equals("system.getbool("))
@@ -952,6 +953,7 @@ int CGUIInfoManager::TranslateListItem(const CStdString &info)
   else if (info.Equals("originaltitle")) return LISTITEM_ORIGINALTITLE;
   else if (info.Equals("lastplayed")) return LISTITEM_LASTPLAYED;
   else if (info.Equals("playcount")) return LISTITEM_PLAYCOUNT;
+  else if (info.Equals("discnumber")) return LISTITEM_DISC_NUMBER;
   else if (info.Left(9).Equals("property(")) return AddListItemProp(info.Mid(9, info.GetLength() - 10));
   return 0;
 }
@@ -1290,12 +1292,10 @@ CStdString CGUIInfoManager::GetLabel(int info, int contextWindow)
       CGUIWindow *window = GetWindowWithCondition(contextWindow, WINDOW_CONDITION_IS_MEDIA_WINDOW);
       if (window)
       {
-        strLabel = CURL(((CGUIMediaWindow*)window)->CurrentDirectory().m_strPath).GetWithoutUserDetails();
         if (info==CONTAINER_FOLDERNAME)
-        {
-          URIUtils::RemoveSlashAtEnd(strLabel);
-          strLabel=URIUtils::GetFileName(strLabel);
-        }
+          strLabel = ((CGUIMediaWindow*)window)->CurrentDirectory().GetLabel();
+        else
+          strLabel = CURL(((CGUIMediaWindow*)window)->CurrentDirectory().m_strPath).GetWithoutUserDetails();
       }
       break;
     }
@@ -1636,6 +1636,7 @@ int CGUIInfoManager::GetInt(int info, int contextWindow) const
     case PLAYER_AUDIO_DELAY:
       return g_application.GetAudioDelay();
     case PLAYER_PROGRESS:
+    case PLAYER_PROGRESS_CACHE:
     case PLAYER_SEEKBAR:
     case PLAYER_CACHELEVEL:
     case PLAYER_CHAPTER:
@@ -1647,6 +1648,8 @@ int CGUIInfoManager::GetInt(int info, int contextWindow) const
           {
           case PLAYER_PROGRESS:
             return (int)(g_application.GetPercentage());
+          case PLAYER_PROGRESS_CACHE:
+            return (int)(g_application.GetCachePercentage());
           case PLAYER_SEEKBAR:
             {
               CGUIDialogSeekBar *seekBar = (CGUIDialogSeekBar*)g_windowManager.GetWindow(WINDOW_DIALOG_SEEK_BAR);
@@ -1770,8 +1773,6 @@ bool CGUIInfoManager::GetBool(int condition1, int contextWindow, const CGUIListI
 #else
     bReturn = false;
 #endif
-  else if (condition == SYSTEM_PLATFORM_XBOX)
-    bReturn = false;
   else if (condition == SYSTEM_MEDIA_DVD)
     bReturn = g_mediaManager.IsDiscInDrive();
 #ifdef HAS_DVD_DRIVE
@@ -1820,6 +1821,8 @@ bool CGUIInfoManager::GetBool(int condition1, int contextWindow, const CGUIListI
     bReturn = g_settings.GetMasterProfile().getLockMode() != LOCK_MODE_EVERYONE && g_passwordManager.bMasterUser;
   else if (condition == SYSTEM_LOGGEDON)
     bReturn = !(g_windowManager.GetActiveWindow() == WINDOW_LOGIN_SCREEN);
+  else if (condition == SYSTEM_SHOW_EXIT_BUTTON)
+    bReturn = g_advancedSettings.m_showExitButton;
   else if (condition == SYSTEM_HAS_LOGINSCREEN)
     bReturn = g_settings.UsingLoginScreen();
   else if (condition == WEATHER_IS_FETCHED)
@@ -2047,7 +2050,7 @@ bool CGUIInfoManager::GetBool(int condition1, int contextWindow, const CGUIListI
       }
     break;
     case VISUALISATION_ENABLED:
-      bReturn = g_guiSettings.GetString("musicplayer.visualisation") != "None";
+      bReturn = !g_guiSettings.GetString("musicplayer.visualisation").IsEmpty();
     break;
     default: // default, use integer value different from 0 as true
       bReturn = GetInt(condition) != 0;
@@ -3066,15 +3069,7 @@ CStdString CGUIInfoManager::GetMusicTagLabel(int info, const CFileItem *item) co
     }
     break;
   case MUSICPLAYER_DISC_NUMBER:
-    {
-      CStdString strDisc;
-      if (tag.Loaded() && tag.GetDiscNumber() > 0)
-      {
-        strDisc.Format("%02i", tag.GetDiscNumber());
-        return strDisc;
-      }
-    }
-    break;
+    return GetItemLabel(item, LISTITEM_DISC_NUMBER);
   case MUSICPLAYER_RATING:
     return GetItemLabel(item, LISTITEM_RATING);
   case MUSICPLAYER_COMMENT:
@@ -3343,26 +3338,11 @@ void CGUIInfoManager::SetCurrentMovie(CFileItem &item)
   *m_currentFile = item;
 
   CVideoDatabase dbs;
-  dbs.Open();
-  if (dbs.HasMovieInfo(item.m_strPath))
+  if (dbs.Open())
   {
-    dbs.GetMovieInfo(item.m_strPath, *m_currentFile->GetVideoInfoTag());
-    CLog::Log(LOGDEBUG,"%s, got movie info!", __FUNCTION__);
-    CLog::Log(LOGDEBUG,"  Title = %s", m_currentFile->GetVideoInfoTag()->m_strTitle.c_str());
+    dbs.LoadVideoInfo(item.m_strPath, *m_currentFile->GetVideoInfoTag());
+    dbs.Close();
   }
-  else if (dbs.HasEpisodeInfo(item.m_strPath))
-  {
-    dbs.GetEpisodeInfo(item.m_strPath, *m_currentFile->GetVideoInfoTag());
-    CLog::Log(LOGDEBUG,"%s, got episode info!", __FUNCTION__);
-    CLog::Log(LOGDEBUG,"  Title = %s", m_currentFile->GetVideoInfoTag()->m_strTitle.c_str());
-  }
-  else if (dbs.HasMusicVideoInfo(item.m_strPath))
-  {
-    dbs.GetMusicVideoInfo(item.m_strPath, *m_currentFile->GetVideoInfoTag());
-    CLog::Log(LOGDEBUG,"%s, got music video info!", __FUNCTION__);
-    CLog::Log(LOGDEBUG,"  Title = %s", m_currentFile->GetVideoInfoTag()->m_strTitle.c_str());
-  }
-  dbs.Close();
 
   // Find a thumb for this file.
   item.SetVideoThumb();
@@ -3769,6 +3749,13 @@ CStdString CGUIInfoManager::GetItemLabel(const CFileItem *item, int info) const
         track.Format("%i", item->GetMusicInfoTag()->GetTrackNumber());
 
       return track;
+    }
+  case LISTITEM_DISC_NUMBER:
+    {
+      CStdString disc;
+      if (item->HasMusicInfoTag() && item->GetMusicInfoTag()->GetDiscNumber() > 0)
+        disc.Format("%i", item->GetMusicInfoTag()->GetDiscNumber());
+      return disc;
     }
   case LISTITEM_ARTIST:
     if (item->HasVideoInfoTag())

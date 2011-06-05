@@ -25,7 +25,7 @@
 #include "dialogs/GUIDialogKeyboard.h"
 #include "dialogs/GUIDialogNumeric.h"
 #include "LocalizeStrings.h"
-#include "DateTime.h"
+#include "XBDateTime.h"
 #include "utils/md5.h"
 
 #ifdef __APPLE__
@@ -527,7 +527,7 @@ void CGUIEditControl::OnSMSCharacter(unsigned int key)
 
 void CGUIEditControl::OnPasteClipboard()
 {
-#ifdef __APPLE__
+#if defined(__APPLE__) && !defined(__arm__)
   const char *szStr = Cocoa_Paste();
   if (szStr)
   {

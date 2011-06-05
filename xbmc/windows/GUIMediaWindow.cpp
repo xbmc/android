@@ -321,7 +321,8 @@ bool CGUIMediaWindow::OnMessage(CGUIMessage& message)
       }
       else if (message.GetParam1() == GUI_MSG_REMOVED_MEDIA)
       {
-        if (m_vecItems->IsVirtualDirectoryRoot() && IsActive())
+        if ((m_vecItems->IsVirtualDirectoryRoot() ||
+             m_vecItems->m_strPath.Left(10).Equals("sources://")) && IsActive())
         {
           int iItem = m_viewControl.GetSelectedItem();
           Update(m_vecItems->m_strPath);
@@ -344,7 +345,8 @@ bool CGUIMediaWindow::OnMessage(CGUIMessage& message)
       }
       else if (message.GetParam1()==GUI_MSG_UPDATE_SOURCES)
       { // State of the sources changed, so update our view
-        if (m_vecItems->IsVirtualDirectoryRoot() && IsActive())
+        if ((m_vecItems->IsVirtualDirectoryRoot() ||
+             m_vecItems->m_strPath.Left(10).Equals("sources://")) && IsActive())
         {
           int iItem = m_viewControl.GetSelectedItem();
           Update(m_vecItems->m_strPath);
@@ -725,6 +727,9 @@ bool CGUIMediaWindow::Update(const CStdString &strDirectory)
     return false;
   }
 
+  if (items.GetLabel().IsEmpty())
+    items.SetLabel(CUtil::GetTitleFromPath(items.m_strPath, true));
+
   ClearFileItems();
   m_vecItems->Copy(items);
 
@@ -734,10 +739,17 @@ bool CGUIMediaWindow::Update(const CStdString &strDirectory)
     m_history.ClearPathHistory();
 
   int iWindow = GetID();
-  bool bOkay = (iWindow == WINDOW_MUSIC_FILES || iWindow == WINDOW_VIDEO_FILES || iWindow == WINDOW_FILES || iWindow == WINDOW_PICTURES || iWindow == WINDOW_PROGRAMS);
-  if (strDirectory.IsEmpty() && bOkay && (m_vecItems->Size() == 0 || !m_guiState->DisableAddSourceButtons())) // add 'add source button'
+  int showLabel = 0;
+  if (strDirectory.IsEmpty() && (iWindow == WINDOW_MUSIC_FILES ||
+                                 iWindow == WINDOW_FILES ||
+                                 iWindow == WINDOW_PICTURES ||
+                                 iWindow == WINDOW_PROGRAMS))
+    showLabel = 1026;
+  if (strDirectory.Equals("sources://video/"))
+    showLabel = 999;
+  if (showLabel && (m_vecItems->Size() == 0 || !m_guiState->DisableAddSourceButtons())) // add 'add source button'
   {
-    CStdString strLabel = g_localizeStrings.Get(1026);
+    CStdString strLabel = g_localizeStrings.Get(showLabel);
     CFileItemPtr pItem(new CFileItem(strLabel));
     pItem->m_strPath = "add";
     pItem->SetIconImage("DefaultAddSource.png");
@@ -846,9 +858,9 @@ bool CGUIMediaWindow::OnClick(int iItem)
     GoParentFolder();
     return true;
   }
-  if (pItem->m_strPath == "add" && pItem->GetLabel() == g_localizeStrings.Get(1026)) // 'add source button' in empty root
+  if (pItem->m_strPath == "add" || pItem->m_strPath == "sources://add/") // 'add source button' in empty root
   {
-    OnContextButton(0, CONTEXT_BUTTON_ADD_SOURCE);
+    OnContextButton(iItem, CONTEXT_BUTTON_ADD_SOURCE);
     return true;
   }
 
@@ -872,7 +884,7 @@ bool CGUIMediaWindow::OnClick(int iItem)
     {
 #ifdef HAS_PYTHON
       if (!g_pythonParser.StopScript(addon->LibPath()))
-        g_pythonParser.evalFile(addon->LibPath());
+        g_pythonParser.evalFile(addon->LibPath(),addon);
 #endif
       return true;
     }
@@ -1019,8 +1031,6 @@ void CGUIMediaWindow::ShowShareErrorMessage(CFileItem* pItem)
 
     if (pItem->m_iDriveType != CMediaSource::SOURCE_TYPE_REMOTE) //  Local shares incl. dvd drive
       idMessageText=15300;
-    else if (url.GetProtocol() == "xbms" && strHostName.IsEmpty()) //  xbms server discover
-      idMessageText=15302;
     else if (url.GetProtocol() == "smb" && strHostName.IsEmpty()) //  smb workgroup
       idMessageText=15303;
     else  //  All other remote shares

@@ -50,6 +50,8 @@ public:
   bool HasStreamDetails() const;
   bool IsEmpty() const;
 
+  CStdString m_basePath; // the base path of the video, for folder-based lookups
+  int m_parentPathID;      // the parent path id where the base path of the video lies
   CStdString m_strDirector;
   CStdString m_strWritingCredits;
   CStdString m_strGenre;

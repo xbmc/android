@@ -155,6 +155,8 @@ public:
   virtual bool SeekScene(bool bPlus = true);
   virtual void SeekPercentage(float iPercent);
   virtual float GetPercentage();
+  virtual float GetCachePercentage();
+
   virtual void SetVolume(long nVolume)                          { m_dvdPlayerAudio.SetVolume(nVolume); }
   virtual void SetDynamicRangeCompression(long drc)             { m_dvdPlayerAudio.SetDynamicRangeCompression(drc); }
   virtual void GetAudioInfo(CStdString& strAudioInfo);
@@ -222,6 +224,7 @@ public:
   , CACHESTATE_FULL     // player is filling up the demux queue
   , CACHESTATE_INIT     // player is waiting for first packet of each stream
   , CACHESTATE_PLAY     // player is waiting for players to not be stalled
+  , CACHESTATE_FLUSH    // temporary state player will choose startup between init or full
   };
 
   virtual bool IsCaching() const { return m_caching == CACHESTATE_FULL; }
@@ -262,6 +265,11 @@ protected:
   void SetCaching(ECacheState state);
 
   __int64 GetTotalTimeInMsec();
+
+  double GetQueueTime();
+  bool GetCachingTimes(double& play_left, double& cache_left, double& file_offset);
+
+
   void FlushBuffers(bool queued, double pts = DVD_NOPTS_VALUE, bool accurate = true);
 
   void HandleMessages();
@@ -295,6 +303,7 @@ protected:
   std::string m_mimetype;  // hold a hint to what content file contains (mime type)
   ECacheState m_caching;
   CFileItem   m_item;
+
 
   CCurrentStream m_CurrentAudio;
   CCurrentStream m_CurrentVideo;
@@ -363,6 +372,10 @@ protected:
       recording     = false;
       demux_video   = "";
       demux_audio   = "";
+      cache_bytes   = 0;
+      cache_level   = 0.0;
+      cache_delay   = 0.0;
+      cache_offset  = 0.0;
     }
 
     double timestamp;         // last time of update
@@ -383,6 +396,11 @@ protected:
 
     std::string demux_video;
     std::string demux_audio;
+
+    __int64 cache_bytes;   // number of bytes current's cached
+    double  cache_level;   // current estimated required cache level
+    double  cache_delay;   // time until cache is expected to reach estimated level
+    double  cache_offset;  // percentage of file ahead of current position
   } m_State;
   CCriticalSection m_StateSection;
 

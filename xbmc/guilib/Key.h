@@ -29,7 +29,6 @@
  *
  */
 
-#include "input/XBIRRemote.h"
 #include "utils/StdString.h"
 
 // Analogue - don't change order
@@ -76,6 +75,12 @@
 #define KEY_VKEY            0xF000 // a virtual key/functional key e.g. cursor left
 #define KEY_ASCII           0xF100 // a printable character in the range of TRUE ASCII (from 0 to 127) // FIXME make it clean and pure unicode! remove the need for KEY_ASCII
 #define KEY_UNICODE         0xF200 // another printable character whose range is not included in this KEY code
+
+// 0xE000 -> 0xE0FF is reserved for mouse actions
+#define KEY_MOUSE           0xE000
+
+// 0xD000 -> 0xD0FF is reserved for WM_APPCOMMAND messages
+#define KEY_APPCOMMAND      0xD000
 
 #define KEY_INVALID         0xFFFF
 
@@ -290,6 +295,11 @@
 
 #define ACTION_PLAYER_PLAYPAUSE       227 // Play/pause. If playing it pauses, if paused it plays.
 
+// The NOOP action can be specified to disable an input event. This is
+// useful in user keyboard.xml etc to disable actions specified in the
+// system mappings.
+#define ACTION_NOOP                   999
+
 // Window ID defines to make the code a bit more readable
 #define WINDOW_INVALID                     9999
 #define WINDOW_HOME                       10000
@@ -364,6 +374,7 @@
 #define WINDOW_DIALOG_SLIDER              10145
 #define WINDOW_DIALOG_ADDON_INFO          10146
 #define WINDOW_DIALOG_TEXT_VIEWER         10147
+#define WINDOW_DIALOG_PLAY_EJECT          10148
 
 #define WINDOW_MUSIC_PLAYLIST             10500
 #define WINDOW_MUSIC_FILES                10501

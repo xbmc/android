@@ -19,21 +19,8 @@
  *
  */
 
-#include "system.h"
-#if (defined USE_EXTERNAL_PYTHON)
-  #if (defined HAVE_LIBPYTHON2_6)
-    #include <python2.6/Python.h>
-  #elif (defined HAVE_LIBPYTHON2_5)
-    #include <python2.5/Python.h>
-  #elif (defined HAVE_LIBPYTHON2_4)
-    #include <python2.4/Python.h>
-  #else
-    #error "Could not determine version of Python to use."
-  #endif
-#else
-  #include "python/Include/Python.h"
-#endif
-#include "../XBPythonDll.h"
+#include <Python.h>
+
 #include "player.h"
 #include "pyplaylist.h"
 #include "keyboard.h"
@@ -64,6 +51,7 @@
 #include "settings/Settings.h"
 #include "guilib/LocalizeStrings.h"
 #include "utils/FileUtils.h"
+#include "pythreadstate.h"
 
 // include for constants
 #include "pyutil.h"
@@ -266,6 +254,8 @@ namespace PYXBMC
     "\n"
     "List of functions - http://wiki.xbmc.org/?title=List_of_Built_In_Functions \n"
     "\n"
+    "NOTE: This function is executed asynchronously, so do not rely on it being done immediately\n"
+    "\n"
     "example:\n"
     "  - xbmc.executebuiltin('XBMC.RunXBE(c:\\\\avalaunch.xbe)')\n");
 
@@ -379,9 +369,9 @@ namespace PYXBMC
     long i = PyInt_AsLong(pObject);
     //while(i != 0)
     //{
-      Py_BEGIN_ALLOW_THREADS
+      CPyThreadState pyState;
       Sleep(i);//(500);
-      Py_END_ALLOW_THREADS
+      pyState.Restore();
 
       PyXBMC_MakePendingCalls();
       //i = PyInt_AsLong(pObject);
@@ -981,9 +971,10 @@ namespace PYXBMC
     
     CStdString strSize;
     CStdString strHash;
-    Py_BEGIN_ALLOW_THREADS
+
+    CPyThreadState pyState;
     CFileUtils::SubtitleFileSizeAndHash(strSource, strSize, strHash);
-    Py_END_ALLOW_THREADS
+    pyState.Restore();
     
     return Py_BuildValue((char*)"ss",strSize.c_str(), strHash.c_str());
   } 

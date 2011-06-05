@@ -29,7 +29,7 @@
 #include <fcntl.h>
 
 #ifdef _WIN32
-#pragma comment(lib, "../../lib/win32/libssh_win32/lib/libssh.lib")
+#pragma comment(lib, "ssh.lib")
 #endif
 
 #ifdef _MSC_VER
@@ -475,9 +475,6 @@ void CFileSFTP::Close()
 
 int64_t CFileSFTP::Seek(int64_t iFilePosition, int iWhence)
 {
-  if(iWhence == SEEK_POSSIBLE)
-    return 1;
-
   if (m_session && m_sftp_handle)
   {
     uint64_t position = 0;
@@ -570,4 +567,13 @@ int64_t CFileSFTP::GetPosition()
   CLog::Log(LOGERROR, "SFTPFile: Can't get position without a filehandle");
   return 0;
 }
+
+int CFileSFTP::IoControl(EIoControl request, void* param)
+{
+  if(request == IOCTRL_SEEK_POSSIBLE)
+    return 1;
+
+  return -1;
+}
+
 #endif

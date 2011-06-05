@@ -19,23 +19,8 @@
  *
  */
 
-#if (defined HAVE_CONFIG_H) && (!defined WIN32)
-  #include "config.h"
-#endif
-#if (defined USE_EXTERNAL_PYTHON)
-  #if (defined HAVE_LIBPYTHON2_6)
-    #include <python2.6/Python.h>
-  #elif (defined HAVE_LIBPYTHON2_5)
-    #include <python2.5/Python.h>
-  #elif (defined HAVE_LIBPYTHON2_4)
-    #include <python2.4/Python.h>
-  #else
-    #error "Could not determine version of Python to use."
-  #endif
-#else
-  #include "python/Include/Python.h"
-#endif
-#include "../XBPythonDll.h"
+#include <Python.h>
+
 #include "listitem.h"
 #include "pyutil.h"
 #include "video/VideoInfoTag.h"
@@ -432,12 +417,12 @@ namespace PYXBMC
     }
 
     PyObject *key, *value;
-    int pos = 0;
+    Py_ssize_t pos = 0;
 
     PyXBMCGUILock();
 
     CStdString tmp;
-    while (PyDict_Next(pInfoLabels, (Py_ssize_t*)&pos, &key, &value)) {
+    while (PyDict_Next(pInfoLabels, &pos, &key, &value)) {
       if (strcmpi(cType, "video") == 0)
       {
         if (strcmpi(PyString_AsString(key), "year") == 0)

@@ -387,7 +387,7 @@
   <string id="426">No CD information found</string>
   <string id="427">Disc</string>
   <string id="428">Insert correct CD/DVD</string>
-  <string id="429">Please insert the following CD/DVD</string>
+  <string id="429">Please insert the following disc:</string>
   <string id="430">Sort by: DVD#</string>
   <string id="431">No cache</string>
   <string id="432">Remove movie from library</string>
@@ -706,6 +706,8 @@
   <string id="851">Valid port range is 1-65535</string>
   <string id="852">Valid port range is 1024-65535</string>
 
+  <string id="998">Add Music...</string>
+  <string id="999">Add Videos...</string>
   <string id="1000">- Preview</string>
   <string id="1001">Unable to connect</string>
   <string id="1002">XBMC was unable to connect to the network location.</string>
@@ -1219,6 +1221,7 @@
   <string id="13429">Allow hardware acceleration (VDADecoder)</string>
   <string id="13430">Allow hardware acceleration (OpenMax)</string>
   <string id="13431">Pixel Shaders</string>
+  <string id="13432">Allow hardware acceleration (VideoToolbox)</string>
 
   <string id="13500">A/V sync method</string>
   <string id="13501">Audio clock</string>
@@ -2162,6 +2165,8 @@
   <string id="24041">Install from zip file</string>
   <string id="24042">Downloading %i%%</string>
   <string id="24043">Available Updates</string>
+  <string id="24044">Dependencies not met</string>
+  <string id="24045">Add-on does not have the correct structure</string>
 
   <string id="24050">Available Add-ons</string>
   <string id="24051">Version:</string>
@@ -2277,6 +2282,11 @@
   <string id="33081">This file is stacked, select the part you want to play from.</string>
   <string id="33082">Path to script</string>
   <string id="33083">Enable custom script button</string>
+
+  <string id="33100">Failed to start</string>
+  <string id="33101">Webserver</string>
+  <string id="33102">Event Server</string>
+  <string id="33103">Remote communication server</string>
 
   <!-- translators: no need to add these to your language files -->
   <string id="34000">Lame</string>

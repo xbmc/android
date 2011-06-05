@@ -78,6 +78,8 @@ void CVideoInfoTag::Reset()
   m_streamDetails.Reset();
   m_playCount = 0;
   m_fEpBookmark = 0;
+  m_basePath = "";
+  m_parentPathID = -1;
 }
 
 bool CVideoInfoTag::Save(TiXmlNode *node, const CStdString &tag, bool savePathInfo)
@@ -141,6 +143,7 @@ bool CVideoInfoTag::Save(TiXmlNode *node, const CStdString &tag, bool savePathIn
     XMLUtils::SetString(movie, "file", m_strFile);
     XMLUtils::SetString(movie, "path", m_strPath);
     XMLUtils::SetString(movie, "filenameandpath", m_strFileNameAndPath);
+    XMLUtils::SetString(movie, "basepath", m_basePath);
   }
   if (!m_strEpisodeGuide.IsEmpty())
   {
@@ -302,6 +305,8 @@ void CVideoInfoTag::Archive(CArchive& ar)
     ar << dynamic_cast<IArchivable&>(m_streamDetails);
     ar << m_strShowLink;
     ar << m_fEpBookmark;
+    ar << m_basePath;
+    ar << m_parentPathID;
   }
   else
   {
@@ -367,6 +372,8 @@ void CVideoInfoTag::Archive(CArchive& ar)
     ar >> dynamic_cast<IArchivable&>(m_streamDetails);
     ar >> m_strShowLink;
     ar >> m_fEpBookmark;
+    ar >> m_basePath;
+    ar >> m_parentPathID;
   }
 }
 
@@ -383,10 +390,13 @@ void CVideoInfoTag::Serialize(CVariant& value)
   value["votes"] = m_strVotes;
   value["studio"] = m_strStudio;
   value["trailer"] = m_strTrailer;
+  value["cast"] = CVariant(CVariant::VariantTypeArray);
   for (unsigned int i = 0; i < m_cast.size(); ++i)
   {
-    value["cast"][i]["name"] = m_cast[i].strName;
-    value["cast"][i]["role"] = m_cast[i].strRole;
+    CVariant actor;
+    actor["name"] = m_cast[i].strName;
+    actor["role"] = m_cast[i].strRole;
+    value["cast"].push_back(actor);
   }
   value["set"] = m_strSet;
   value["runtime"] = m_strRuntime;
@@ -396,6 +406,7 @@ void CVideoInfoTag::Serialize(CVariant& value)
   value["mpaa"] = m_strMPAARating;
   value["filenameandpath"] = m_strFileNameAndPath;
   value["originaltitle"] = m_strOriginalTitle;
+  value["sorttitle"] = m_strSortTitle;
   value["episodeguide"] = m_strEpisodeGuide;
   value["premiered"] = m_strPremiered;
   value["status"] = m_strStatus;
@@ -478,6 +489,7 @@ void CVideoInfoTag::ParseNative(const TiXmlElement* movie)
   XMLUtils::GetString(movie, "aired", m_strFirstAired);
   XMLUtils::GetString(movie, "album", m_strAlbum);
   XMLUtils::GetString(movie, "trailer", m_strTrailer);
+  XMLUtils::GetString(movie, "basepath", m_basePath);
 
   const TiXmlElement* thumb = movie->FirstChildElement("thumb");
   while (thumb)

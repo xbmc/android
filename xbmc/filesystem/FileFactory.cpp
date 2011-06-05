@@ -37,9 +37,6 @@
 #include "FileSmb.h"
 #endif
 #endif
-#ifdef HAS_FILESYSTEM_CCX
-#include "FileXBMSP.h"
-#endif
 #ifdef HAS_FILESYSTEM_CDDA
 #include "FileCDDA.h"
 #endif
@@ -72,6 +69,7 @@
 #include "FileUDF.h"
 #include "MythFile.h"
 #include "HDHomeRun.h"
+#include "Slingbox.h"
 #include "Application.h"
 #include "URL.h"
 #include "utils/log.h"
@@ -114,6 +112,7 @@ IFile* CFileFactory::CreateLoader(const CURL& url)
   else if (strProtocol == "iso9660") return new CFileISO();
 #endif
   else if(strProtocol == "udf") return new CFileUDF();
+
   if( g_application.getNetwork().IsAvailable() )
   {
     if (strProtocol == "http"
@@ -131,6 +130,7 @@ IFile* CFileFactory::CreateLoader(const CURL& url)
     else if (strProtocol == "lastfm") return new CFileLastFM();
     else if (strProtocol == "tuxbox") return new CFileTuxBox();
     else if (strProtocol == "hdhomerun") return new CFileHomeRun();
+    else if (strProtocol == "sling") return new CSlingboxFile();
     else if (strProtocol == "myth") return new CMythFile();
     else if (strProtocol == "cmyth") return new CMythFile();
 #ifdef HAS_FILESYSTEM_SMB
@@ -140,9 +140,6 @@ IFile* CFileFactory::CreateLoader(const CURL& url)
     else if (strProtocol == "smb") return new CFileSMB();
 #endif
 #endif
-#ifdef HAS_FILESYSTEM_CCX
-    else if (strProtocol == "xbms") return new CFileXBMSP();
-#endif
 #ifdef HAS_FILESYSTEM
 #ifdef HAS_FILESYSTEM_RTV
     else if (strProtocol == "rtv") return new CFileRTV();
@@ -151,8 +148,6 @@ IFile* CFileFactory::CreateLoader(const CURL& url)
     else if (strProtocol == "daap") return new CFileDAAP();
 #endif
 #endif
-    else if (strProtocol == "myth") return new CMythFile();
-    else if (strProtocol == "cmyth") return new CMythFile();
 #ifdef HAS_FILESYSTEM_SAP
     else if (strProtocol == "sap") return new CSAPFile();
 #endif

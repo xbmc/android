@@ -1,0 +1,43 @@
+include Makefile.include
+
+BUILDTOOLS = gas-preprocessor help2man autoconf automake libtool pkg-config yasm cmake tar dpkg
+
+SUBDIRS := \
+	Backrow pcre expat gettext readline sqlite3 \
+	liblzo2 freetype2 fontconfig \
+	openssl libssh2 curl \
+	jpeg tiff libpng libogg \
+	libvorbis libflac libmad fribidi libwavpack libmpeg2 \
+	libass libcdio libsamplerate librtmp libcrystalhd \
+	libGLEW libsdl libsdl_mixer libsdl_image \
+	libmicrohttpd libmodplug libbluray libyajl \
+	samba python26 mysqlclient boost \
+
+ifeq ($(DARWIN), ios)
+  EXCLUDED = libcrystalhd libGLEW libsdl libsdl_mixer libsdl_image
+else
+  EXCLUDED = Backrow
+endif
+SUBDIRS := $(filter-out $(EXCLUDED),$(SUBDIRS))
+
+.PHONY: $(BUILDTOOLS) $(SUBDIRS)
+
+all: $(BUILDTOOLS) $(SUBDIRS)
+
+$(BUILDTOOLS):
+	$(MAKE) -C $@
+
+$(SUBDIRS):
+	$(MAKE) -C $@
+
+clean:
+	for d in $(BUILDTOOLS); do if test -f $$d/Makefile; then $(MAKE) -C $$d clean; fi; done
+	for d in $(SUBDIRS); do if test -f $$d/Makefile; then $(MAKE) -C $$d clean; fi; done
+
+distclean::
+	for d in $(BUILDTOOLS); do if test -f $$d/Makefile; then $(MAKE) -C $$d distclean; fi; done
+	for d in $(SUBDIRS); do if test -f $$d/Makefile; then $(MAKE) -C $$d distclean; fi; done
+	find . -name .gitignore  -exec rm -rf {} \;
+	rm -rf $(TOOLCHAIN)
+	rm -rf $(PREFIX)
+	rm -f Makefile Makefile.include config.site config.site.mk config.log config.status configure

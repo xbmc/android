@@ -73,7 +73,7 @@ CGUIViewState* CGUIViewState::GetViewState(int windowId, const CFileItemList& it
   if (url.GetProtocol()=="musicsearch")
     return new CGUIViewStateMusicSearch(items);
 
-  if (items.IsSmartPlayList())
+  if (items.IsSmartPlayList() || url.GetProtocol() == "upnp")
   {
     if (items.GetContent() == "songs")
       return new CGUIViewStateMusicSmartPlaylist(items);
@@ -361,7 +361,7 @@ void CGUIViewState::AddAddonsSource(const CStdString &content, const CStdString 
     source.strName = label;
     if (!thumb.IsEmpty() && g_TextureManager.HasTexture(thumb))
       source.m_strThumbnailImage = thumb;
-    source.m_iDriveType = CMediaSource::SOURCE_TYPE_REMOTE;
+    source.m_iDriveType = CMediaSource::SOURCE_TYPE_LOCAL;
     source.m_ignore = true;
     m_sources.push_back(source);
   }
@@ -399,6 +399,8 @@ void CGUIViewState::SetSortOrder(SORT_ORDER sortOrder)
 {
   if (GetSortMethod() == SORT_METHOD_NONE)
     m_sortOrder = SORT_ORDER_NONE;
+  else if (sortOrder == SORT_ORDER_NONE)
+    m_sortOrder = SORT_ORDER_ASC;
   else
     m_sortOrder = sortOrder;
 }
@@ -409,7 +411,8 @@ void CGUIViewState::LoadViewState(const CStdString &path, int windowID)
   if (db.Open())
   {
     CViewState state;
-    if (db.GetViewState(path, windowID, state))
+    if (db.GetViewState(path, windowID, state, g_guiSettings.GetString("lookandfeel.skin")) ||
+        db.GetViewState(path, windowID, state, ""))
     {
       SetViewAsControl(state.m_viewMode);
       SetSortMethod(state.m_sortMethod);
@@ -427,7 +430,7 @@ void CGUIViewState::SaveViewToDb(const CStdString &path, int windowID, CViewStat
     CViewState state(m_currentViewAsControl, GetSortMethod(), m_sortOrder);
     if (viewState)
       *viewState = state;
-    db.SetViewState(path, windowID, state);
+    db.SetViewState(path, windowID, state, g_guiSettings.GetString("lookandfeel.skin"));
     db.Close();
     if (viewState)
       g_settings.Save();

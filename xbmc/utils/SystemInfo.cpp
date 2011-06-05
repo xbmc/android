@@ -35,11 +35,12 @@
 #include "guilib/LocalizeStrings.h"
 #include "CPUInfo.h"
 #include "utils/TimeUtils.h"
-#include "log.h"
+#include "utils/log.h"
 #ifdef _WIN32
 #include "dwmapi.h"
 #endif
 #ifdef __APPLE__
+#include "osx/DarwinUtils.h"
 #include "osx/CocoaInterface.h"
 #endif
 
@@ -87,7 +88,7 @@ CSysData::INTERNET_STATE CSysInfoJob::GetInternetState()
 
 CStdString CSysInfoJob::GetMACAddress()
 {
-#if defined(HAS_LINUX_NETWORK)
+#if defined(HAS_LINUX_NETWORK) || defined(HAS_WIN32_NETWORK)
   CNetworkInterface* iface = g_application.getNetwork().GetFirstConnectedInterface();
   if (iface)
     return iface->GetMacAddress();
@@ -606,7 +607,7 @@ CStdString CSysInfo::GetHddSpaceInfo(int& percent, int drive, bool shortText)
   return strRet;
 }
 
-#if defined(_LINUX) && !defined(__APPLE__)
+#if defined(_LINUX) && !defined(__APPLE__) && !defined(__FreeBSD__)
 CStdString CSysInfo::GetLinuxDistro()
 {
   static const char* release_file[] = { "/etc/debian_version",
@@ -671,7 +672,14 @@ CStdString CSysInfo::GetUserAgent()
   result += "Windows; ";
   result += GetKernelVersion();
 #elif defined(__APPLE__)
+#if defined(__arm__)
+  result += "iOS; ";
+#else
   result += "Mac OS X; ";
+#endif
+  result += GetUnameVersion();
+#elif defined(__FreeBSD__)
+  result += "FreeBSD; ";
   result += GetUnameVersion();
 #elif defined(_LINUX)
   result += "Linux; ";
@@ -701,11 +709,38 @@ bool CSysInfo::IsAppleTV()
   return result;
 }
 
+bool CSysInfo::IsAppleTV2()
+{
+  bool        result = false;
+#if defined(__APPLE__) && defined(__arm__)
+  char        buffer[512];
+  size_t      len = 512;
+  std::string hw_machine = "unknown";
+
+  if (sysctlbyname("hw.machine", &buffer, &len, NULL, 0) == 0)
+    hw_machine = buffer;
+
+  if (hw_machine.find("AppleTV2,1") != std::string::npos)
+    result = true;
+#endif
+  return result;
+}
+
+bool CSysInfo::HasVideoToolBoxDecoder()
+{
+  bool        result = false;
+
+#if defined(HAVE_VIDEOTOOLBOXDECODER)
+  result = DarwinHasVideoToolboxDecoder();
+#endif
+  return result;
+}
+
 bool CSysInfo::HasVDADecoder()
 {
   bool        result = false;
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(__arm__)
   result = Cocoa_HasVDADecoder();
 #endif
   return result;

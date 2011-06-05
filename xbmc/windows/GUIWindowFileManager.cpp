@@ -621,7 +621,7 @@ void CGUIWindowFileManager::OnStart(CFileItem *pItem)
 #ifdef HAS_PYTHON
   if (pItem->IsPythonScript())
   {
-    g_pythonParser.evalFile(pItem->m_strPath.c_str());
+    g_pythonParser.evalFile(pItem->m_strPath.c_str(),ADDON::AddonPtr());
     return ;
   }
 #endif
@@ -1209,8 +1209,6 @@ void CGUIWindowFileManager::ShowShareErrorMessage(CFileItem* pItem)
 
     if (pItem->m_iDriveType!=CMediaSource::SOURCE_TYPE_REMOTE) //  Local shares incl. dvd drive
       idMessageText=15300;
-    else if (url.GetProtocol()=="xbms" && strHostName.IsEmpty()) //  xbms server discover
-      idMessageText=15302;
     else if (url.GetProtocol()=="smb" && strHostName.IsEmpty()) //  smb workgroup
       idMessageText=15303;
     else  //  All other remote shares

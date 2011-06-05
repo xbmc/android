@@ -29,7 +29,7 @@
 
 class CMutex;
 
-#if defined(_LINUX) && !defined(__APPLE__) && !defined(__ANDROID__)
+#if defined(_LINUX) && !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(__ANDROID__)
 #define _file _fileno
 #endif
 
