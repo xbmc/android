@@ -28,13 +28,16 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 
+#if defined(__ANDROID__)
+#include <sys/socket.h>
+#endif
+
 extern "C" {
 #include "libhts/net.h"
 #include "libhts/htsmsg.h"
 #include "libhts/htsmsg_binary.h"
 #include "libhts/sha1.h"
 }
-
 
 struct SContentType
 {

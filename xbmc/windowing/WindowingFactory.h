@@ -44,8 +44,12 @@
 #include "X11/WinSystemX11GL.h"
 #endif
 
-#if defined(HAS_EGL) && !defined(__APPLE__)
+#if defined(HAS_EGL) && !defined(__APPLE__) && !defined(__ANDROID__)
 #include "egl/WinSystemEGL.h"
+#endif
+
+#if defined(HAS_EGL) && defined(__ANDROID__)
+#include "android/WinSystemAndroid.h"
 #endif
 
 #endif // WINDOWING_FACTORY_H

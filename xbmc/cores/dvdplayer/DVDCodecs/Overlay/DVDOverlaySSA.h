@@ -29,6 +29,7 @@ class CDVDOverlaySSA : public CDVDOverlay
 {
 public:
 
+#if defined(HAS_LIBASS)
   CDVDSubtitlesLibass* m_libass;
 
   CDVDOverlaySSA(CDVDSubtitlesLibass* libass) : CDVDOverlay(DVDOVERLAY_TYPE_SSA)
@@ -42,5 +43,6 @@ public:
     if(m_libass)
       SAFE_RELEASE(m_libass);
   }
+#endif
 
 };

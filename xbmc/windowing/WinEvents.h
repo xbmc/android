@@ -44,6 +44,9 @@ public:
 #if defined(__APPLE__) && defined(__arm__)
 #include "osx/WinEventsIOS.h"
 #define CWinEvents CWinEventsIOS
+#elif defined(__ANDROID__)
+#include "android/WinEventsAndroid.h"
+#define CWinEvents CWinEventsAndroid
 #else
 #include "WinEventsSDL.h"
 #define CWinEvents CWinEventsSDL

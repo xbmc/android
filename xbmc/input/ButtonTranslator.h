@@ -26,9 +26,18 @@
 
 #include <map>
 #include "system.h" // for HAS_EVENT_SERVER, HAS_SDL_JOYSTICK, HAS_LIRC
+#include <utils/StdString.h>
 
 #ifdef HAS_EVENT_SERVER
 #include "network/EventClient.h"
+#endif
+
+#if defined(HAS_EVENT_SERVER)
+#warning("HAS_EVENT_SERVER")
+#endif
+
+#if defined(HAS_SDL_JOYSTICK)
+#warning("HAS_SDL_JOYSTICK")
 #endif
 
 #if defined(HAS_SDL_JOYSTICK) || defined(HAS_EVENT_SERVER)
@@ -38,6 +47,7 @@
 class CKey;
 class CAction;
 class TiXmlNode;
+class TiXmlElement;
 
 struct CButtonAction
 {

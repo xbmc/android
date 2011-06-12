@@ -11,6 +11,8 @@
 namespace std
 {
   typedef basic_string<wchar_t> wstring;
+  typedef basic_stringstream<wchar_t, char_traits<wchar_t> > wstringstream;
+
 }
 #endif
 

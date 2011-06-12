@@ -19,6 +19,8 @@
  *
  */
 
+#if defined(HAS_LIBASS)
+
 #include "DVDSubtitleParserSSA.h"
 #include "DVDCodecs/Overlay/DVDOverlaySSA.h"
 #include "DVDClock.h"
@@ -77,3 +79,5 @@ void CDVDSubtitleParserSSA::Dispose()
   }
   CDVDSubtitleParserCollection::Dispose();
 }
+
+#endif

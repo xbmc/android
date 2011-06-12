@@ -21,6 +21,7 @@
  *
  */
 
+#if defined(HAS_LIBASS)
 #include "DllLibass.h"
 #include "threads/CriticalSection.h"
 
@@ -53,4 +54,6 @@ private:
   ASS_Renderer* m_renderer;
   CCriticalSection m_section;
 };
+
+#endif
 

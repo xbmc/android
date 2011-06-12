@@ -119,7 +119,7 @@ endif
 LIB_DIRS=\
 	lib/cximage-6.0 \
 	lib/libexif \
-	lib/cmyth \
+	#lib/cmyth \
 	lib/libhdhomerun \
 	lib/libid3tag \
 	lib/libapetag \

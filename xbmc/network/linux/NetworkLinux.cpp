@@ -343,7 +343,7 @@ void CNetworkLinux::queryInterfaceList()
 std::vector<CStdString> CNetworkLinux::GetNameServers(void)
 {
    std::vector<CStdString> result;
-#ifndef __APPLE__
+#if !defined(__APPLE__) && !defined(__ANDROID__)
    res_init();
 
    for (int i = 0; i < _res.nscount; i ++)
@@ -357,6 +357,7 @@ std::vector<CStdString> CNetworkLinux::GetNameServers(void)
 
 void CNetworkLinux::SetNameServers(std::vector<CStdString> nameServers)
 {
+#if !defined(__ANDROID__)
    FILE* fp = fopen("/etc/resolv.conf", "w");
    if (fp != NULL)
    {
@@ -370,6 +371,7 @@ void CNetworkLinux::SetNameServers(std::vector<CStdString> nameServers)
    {
       // TODO:
    }
+#endif
 }
 
 std::vector<NetworkAccessPoint> CNetworkInterfaceLinux::GetAccessPoints(void)

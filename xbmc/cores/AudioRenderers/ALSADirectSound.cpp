@@ -1,4 +1,4 @@
-#ifndef __APPLE__
+#if !defined(__APPLE__) && !defined(__ANDROID__)
 /*
 * XBMC Media Center
 * Copyright (c) 2002 d7o3g4q and RUNTiME

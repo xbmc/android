@@ -339,7 +339,12 @@ bool CDatabase::Connect(DatabaseSettings &dbSettings, bool create)
   }
   else if (dbSettings.type.Equals("mysql"))
   {
+#if defined(__ANDROID__)
+    CLog::Log(LOGERROR, "MySQL not supported on android");
+    return false;
+#else
     m_pDB.reset( new MysqlDatabase() ) ;
+#endif
   }
   else
   {

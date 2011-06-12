@@ -40,7 +40,10 @@
   #include "CoreAudioRenderer.h"
 #endif
 #elif defined(_LINUX)
-#include "ALSADirectSound.h"
+#if defined(__ANDROID__)
+#else
+  #include "ALSADirectSound.h"
+#endif
 #endif
 
 #define ReturnOnValidInitialize(rendererName)    \
@@ -151,7 +154,7 @@ IAudioRenderer* CAudioRendererFactory::Create(IAudioCallback* pCallback, int iCh
   #else
     CreateAndReturnOnValidInitialize(CCoreAudioRenderer);
   #endif
-#elif defined(_LINUX)
+#elif defined(_LINUX) && !defined(__ANDROID__)
   CreateAndReturnOnValidInitialize(CALSADirectSound);
 #endif
 
@@ -177,7 +180,11 @@ void CAudioRendererFactory::EnumerateAudioSinks(AudioSinkList& vAudioSinks, bool
     CCoreAudioRenderer::EnumerateAudioSinks(vAudioSinks, passthrough);
   #endif
 #elif defined(_LINUX)
+  #if defined(__ANDROID__)
+    //CNullDirectSound::EnumerateAudioSinks(vAudioSinks, passthrough);
+  #else
   CALSADirectSound::EnumerateAudioSinks(vAudioSinks, passthrough);
+  #endif
 #endif
 }
 
@@ -203,7 +210,7 @@ IAudioRenderer *CAudioRendererFactory::CreateFromUri(const CStdString &soundsyst
     if (soundsystem.Equals("coreaudio"))
       ReturnNewRenderer(CCoreAudioRenderer);
   #endif
-#elif defined(_LINUX)
+#elif defined(_LINUX) && !defined(__ANDROID__)
   if (soundsystem.Equals("alsa"))
     ReturnNewRenderer(CALSADirectSound);
 #endif

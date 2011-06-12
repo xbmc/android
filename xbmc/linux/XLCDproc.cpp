@@ -26,6 +26,10 @@
 #include "settings/AdvancedSettings.h"
 #include "settings/GUISettings.h"
 
+#if defined(__ANDROID__)
+#include <netinet/in.h>
+#endif
+
 #include <netdb.h>
 
 #define SCROLL_SPEED_IN_MSEC 250

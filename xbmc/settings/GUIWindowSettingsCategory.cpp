@@ -66,7 +66,7 @@
 #include "LinuxTimezone.h"
 #include <dlfcn.h>
 #include "cores/AudioRenderers/AudioRendererFactory.h"
-#ifndef __APPLE__
+#if !defined(__APPLE__) && !defined(__ANDROID__)
 #include "cores/AudioRenderers/ALSADirectSound.h"
 #endif
 #ifdef HAS_HAL

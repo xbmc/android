@@ -78,6 +78,11 @@ private:
   static std::map<CStdString, CStdString> m_pathMap;
 };
 
+#if defined(__ANDROID__)
+#undef _P
+#endif
+
+// TODO _ is reserved for compiler extensions and should not be used by application code
 #define _P(x)     CSpecialProtocol::TranslatePath(x)
 #define PTH_IC(x) CSpecialProtocol::TranslatePathConvertCase(x)
 

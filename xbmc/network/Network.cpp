@@ -28,6 +28,9 @@
 #include "utils/log.h"
 #include "guilib/LocalizeStrings.h"
 
+#if defined(__ANDROID__)
+#include <sys/socket.h>
+#endif
 #include <arpa/inet.h>
 
 using namespace std;

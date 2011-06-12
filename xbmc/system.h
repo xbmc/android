@@ -30,7 +30,6 @@
  *****************/
 #define HAS_DVD_SWSCALE
 #define HAS_DVDPLAYER
-#define HAS_EVENT_SERVER
 #define HAS_KARAOKE
 #define HAS_SCREENSAVER
 #define HAS_PYTHON
@@ -52,8 +51,6 @@
 #endif
 
 #define HAS_FILESYSTEM
-#define HAS_FILESYSTEM_SMB
-#define HAS_FILESYSTEM_CDDA
 #define HAS_FILESYSTEM_RTV
 #define HAS_FILESYSTEM_DAAP
 #define HAS_FILESYSTEM_SAP
@@ -65,6 +62,9 @@
 /************************/
 #if !defined(__ANDROID__)
 #define HAS_SDL
+#define HAS_EVENT_SERVER
+#define HAS_FILESYSTEM_SMB
+#define HAS_FILESYSTEM_CDDA
 #endif
 
 /**********************
@@ -102,9 +102,10 @@
  * Mac Specific
  *****************/
 
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__ANDROID__)
   #if defined(__arm__)
     #undef HAS_SDL
+    #undef HAS_SDL_JOYSTICK // where does this define come from?
     #define HAS_XBMC_MUTEX
   #else
     #define HAS_GL
@@ -120,7 +121,7 @@
  * Linux Specific
  *****************/
 
-#if defined(_LINUX) && !defined(__APPLE__)
+#if defined(_LINUX) && !defined(__APPLE__) && !defined(__ANDROID__)
 #ifndef HAS_SDL_OPENGL
 #define HAS_SDL_OPENGL
 #endif
@@ -128,14 +129,15 @@
 #define HAS_ZEROCONF
 #define HAS_AVAHI
 #endif
+#warning("__LINUX__")
 #define HAS_LCD
 #define HAS_DBUS
 #define HAS_DBUS_SERVER
 #define HAS_GL
 #define HAS_GLX
 #define HAS_LINUX_NETWORK
-//#define HAS_SDL_AUDIO
 #define HAS_LIRC
+#define HAS_SDL_AUDIO
 #define HAS_SDL_WIN_EVENTS
 #ifdef HAVE_LIBPULSE
 #define HAS_PULSEAUDIO

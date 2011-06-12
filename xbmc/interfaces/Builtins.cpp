@@ -49,6 +49,7 @@
 #include "utils/RssReader.h"
 #include "PartyModeManager.h"
 #include "settings/Settings.h"
+#include "settings/GUISettings.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "Util.h"

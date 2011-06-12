@@ -22,6 +22,9 @@
 
 #include "utils/StdString.h"
 #include "threads/Thread.h"
+#if defined(__ANDROID__)
+#include <linux/socket.h>
+#endif
 #include <sys/socket.h>
 #include <netinet/in.h>
 

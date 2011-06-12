@@ -65,6 +65,10 @@ namespace ADDON
 #include "windowing/XBMC_events.h"
 #include "threads/Thread.h"
 
+#if defined(__ANDROID__)
+#include "threads/SingleLock.h"
+#endif
+
 #ifdef HAS_WEB_SERVER
 #include "network/WebServer.h"
 #endif
