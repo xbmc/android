@@ -327,8 +327,6 @@ DYNOBJSXBMC= \
 
 OBJSXBMC:=$(filter-out $(DYNOBJSXBMC), $(OBJSXBMC))
 
-LIBS += @PYTHON_LDFLAGS@
-
 libxbmc.so: $(OBJSXBMC) $(DYNOBJSXBMC)
 ifeq ($(findstring osx,@ARCH@), osx)
 	$(SILENT_LD) $(CXX) $(LDFLAGS) -shared -o $@ -Wl,-all_load,-ObjC $(DYNOBJSXBMC) $(OBJSXBMC) -rdynamic
