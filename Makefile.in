@@ -329,16 +329,15 @@ OBJSXBMC:=$(filter-out $(DYNOBJSXBMC), $(OBJSXBMC))
 
 libxbmc.so: $(OBJSXBMC) $(DYNOBJSXBMC)
 ifeq ($(findstring osx,@ARCH@), osx)
-	$(SILENT_LD) $(CXX) $(LDFLAGS) -shared -o $@ -Wl,-all_load,-ObjC $(DYNOBJSXBMC) $(OBJSXBMC) -rdynamic
-else
-	$(SILENT_LD) $(CXX) $(CXXFLAGS) -shared $(LDFLAGS) -o $@ -Wl,--whole-archive $(DYNOBJSXBMC) $(OBJSXBMC) -Wl,--no-whole-archive -rdynamic
+	$(SILENT_LD) $(CXX) $(LDFLAGS) -shared -o $@ -Wl,-all_load,-ObjC $(DYNOBJSXBMC) $(OBJSXBMC) $(LIBS) -rdynamic
+	$(SILENT_LD) $(CXX) $(CXXFLAGS) -shared $(LDFLAGS) -o $@ -Wl,--whole-archive $(DYNOBJSXBMC) $(OBJSXBMC) -Wl,--no-whole-archive $(LIBS) -rdynamic
 endif
 
 xbmc.bin: libxbmc.so $(MAIN)
 ifeq ($(findstring osx,@ARCH@), osx)
-	$(CXX) $(LDFLAGS) -o xbmc.bin -Wl,-all_load,-ObjC libxbmc.so $(MAIN) $(LIBS) -rdynamic -Wl,-rpath,$(DESTDIR)$(libdir)/xbmc
+	$(CXX) $(LDFLAGS) -o xbmc.bin -Wl,-all_load,-ObjC libxbmc.so $(MAIN) -rdynamic -Wl,-rpath,$(DESTDIR)$(libdir)/xbmc
 else
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o xbmc.bin -Wl,--whole-archive libxbmc.so $(MAIN) -Wl,--no-whole-archive $(LIBS) -rdynamic -Wl,-rpath,$(DESTDIR)$(libdir)/xbmc
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o xbmc.bin -Wl,--whole-archive libxbmc.so $(MAIN) -Wl,--no-whole-archive -rdynamic -Wl,-rpath,$(DESTDIR)$(libdir)/xbmc
 endif
 
 xbmc-xrandr: xbmc-xrandr.c
