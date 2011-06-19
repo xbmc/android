@@ -219,7 +219,7 @@ else
 skins:
 endif
 
-MAIN = xbmc/xbmc.o
+MAIN = xbmc/main.o
 # Setup some dependencies for subdir makes
 xbmc/cores/paplayer/paplayer.a: papcodecs
 $(DVDPLAYER_ARCHIVES)         : dvdpcodecs
