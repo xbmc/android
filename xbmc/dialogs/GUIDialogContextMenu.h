@@ -101,6 +101,7 @@ enum CONTEXT_BUTTON { CONTEXT_BUTTON_CANCELLED = 0,
                       CONTEXT_BUTTON_LASTFM_UNLOVE_ITEM,
                       CONTEXT_BUTTON_LASTFM_UNBAN_ITEM,
                       CONTEXT_BUTTON_SET_MOVIESET_THUMB,
+                      CONTEXT_BUTTON_SET_MOVIESET_FANART,
                       CONTEXT_BUTTON_DELETE_PLUGIN,
                       CONTEXT_BUTTON_PLAY_AND_QUEUE,
                       CONTEXT_BUTTON_USER1,
@@ -129,6 +130,7 @@ public:
   CGUIDialogContextMenu(void);
   virtual ~CGUIDialogContextMenu(void);
   virtual bool OnMessage(CGUIMessage &message);
+  virtual bool OnAction(const CAction& action);
   virtual void SetPosition(float posX, float posY);
 
   static bool SourcesMenu(const CStdString &strType, const CFileItemPtr item, float posX, float posY);
@@ -151,8 +153,8 @@ protected:
    */
   void PositionAtCurrentFocus();
 
-  float GetWidth();
-  float GetHeight();
+  virtual float GetWidth() const;
+  virtual float GetHeight() const;
   virtual void OnInitWindow();
   virtual void OnWindowLoaded();
   virtual void OnWindowUnload();

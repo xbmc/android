@@ -20,8 +20,12 @@
 */
 
 #include "system.h"
+#ifdef HAS_SDL_WIN_EVENTS
+
 #include "WinEvents.h"
+#include "WinEventsSDL.h"
 #include "Application.h"
+#include "guilib/GUIWindowManager.h"
 #ifdef HAS_SDL_JOYSTICK
 #include "input/SDLJoystick.h"
 #endif
@@ -37,8 +41,6 @@
 #include "input/XBMC_keysym.h"
 #include "utils/log.h"
 #endif
-
-#ifdef HAS_SDL_WIN_EVENTS
 
 PHANDLE_EVENT_FUNC CWinEventsBase::m_pEventFunc = NULL;
 
@@ -63,8 +65,8 @@ static uint16_t SymMappingsEvdev[][2] =
 , { 127, XBMCK_SPACE }               // Pause
 , { 135, XBMCK_MENU }                // Right click
 , { 136, XBMCK_MEDIA_STOP }          // Stop
-, { 138, 0x49 /* 'I' */}             // Info
-, { 147, 0x4d /* 'M' */}             // Menu
+, { 138, 0x69 /* 'i' */}             // Info
+, { 147, 0x6d /* 'm' */}             // Menu
 , { 148, XBMCK_LAUNCH_APP2 }         // Launch app 2
 , { 150, 0x9f }                      // Sleep
 , { 152, XBMCK_LAUNCH_APP1 }         // Launch app 1
@@ -76,13 +78,13 @@ static uint16_t SymMappingsEvdev[][2] =
 , { 172, XBMCK_MEDIA_PLAY_PAUSE }    // Play_Pause
 , { 173, XBMCK_MEDIA_PREV_TRACK }    // Prev track
 , { 174, XBMCK_MEDIA_STOP }          // Stop
-, { 176, 0x52 /* 'R' */}             // Rewind
+, { 176, 0x72 /* 'r' */}             // Rewind
 , { 179, XBMCK_LAUNCH_MEDIA_SELECT } // Launch media select
 , { 180, XBMCK_BROWSER_HOME }        // Browser home
 , { 181, XBMCK_BROWSER_REFRESH }     // Browser refresh
 , { 214, XBMCK_ESCAPE }              // Close
 , { 215, XBMCK_MEDIA_PLAY_PAUSE }    // Play_Pause
-, { 216, 0x46 /* 'F' */}             // Forward
+, { 216, 0x66 /* 'f' */}             // Forward
 //, {167, 0xb3 } // Record
 };
 
@@ -357,8 +359,8 @@ bool CWinEventsSDL::MessagePump()
         newEvent.type = XBMC_VIDEORESIZE;
         newEvent.resize.w = event.resize.w;
         newEvent.resize.h = event.resize.h;
-        newEvent.resize.type = event.resize.type;
         ret |= g_application.OnEvent(newEvent);
+        g_windowManager.MarkDirty();
         break;
       }
       case SDL_USEREVENT:
@@ -369,6 +371,9 @@ bool CWinEventsSDL::MessagePump()
         ret |= g_application.OnEvent(newEvent);
         break;
       }
+      case SDL_VIDEOEXPOSE:
+        g_windowManager.MarkDirty();
+        break;
     }
     memset(&event, 0, sizeof(XBMC_Event));
   }
@@ -389,7 +394,6 @@ bool CWinEventsSDL::ProcessOSXShortcuts(SDL_Event& event)
     switch(event.key.keysym.sym)
     {
     case SDLK_q:  // CMD-q to quit
-    case SDLK_w:  // CMD-w to quit
       if (!g_application.m_bStop)
         g_application.getApplicationMessenger().Quit();
       return true;

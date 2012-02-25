@@ -83,7 +83,8 @@ bool CPlayListM3U::Load(const CStdString& strFileName)
   while (file.ReadString(szLine, 1024))
   {
     strLine = szLine;
-    StringUtils::RemoveCRLF(strLine);
+    strLine.TrimRight(" \t\r\n");
+    strLine.TrimLeft(" \t");
 
     if (strLine.Left( (int)strlen(M3U_INFO_MARKER) ) == M3U_INFO_MARKER)
     {
@@ -105,6 +106,9 @@ bool CPlayListM3U::Load(const CStdString& strFileName)
     {
       CStdString strFileName = strLine;
 
+      if (strFileName.size() > 0 && strFileName[0] == '#')
+        continue; // assume a comment or something else we don't support
+
       // Skip self - do not load playlist recursively
       if (URIUtils::GetFileName(strFileName).Equals(m_strPlayListName))
         continue;
@@ -120,13 +124,12 @@ bool CPlayListM3U::Load(const CStdString& strFileName)
         }
 
         // should substitition occur befor or after charset conversion??
-        if (URIUtils::IsRemote(m_strBasePath) && g_advancedSettings.m_pathSubstitutions.size() > 0)
-          strFileName = CUtil::SubstitutePath(strFileName);
+        strFileName = URIUtils::SubstitutePath(strFileName);
 
         // Get the full path file name and add it to the the play list
         CUtil::GetQualifiedFilename(m_strBasePath, strFileName);
         CFileItemPtr newItem(new CFileItem(strInfo));
-        newItem->m_strPath = strFileName;
+        newItem->SetPath(strFileName);
         if (lDuration && newItem->IsAudio())
           newItem->GetMusicInfoTag()->SetDuration(lDuration);
         Add(newItem);

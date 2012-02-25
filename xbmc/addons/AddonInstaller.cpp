@@ -20,6 +20,7 @@
  */
 
 #include "AddonInstaller.h"
+#include "Service.h"
 #include "utils/log.h"
 #include "utils/URIUtils.h"
 #include "Util.h"
@@ -28,6 +29,7 @@
 #include "settings/GUISettings.h"
 #include "settings/Settings.h"
 #include "Application.h"
+#include "Favourites.h"
 #include "utils/JobManager.h"
 #include "dialogs/GUIDialogYesNo.h"
 #include "addons/AddonManager.h"
@@ -35,6 +37,8 @@
 #include "guilib/GUIWindowManager.h"      // for callback
 #include "GUIUserMessages.h"              // for callback
 #include "utils/StringUtils.h"
+#include "dialogs/GUIDialogKaiToast.h"
+#include "dialogs/GUIDialogProgress.h"
 
 using namespace std;
 using namespace XFILE;
@@ -66,6 +70,9 @@ CAddonInstaller &CAddonInstaller::Get()
 
 void CAddonInstaller::OnJobComplete(unsigned int jobID, bool success, CJob* job)
 {
+  if (success)
+    CAddonMgr::Get().FindAddons();
+
   CSingleLock lock(m_critSection);
   if (strncmp(job->GetType(), "repoupdate", 10) == 0)
   { // repo job finished
@@ -77,11 +84,8 @@ void CAddonInstaller::OnJobComplete(unsigned int jobID, bool success, CJob* job)
     JobMap::iterator i = find_if(m_downloadJobs.begin(), m_downloadJobs.end(), bind2nd(find_map(), jobID));
     if (i != m_downloadJobs.end())
       m_downloadJobs.erase(i);
-    lock.Leave();
   }
-
-  if (success)
-    CAddonMgr::Get().FindAddons();
+  lock.Leave();
 
   CGUIMessage msg(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_UPDATE);
   g_windowManager.SendThreadMessage(msg);
@@ -153,6 +157,53 @@ bool CAddonInstaller::Cancel(const CStdString &addonID)
   return false;
 }
 
+bool CAddonInstaller::PromptForInstall(const CStdString &addonID, AddonPtr &addon)
+{
+  // we assume that addons that are enabled don't get to this routine (i.e. that GetAddon() has been called)
+  if (CAddonMgr::Get().GetAddon(addonID, addon, ADDON_UNKNOWN, false))
+    return false; // addon is installed but disabled, and the user has specifically activated something that needs
+                  // the addon - should we enable it?
+
+  // check we have it available
+  CAddonDatabase database;
+  database.Open();
+  if (database.GetAddon(addonID, addon))
+  { // yes - ask user if they want it installed
+    if (!CGUIDialogYesNo::ShowAndGetInput(g_localizeStrings.Get(24076), g_localizeStrings.Get(24100),
+                                          addon->Name().c_str(), g_localizeStrings.Get(24101)))
+      return false;
+    if (Install(addonID, true))
+    {
+      CGUIDialogProgress *progress = (CGUIDialogProgress *)g_windowManager.GetWindow(WINDOW_DIALOG_PROGRESS);
+      if (progress)
+      {
+        progress->SetHeading(13413); // Downloading
+        progress->SetLine(0, "");
+        progress->SetLine(1, addon->Name());
+        progress->SetLine(2, "");
+        progress->SetPercentage(0);
+        progress->StartModal();
+        while (true)
+        {
+          progress->Progress();
+          unsigned int percent;
+          if (progress->IsCanceled())
+          {
+            Cancel(addonID);
+            break;
+          }
+          if (!GetProgress(addonID, percent))
+            break;
+          progress->SetPercentage(percent);
+        }
+        progress->Close();
+      }
+      return CAddonMgr::Get().GetAddon(addonID, addon);
+    }
+  }
+  return false;
+}
+
 bool CAddonInstaller::Install(const CStdString &addonID, bool force, const CStdString &referer, bool background)
 {
   AddonPtr addon;
@@ -191,7 +242,7 @@ bool CAddonInstaller::DoInstall(const AddonPtr &addon, const CStdString &hash, b
   //       missing deps.
   if (!CheckDependencies(addon))
   {
-    g_application.m_guiDialogKaiToast.QueueNotification(addon->Icon(), addon->Name(), g_localizeStrings.Get(24044), TOAST_DISPLAY_TIME, false);
+    CGUIDialogKaiToast::QueueNotification(addon->Icon(), addon->Name(), g_localizeStrings.Get(24044), TOAST_DISPLAY_TIME, false);
     return false;
   }
 
@@ -225,12 +276,12 @@ bool CAddonInstaller::InstallFromZip(const CStdString &path)
   URIUtils::CreateArchivePath(zipDir, "zip", path, "");
   if (!CDirectory::GetDirectory(zipDir, items) || items.Size() != 1 || !items[0]->m_bIsFolder)
   {
-    g_application.m_guiDialogKaiToast.QueueNotification("", path, g_localizeStrings.Get(24045), TOAST_DISPLAY_TIME, false);
+    CGUIDialogKaiToast::QueueNotification("", path, g_localizeStrings.Get(24045), TOAST_DISPLAY_TIME, false);
     return false;
   }
 
   // TODO: possibly add support for github generated zips here?
-  CStdString archive = URIUtils::AddFileToFolder(items[0]->m_strPath, "addon.xml");
+  CStdString archive = URIUtils::AddFileToFolder(items[0]->GetPath(), "addon.xml");
 
   TiXmlDocument xml;
   AddonPtr addon;
@@ -242,7 +293,7 @@ bool CAddonInstaller::InstallFromZip(const CStdString &path)
     // install the addon
     return DoInstall(addon);
   }
-  g_application.m_guiDialogKaiToast.QueueNotification("", path, g_localizeStrings.Get(24045), TOAST_DISPLAY_TIME, false);
+  CGUIDialogKaiToast::QueueNotification("", path, g_localizeStrings.Get(24045), TOAST_DISPLAY_TIME, false);
   return false;
 }
 
@@ -258,7 +309,8 @@ void CAddonInstaller::InstallFromXBMCRepo(const set<CStdString> &addonIDs)
 
 bool CAddonInstaller::CheckDependencies(const AddonPtr &addon)
 {
-  assert(addon.get());
+  if (!addon.get())
+    return true; // a NULL addon has no dependencies
   ADDONDEPS deps = addon->GetDeps();
   CAddonDatabase database;
   database.Open();
@@ -277,9 +329,9 @@ bool CAddonInstaller::CheckDependencies(const AddonPtr &addon)
         return false;
       }
     }
-    // at this point we have our dep, so check that it's OK as well
+    // at this point we have our dep, or the dep is optional (and we don't have it) so check that it's OK as well
     // TODO: should we assume that installed deps are OK?
-    if (!CheckDependencies(dep))
+    if (dep && !CheckDependencies(dep))
       return false;
   }
   return true;
@@ -321,6 +373,12 @@ void CAddonInstaller::UpdateRepos(bool force, bool wait)
       return;
     }
   }
+}
+
+bool CAddonInstaller::HasJob(const CStdString& ID) const
+{
+  CSingleLock lock(m_critSection);
+  return m_downloadJobs.find(ID) != m_downloadJobs.end();
 }
 
 CAddonInstallJob::CAddonInstallJob(const AddonPtr &addon, const CStdString &hash, bool update, const CStdString &referer)
@@ -378,7 +436,7 @@ bool CAddonInstallJob::DoWork()
       CFile::Delete(package);
       return false;
     }
-    installFrom = archivedFiles[0]->m_strPath;
+    installFrom = archivedFiles[0]->GetPath();
   }
 
   // run any pre-install functions
@@ -410,6 +468,14 @@ bool CAddonInstallJob::OnPreInstall()
   if (g_guiSettings.GetString("lookandfeel.skin") == m_addon->ID())
   {
     g_application.getApplicationMessenger().ExecBuiltIn("UnloadSkin", true);
+    return true;
+  }
+
+  if (m_addon->Type() == ADDON_SERVICE)
+  {
+    boost::shared_ptr<CService> service = boost::dynamic_pointer_cast<CService>(m_addon);
+    if (service)
+      service->Stop();
     return true;
   }
   return false;
@@ -455,11 +521,26 @@ bool CAddonInstallJob::Install(const CStdString &installFrom)
   {
     if (it->first.Equals("xbmc.metadata"))
       continue;
+
+    const CStdString &addonID = it->first;
+    const AddonVersion &version = it->second.first;
+    bool optional = it->second.second;
     AddonPtr dependency;
-    if (!CAddonMgr::Get().GetAddon(it->first,dependency) || dependency->Version() < it->second.first)
-    {
+    bool haveAddon = CAddonMgr::Get().GetAddon(addonID, dependency);
+    if ((haveAddon && !dependency->MeetsVersion(version)) || (!haveAddon && !optional))
+    { // we have it but our version isn't good enough, or we don't have it and we need it
+      bool force=(dependency != NULL);
+      // dependency is already queued up for install - ::Install will fail
+      // instead we wait until the Job has finished. note that we
+      // recall install on purpose in case prior installation failed
+      if (CAddonInstaller::Get().HasJob(addonID))
+      {
+        while (CAddonInstaller::Get().HasJob(addonID))
+          Sleep(50);
+        force = false;
+      }
       // don't have the addon or the addon isn't new enough - grab it (no new job for these)
-      if (!CAddonInstaller::Get().Install(it->first, dependency != NULL, referer, false))
+      if (!CAddonInstaller::Get().Install(addonID, force, referer, false))
       {
         DeleteAddon(addonFolder);
         return false;
@@ -473,11 +554,11 @@ void CAddonInstallJob::OnPostInstall(bool reloadAddon)
 {
   if (m_addon->Type() < ADDON_VIZ_LIBRARY && g_settings.m_bAddonNotifications)
   {
-    g_application.m_guiDialogKaiToast.QueueNotification(m_addon->Icon(),
-                                                        m_addon->Name(),
-                                                        g_localizeStrings.Get(m_update ? 24065 : 24064),
-                                                        TOAST_DISPLAY_TIME,false,
-                                                        TOAST_DISPLAY_TIME);
+    CGUIDialogKaiToast::QueueNotification(m_addon->Icon(),
+                                          m_addon->Name(),
+                                          g_localizeStrings.Get(m_update ? 24065 : 24064),
+                                          TOAST_DISPLAY_TIME,false,
+                                          TOAST_DISPLAY_TIME);
   }
   if (m_addon->Type() == ADDON_SKIN)
   {
@@ -485,10 +566,28 @@ void CAddonInstallJob::OnPostInstall(bool reloadAddon)
                                                         g_localizeStrings.Get(24099),"","")))
     {
       g_guiSettings.SetString("lookandfeel.skin",m_addon->ID().c_str());
-      g_application.m_guiDialogKaiToast.ResetTimer();
-      g_application.m_guiDialogKaiToast.Close(true);
+      CGUIDialogKaiToast *toast = (CGUIDialogKaiToast *)g_windowManager.GetWindow(WINDOW_DIALOG_KAI_TOAST);
+      if (toast)
+      {
+        toast->ResetTimer();
+        toast->Close(true);
+      }
       g_application.getApplicationMessenger().ExecBuiltIn("ReloadSkin");
     }
+  }
+
+  if (m_addon->Type() == ADDON_SERVICE)
+  {
+    boost::shared_ptr<CService> service = boost::dynamic_pointer_cast<CService>(m_addon);
+    if (service)
+      service->Start();
+  }
+
+  if (m_addon->Type() == ADDON_REPOSITORY)
+  {
+    VECADDONS addons;
+    addons.push_back(m_addon);
+    CJobManager::GetInstance().AddJob(new CRepositoryUpdateJob(addons), &CAddonInstaller::Get());
   }
 }
 
@@ -503,19 +602,17 @@ void CAddonInstallJob::ReportInstallError(const CStdString& addonID,
   {
     AddonPtr addon2;
     CAddonMgr::Get().GetAddon(addonID, addon2);
-    g_application.m_guiDialogKaiToast.QueueNotification(
-                                                        addon->Icon(),
-                                                        addon->Name(),
-                                                        g_localizeStrings.Get(addon2 ? 113 : 114),
-                                                        TOAST_DISPLAY_TIME, false);
+    CGUIDialogKaiToast::QueueNotification(addon->Icon(),
+                                          addon->Name(),
+                                          g_localizeStrings.Get(addon2 ? 113 : 114),
+                                          TOAST_DISPLAY_TIME, false);
   }
   else
   {
-    g_application.m_guiDialogKaiToast.QueueNotification(
-                                                        CGUIDialogKaiToast::Error,
-                                                        fileName,
-                                                        g_localizeStrings.Get(114),
-                                                        TOAST_DISPLAY_TIME, false);
+    CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Error,
+                                          fileName,
+                                          g_localizeStrings.Get(114),
+                                          TOAST_DISPLAY_TIME, false);
   }
 }
 
@@ -562,4 +659,19 @@ void CAddonUnInstallJob::OnPostUnInstall()
     database.Open();
     database.DeleteRepository(m_addon->ID());
   }
+
+  bool bSave(false);
+  CFileItemList items;
+  CFavourites::Load(items);
+  for (int i=0; i < items.Size(); ++i)
+  {
+    if (items[i]->GetPath().Find(m_addon->ID()) > -1)
+    {
+      items.Remove(items[i].get());
+      bSave = true;
+    }
+  }
+
+  if (bSave)
+    CFavourites::Save(items);
 }

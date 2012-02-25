@@ -19,14 +19,12 @@
 *
 */
 
-
-#include "system.h"
+#include "RenderSystemGL.h"
 
 #ifdef HAS_GL
 
 #include "guilib/GraphicContext.h"
 #include "settings/AdvancedSettings.h"
-#include "RenderSystemGL.h"
 #include "utils/log.h"
 #include "utils/GLUtils.h"
 #include "utils/TimeUtils.h"
@@ -54,7 +52,7 @@ void CRenderSystemGL::CheckOpenGLQuirks()
     // Nvidia 9400M is slow as a dog
     if (m_renderCaps & RENDER_CAPS_DXT_NPOT)
     {
-      char *arr[3]= { "7300","7600","9400M" };
+      const char *arr[3]= { "7300","7600","9400M" };
       for(int j = 0; j < 3; j++)
       {
         if((int(m_RenderRenderer.find(arr[j])) > -1))
@@ -65,11 +63,37 @@ void CRenderSystemGL::CheckOpenGLQuirks()
       }
     }
   }
-#endif
-  if (m_RenderVendor.Equals("Tungsten Graphics, Inc."))
+#ifdef __ppc__
+  // ATI Radeon 9600 on osx PPC cannot do NPOT
+  if (m_RenderRenderer.Find("ATI Radeon 9600") > -1)
   {
+    m_renderCaps &= ~ RENDER_CAPS_NPOT;
+    m_renderCaps &= ~ RENDER_CAPS_DXT_NPOT;
+  }
+#endif
+#endif
+  if (m_RenderVendor.ToLower() == "nouveau")
+    m_renderQuirks |= RENDER_QUIRKS_YV12_PREFERED;
+
+  if (m_RenderVendor.Equals("Tungsten Graphics, Inc.")
+  ||  m_RenderVendor.Equals("Tungsten Graphics, Inc"))
+  {
+    unsigned major, minor, micro;
+    if (sscanf(m_RenderVersion.c_str(), "%*s Mesa %u.%u.%u", &major, &minor, &micro) == 3)
+    {
+
+      if((major  < 7)
+      || (major == 7 && minor  < 7)
+      || (major == 7 && minor == 7 && micro < 1))
+        m_renderQuirks |= RENDER_QUIRKS_MAJORMEMLEAK_OVERLAYRENDERER;
+    }
+    else
+      CLog::Log(LOGNOTICE, "CRenderSystemGL::CheckOpenGLQuirks - unable to parse mesa version string");
+
     if(m_RenderRenderer.Find("Poulsbo") >= 0)
       m_renderCaps &= ~RENDER_CAPS_DXT_NPOT;
+
+    m_renderQuirks |= RENDER_QUIRKS_BROKEN_OCCLUSION_QUERY;
   }
 }	
 
@@ -261,7 +285,7 @@ bool CRenderSystemGL::IsExtSupported(const char* extension)
   return m_RenderExtensions.find(name) != std::string::npos;;
 }
 
-bool CRenderSystemGL::PresentRender()
+bool CRenderSystemGL::PresentRender(const CDirtyRegionList& dirty)
 {
   if (!m_bRenderCreated)
     return false;
@@ -288,7 +312,7 @@ bool CRenderSystemGL::PresentRender()
       Sleep((DWORD)diff);
   }
 
-  bool result = PresentRenderImpl();
+  bool result = PresentRenderImpl(dirty);
 
   if (m_iVSyncMode && m_iSwapRate != 0)
   {
@@ -361,6 +385,8 @@ void CRenderSystemGL::CaptureStateBlock()
 {
   if (!m_bRenderCreated)
     return;
+  
+  glGetIntegerv(GL_VIEWPORT, m_viewPort);
 
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -381,6 +407,7 @@ void CRenderSystemGL::ApplyStateBlock()
   if (!m_bRenderCreated)
     return;
 
+  glViewport(m_viewPort[0], m_viewPort[1], m_viewPort[2], m_viewPort[3]);
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
   glMatrixMode(GL_TEXTURE);
@@ -419,7 +446,22 @@ void CRenderSystemGL::SetCameraPosition(const CPoint &camera, int screenWidth, i
   glFrustum( (-w - offset.x)*0.5f, (w - offset.x)*0.5f, (-h + offset.y)*0.5f, (h + offset.y)*0.5f, h, 100*h);
   glMatrixMode(GL_MODELVIEW);
 
+  glGetIntegerv(GL_VIEWPORT, m_viewPort);
+  glGetDoublev(GL_MODELVIEW_MATRIX, m_view);
+  glGetDoublev(GL_PROJECTION_MATRIX, m_projection);
+
   g_graphicsContext.EndPaint();
+}
+
+void CRenderSystemGL::Project(float &x, float &y, float &z)
+{
+  GLdouble coordX, coordY, coordZ;
+  if (gluProject(x, y, z, m_view, m_projection, m_viewPort, &coordX, &coordY, &coordZ) == GLU_TRUE)
+  {
+    x = (float)coordX;
+    y = (float)(m_viewPort[3] - coordY);
+    z = 0;
+  }
 }
 
 bool CRenderSystemGL::TestRender()
@@ -525,7 +567,7 @@ void CRenderSystemGL::GetViewPort(CRect& viewPort)
     return;
 
   GLint glvp[4];
-  glGetIntegerv(GL_SCISSOR_BOX, glvp);
+  glGetIntegerv(GL_VIEWPORT, glvp);
 
   viewPort.x1 = glvp[0];
   viewPort.y1 = m_height - glvp[1] - glvp[3];
@@ -540,6 +582,22 @@ void CRenderSystemGL::SetViewPort(CRect& viewPort)
 
   glScissor((GLint) viewPort.x1, (GLint) (m_height - viewPort.y1 - viewPort.Height()), (GLsizei) viewPort.Width(), (GLsizei) viewPort.Height());
   glViewport((GLint) viewPort.x1, (GLint) (m_height - viewPort.y1 - viewPort.Height()), (GLsizei) viewPort.Width(), (GLsizei) viewPort.Height());
+}
+
+void CRenderSystemGL::SetScissors(const CRect &rect)
+{
+  if (!m_bRenderCreated)
+    return;
+  GLint x1 = MathUtils::round_int(rect.x1);
+  GLint y1 = MathUtils::round_int(rect.y1);
+  GLint x2 = MathUtils::round_int(rect.x2);
+  GLint y2 = MathUtils::round_int(rect.y2);
+  glScissor(x1, m_height - y2, x2-x1, y2-y1);
+}
+
+void CRenderSystemGL::ResetScissors()
+{
+  SetScissors(CRect(0, 0, (float)m_width, (float)m_height));
 }
 
 void CRenderSystemGL::GetGLSLVersion(int& major, int& minor)

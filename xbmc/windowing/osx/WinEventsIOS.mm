@@ -25,9 +25,10 @@
 #include "XBMC_vkeys.h"
 #include "Application.h"
 #include "WindowingFactory.h"
-#include "XBMC_mutex.h"
+#include "threads/CriticalSection.h"
+#include "utils/log.h"
 
-static SDL_mutex *m_inputMutex = NULL;
+static CCriticalSection g_inputCond;
 
 PHANDLE_EVENT_FUNC CWinEventsBase::m_pEventFunc = NULL;
 
@@ -35,23 +36,17 @@ static std::vector<XBMC_Event> events;
 
 void CWinEventsIOS::DeInit()
 {
-  if (m_inputMutex)
-    SDL_DestroyMutex(m_inputMutex);
-  m_inputMutex = NULL;
 }
 
 void CWinEventsIOS::Init()
 {
-  m_inputMutex = SDL_CreateMutex();
 }
 
 void CWinEventsIOS::MessagePush(XBMC_Event *newEvent)
 {
-  SDL_mutexP(m_inputMutex);
+  CSingleLock lock(g_inputCond);
 
   events.push_back(*newEvent);
-
-  SDL_mutexV(m_inputMutex);
 }
 
 bool CWinEventsIOS::MessagePump()
@@ -60,7 +55,7 @@ bool CWinEventsIOS::MessagePump()
   bool gotEvent = false;
   XBMC_Event pumpEvent;
 
-  SDL_mutexP(m_inputMutex);  
+  CSingleLock lock(g_inputCond);
   for (vector<XBMC_Event>::iterator it = events.begin(); it!=events.end(); ++it)
   {
     memcpy(&pumpEvent, (XBMC_Event *)&*it, sizeof(XBMC_Event));
@@ -68,7 +63,7 @@ bool CWinEventsIOS::MessagePump()
     gotEvent = true;
     break;
   }
-  SDL_mutexV(m_inputMutex);
+  lock.Leave();
 
   if (gotEvent)
   {
@@ -78,9 +73,10 @@ bool CWinEventsIOS::MessagePump()
       // the user.code will be the keyID to translate using joystick.AppleRemote.xml
       std::string joystickName = "AppleRemote";
       bool isAxis = false;
-      float fAmount = 0.0;
+      float fAmount = 1.0;
       unsigned short wKeyID = pumpEvent.user.code;
 
+      CLog::Log(LOGDEBUG,"CWinEventsIOS: Button press keyID = %i", wKeyID);
       ret |= g_application.ProcessJoystickEvent(joystickName, wKeyID, isAxis, fAmount);
     }
     else

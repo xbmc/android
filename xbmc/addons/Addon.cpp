@@ -120,48 +120,6 @@ const CStdString GetIcon(const ADDON::TYPE& type)
   return "";
 }
 
-/**
- * AddonVersion
- *
- */
-
-bool AddonVersion::operator==(const AddonVersion &rhs) const
-{
-  return str.Equals(rhs.str);
-}
-
-bool AddonVersion::operator!=(const AddonVersion &rhs) const
-{
-  return !(*this == rhs);
-}
-
-bool AddonVersion::operator>(const AddonVersion &rhs) const
-{
-  return (strverscmp(str.c_str(), rhs.str.c_str()) > 0);
-}
-
-bool AddonVersion::operator>=(const AddonVersion &rhs) const
-{
-  return (*this == rhs) || (*this > rhs);
-}
-
-bool AddonVersion::operator<(const AddonVersion &rhs) const
-{
-  return (strverscmp(str.c_str(), rhs.str.c_str()) < 0);
-}
-
-bool AddonVersion::operator<=(const AddonVersion &rhs) const
-{
-  return (*this == rhs) || !(*this > rhs);
-}
-
-CStdString AddonVersion::Print() const
-{
-  CStdString out;
-  out.Format("%s %s", g_localizeStrings.Get(24051), str); // "Version <str>"
-  return CStdString(out);
-}
-
 #define EMPTY_IF(x,y) \
   { \
     CStdString fan=CAddonMgr::Get().GetExtValue(metadata->configuration, x); \
@@ -410,9 +368,9 @@ bool CAddon::HasSettings()
   return LoadSettings();
 }
 
-bool CAddon::LoadSettings()
+bool CAddon::LoadSettings(bool bForce /* = false*/)
 {
-  if (m_settingsLoaded)
+  if (m_settingsLoaded && !bForce)
     return true;
   if (!m_hasSettings)
     return false;
@@ -447,6 +405,11 @@ bool CAddon::HasUserSettings()
   return m_userSettingsLoaded;
 }
 
+bool CAddon::ReloadSettings()
+{
+  return LoadSettings(true);
+}
+
 bool CAddon::LoadUserSettings()
 {
   m_userSettingsLoaded = false;
@@ -478,6 +441,8 @@ void CAddon::SaveSettings(void)
   TiXmlDocument doc;
   SettingsToXML(doc);
   doc.SaveFile(m_userSettingsPath);
+  
+  CAddonMgr::Get().ReloadSettings(ID());//push the settings changes to the running addon instance
 }
 
 CStdString CAddon::GetSetting(const CStdString& key)

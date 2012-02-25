@@ -41,6 +41,7 @@
 #include "utils/log.h"
 #include "utils/URIUtils.h"
 #include "TextureCache.h"
+#include "ThumbnailCache.h"
 
 using namespace std;
 using namespace XFILE;
@@ -165,6 +166,9 @@ void CGUIDialogMusicInfo::SetAlbum(const CAlbum& album, const CStdString &path)
   artist.SetCachedArtistThumb();
   if (CFile::Exists(artist.GetThumbnailImage()))
     m_albumItem->SetProperty("artistthumb", artist.GetThumbnailImage());
+  CStdString strFanart = m_albumItem->GetCachedFanart();
+  if (CFile::Exists(strFanart))
+    m_albumItem->SetProperty("fanart_image",strFanart);
   m_hasUpdatedThumb = false;
   m_bArtistInfo = false;
   m_albumSongs->SetContent("albums");
@@ -318,7 +322,7 @@ void CGUIDialogMusicInfo::RefreshThumb()
     if (m_bArtistInfo)
       thumbImage = m_albumItem->GetCachedArtistThumb();
     else
-      thumbImage = CUtil::GetCachedAlbumThumb(m_album.strAlbum, m_album.strArtist);
+      thumbImage = CThumbnailCache::GetAlbumThumb(m_album);
 
     if (!CFile::Exists(thumbImage))
     {
@@ -327,7 +331,12 @@ void CGUIDialogMusicInfo::RefreshThumb()
     }
   }
   if (!CFile::Exists(thumbImage) )
-    thumbImage.Empty();
+  {
+    if (m_bArtistInfo)
+      thumbImage = "DefaultArtist.png";
+    else
+      thumbImage = "DefaultAlbumCover.png";
+  }
 
   m_albumItem->SetThumbnailImage(thumbImage);
 }
@@ -442,7 +451,7 @@ void CGUIDialogMusicInfo::OnGetThumb()
   if (m_bArtistInfo)
     cachedThumb = m_albumItem->GetCachedArtistThumb();
   else
-    cachedThumb = CUtil::GetCachedAlbumThumb(m_album.strAlbum, m_album.strArtist);
+    cachedThumb = CThumbnailCache::GetAlbumThumb(m_album);
 
   CTextureCache::Get().ClearCachedImage(cachedThumb, true);
   if (result.Left(14) == "thumb://Remote")
@@ -480,7 +489,7 @@ void CGUIDialogMusicInfo::OnGetFanart()
 {
   CFileItemList items;
 
-  CStdString cachedThumb(CFileItem::GetCachedThumb(m_artist.strArtist,g_settings.GetMusicFanartFolder()));
+  CStdString cachedThumb(CThumbnailCache::GetThumb(m_artist.strArtist,g_settings.GetMusicFanartFolder()));
   if (CFile::Exists(cachedThumb))
   {
     CFileItemPtr itemCurrent(new CFileItem("fanart://Current",false));

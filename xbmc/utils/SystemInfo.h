@@ -53,6 +53,7 @@ public:
   CStdString cpuFrequency;
   CStdString kernelVersion;
   CStdString macAddress;
+  CStdString batteryLevel;
 };
 
 class CSysInfoJob : public CJob
@@ -71,6 +72,7 @@ private:
   CStdString GetCPUFreqInfo();
   CStdString GetMACAddress();
   CStdString GetVideoEncoder();
+  CStdString GetBatteryLevel();
 
   CSysData m_info;
 };
@@ -92,6 +94,9 @@ public:
 #endif
 #ifdef _LINUX
   CStdString GetUnameVersion();
+#endif
+#if defined(TARGET_WINDOWS)
+  CStdString CSysInfo::GetUAWindowsVersion();
 #endif
   CStdString GetUserAgent();
   bool HasInternet();

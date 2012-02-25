@@ -22,16 +22,25 @@
 #import <unistd.h>
 #import <sys/mount.h>
 
+#define BOOL XBMC_BOOL 
+#include "utils/log.h"
+#undef BOOL
+
 #import <Cocoa/Cocoa.h>
 #import <QuartzCore/QuartzCore.h>
 #import <Carbon/Carbon.h>
 #import <OpenGL/OpenGL.h>
 #import <OpenGL/gl.h>
+#import <AudioUnit/AudioUnit.h>
+#import <AudioToolbox/AudioToolbox.h>
+#import <CoreServices/CoreServices.h>
 
 #import "CocoaInterface.h"
 #import "DllPaths_generated.h"
 
 #import "AutoPool.h"
+
+#import "CoreAudio.h"
 
 // hack for Cocoa_GL_ResizeWindow
 //extern "C" void SDL_SetWidthHeight(int w, int h);
@@ -198,6 +207,8 @@ double Cocoa_GetCVDisplayLinkRefreshPeriod(void)
 
 void Cocoa_DoAppleScript(const char* scriptSource)
 {
+  CCocoaAutoPool pool;
+
   NSDictionary* errorDict;
   NSAppleEventDescriptor* returnDescriptor = NULL;
   NSAppleScript* scriptObject = [[NSAppleScript alloc] initWithSource:
@@ -236,8 +247,8 @@ void Cocoa_DoAppleScriptFile(const char* filePath)
 
 const char* Cocoa_GetIconFromBundle(const char *_bundlePath, const char* _iconName)
 {
-  NSString* bundlePath = [NSString stringWithCString:_bundlePath];
-  NSString* iconName = [NSString stringWithCString:_iconName];
+  NSString* bundlePath = [NSString stringWithUTF8String:_bundlePath];
+  NSString* iconName = [NSString stringWithUTF8String:_iconName];
   NSBundle* bundle = [NSBundle bundleWithPath:bundlePath];
   NSString* iconPath = [bundle pathForResource:iconName ofType:@"icns"];
   NSString* bundleIdentifier = [bundle bundleIdentifier];
@@ -263,19 +274,18 @@ const char* Cocoa_GetIconFromBundle(const char *_bundlePath, const char* _iconNa
   return [pngFile UTF8String];
 }
 
-void Cocoa_MountPoint2DeviceName(char* path)
+char* Cocoa_MountPoint2DeviceName(char *path)
 {
+  CCocoaAutoPool pool;
   // if physical DVDs, libdvdnav wants "/dev/rdiskN" device name for OSX,
   // path will get realloc'ed and replaced IF this is a physical DVD.
   char* strDVDDevice;
   strDVDDevice = strdup(path);
-  if (strncasecmp(strDVDDevice + strlen(strDVDDevice) - 8, "VIDEO_TS", 8) == 0)
+  if (strncasecmp(strDVDDevice, "/Volumes/", 9) == 0)
   {
     struct statfs *mntbufp;
     int i, mounts;
     
-    strDVDDevice[strlen(strDVDDevice) - 9] = '\0';
-
     // find a match for /Volumes/<disk name>
     mounts = getmntinfo(&mntbufp, MNT_WAIT);  // NOT THREAD SAFE!
     for (i = 0; i < mounts; i++)
@@ -291,10 +301,12 @@ void Cocoa_MountPoint2DeviceName(char* path)
     }
     free(strDVDDevice);
   }
+  return path;
 }
 
 bool Cocoa_GetVolumeNameFromMountPoint(const char *mountPoint, CStdString &volumeName)
 {
+  CCocoaAutoPool pool;
   unsigned i, count = 0;
   struct statfs *buf = NULL;
   CStdString mountpoint, devicepath;
@@ -336,7 +348,7 @@ bool Cocoa_GetVolumeNameFromMountPoint(const char *mountPoint, CStdString &volum
   }
 
   NSString *volumename = [dd objectForKey:(NSString*)kDADiskDescriptionVolumeNameKey];
-  volumeName = [volumename cString];
+  volumeName = [volumename UTF8String];
 
   CFRelease(session);		        
   CFRelease(disk);		        
@@ -524,12 +536,12 @@ bool Cocoa_HasVDADecoder()
   if (result == -1)
   {
     if (Cocoa_GetOSVersion() >= 0x1063)
-      result = access(DLL_PATH_LIBVDADECODER, 0) == 0;
+      result = (access(DLL_PATH_LIBVDADECODER, 0) == 0) ? 1:0;
     else
-      result = false;
+      result = 0;
   }
 
-  return(result);
+  return (result == 1);
 }
 
 bool Cocoa_GPUForDisplayIsNvidiaPureVideo3()
@@ -659,4 +671,51 @@ OSStatus SendAppleEventToSystemProcess(AEEventID EventToSend)
 
   return(error); 
 }
+
+void Cocoa_ResetAudioDevices()
+{
+  // Reset any devices with an AC3/DTS/SPDIF stream back to a Linear PCM
+  // so that they can become a default output device
+  CoreAudioDeviceList deviceList;
+  CCoreAudioHardware::GetOutputDevices(&deviceList);
+  for (CoreAudioDeviceList::iterator d = deviceList.begin(); d != deviceList.end(); d++)
+  {
+    CCoreAudioDevice device(*d);
+    AudioStreamIdList streamList;
+    if (device.GetStreams(&streamList))
+    {
+      for (AudioStreamIdList::iterator s = streamList.begin(); s != streamList.end(); s++)
+      {
+        CCoreAudioStream stream;
+        if (stream.Open(*s))
+        {
+          AudioStreamBasicDescription currentFormat;
+          if (stream.GetPhysicalFormat(&currentFormat))
+          {
+            if (currentFormat.mFormatID == 'IAC3' || currentFormat.mFormatID == kAudioFormat60958AC3)
+            {
+              StreamFormatList formatList;
+              if (stream.GetAvailablePhysicalFormats(&formatList))
+              {
+                for (StreamFormatList::iterator f = formatList.begin(); f != formatList.end(); f++)
+                {
+                  if ((*f).mFormat.mFormatID == kAudioFormatLinearPCM)
+                  {
+                    if (stream.SetPhysicalFormat(&(*f).mFormat))
+                    {
+                      sleep(1);
+                      break;
+                    }
+                  }
+                }
+              }
+            }              
+          }
+          stream.Close();
+        }
+      }
+    }
+  }  
+}
+
 #endif

@@ -23,6 +23,7 @@
 #define XBPYTHREAD_H_
 
 #include "threads/Thread.h"
+#include "threads/Event.h"
 #include "addons/IAddon.h"
 
 class XBPython;
@@ -42,6 +43,7 @@ public:
 
 protected:
   XBPython *m_pExecuter;
+  CEvent stoppedEvent;
   void *m_threadState;
 
   char m_type;
@@ -52,7 +54,8 @@ protected:
   int  m_id;
   ADDON::AddonPtr addon;
 
-  virtual void OnStartup();
+  void setSource(const CStdString &src);
+
   virtual void Process();
   virtual void OnExit();
   virtual void OnException();

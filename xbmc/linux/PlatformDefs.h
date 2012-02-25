@@ -333,10 +333,6 @@ typedef struct _TIME_ZONE_INFORMATION {
 
 typedef int SOCKET;
 
-class CCriticalSection;
-#define CRITICAL_SECTION     XCriticalSection
-#define LPCRITICAL_SECTION   XCriticalSection*
-
 // Thread
 typedef int (*LPTHREAD_START_ROUTINE)(void *);
 
@@ -427,26 +423,32 @@ typedef struct _SECURITY_ATTRIBUTES {
 #define _stat stat
 
 // Memory
-typedef struct _MEMORYSTATUS
+typedef struct _MEMORYSTATUSEX
 {
   DWORD dwLength;
   DWORD dwMemoryLoad;
 
-  uint64_t dwTotalPhys;
-  uint64_t dwAvailPhys;
-  uint64_t dwTotalPageFile;
-  uint64_t dwAvailPageFile;
-  uint64_t dwTotalVirtual;
-  uint64_t dwAvailVirtual;
-} MEMORYSTATUS, *LPMEMORYSTATUS;
+  uint64_t ullTotalPhys;
+  uint64_t ullAvailPhys;
+  uint64_t ullTotalPageFile;
+  uint64_t ullAvailPageFile;
+  uint64_t ullTotalVirtual;
+  uint64_t ullAvailVirtual;
+} MEMORYSTATUSEX, *LPMEMORYSTATUSEX;
 
 // Common HRESULT values
 #ifndef NOERROR
 #define NOERROR           (0L)
 #endif
+#ifndef S_OK
 #define S_OK            (0L)
+#endif
+#ifndef E_FAIL
 #define E_FAIL            (0x80004005L)
+#endif
+#ifndef E_OUTOFMEMORY
 #define E_OUTOFMEMORY         (0x8007000EL)
+#endif
 #define FAILED(Status)            ((HRESULT)(Status)<0)
 
 // Basic D3D stuff

@@ -54,14 +54,10 @@ CScrobbler::CScrobbler(const CStdString &strHandshakeURL, const CStdString &strL
   m_strHandshakeURL = strHandshakeURL;
   m_strLogPrefix    = strLogPrefix;
   ResetState();
-
-  if (!(m_hEvent = CreateEvent(NULL, false, false, NULL)))
-    throw EOutOfMemory();
 }
 
 CScrobbler::~CScrobbler()
 {
-  CloseHandle(m_hEvent);
 }
 
 void CScrobbler::Init()
@@ -112,14 +108,8 @@ void CScrobbler::AddSong(const MUSIC_INFO::CMusicInfoTag &tag, bool lastfmradio)
   CURL::Encode(m_CurrentTrack.strMusicBrainzID);
 
   m_bNotified = false;
-  if (lastfmradio)
-    m_bSubmitted = !g_guiSettings.GetBool("scrobbler.lastfmsubmitradio");
-  else
-  {
-    if ((m_CurrentTrack.length > SCROBBLER_MIN_DURATION) ||
-        !m_CurrentTrack.strMusicBrainzID.IsEmpty())
-      m_bSubmitted = false;
-  }
+  m_bSubmitted = !((lastfmradio && g_guiSettings.GetBool("scrobbler.lastfmsubmitradio")) ||
+      (!lastfmradio && g_guiSettings.GetBool("scrobbler.lastfmsubmit") && (m_CurrentTrack.length > SCROBBLER_MIN_DURATION || !m_CurrentTrack.strMusicBrainzID.IsEmpty())));
 }
 
 void CScrobbler::UpdateStatus()
@@ -141,7 +131,7 @@ void CScrobbler::UpdateStatus()
       CSingleLock lock(m_actionLock);
       m_action = SCROBBLER_ACTION_NOWPLAYING;
     }
-    SetEvent(m_hEvent);
+    m_hEvent.Set();
     return;
   }
 
@@ -169,7 +159,7 @@ void CScrobbler::SubmitQueue()
       CSingleLock lock(m_actionLock);
       m_action = SCROBBLER_ACTION_SUBMIT;
     }
-    SetEvent(m_hEvent);
+    m_hEvent.Set();
   }
 }
 
@@ -642,8 +632,8 @@ void CScrobbler::Process()
   }
   while (!m_bStop)
   {
-    WaitForSingleObject(m_hEvent, INFINITE);
-	if (m_bStop)
+    AbortableWait(m_hEvent);
+    if (m_bStop)
       break;
     
     if (m_strSessionID.IsEmpty())

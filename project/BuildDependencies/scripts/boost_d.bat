@@ -7,6 +7,7 @@ CALL dlextract.bat boost %FILES%
 
 cd %TMP_PATH%
 
-xcopy boost_1_46_1-headers-win32\* "%CUR_PATH%\include\" /E /Q /I /Y
+xcopy boost-1_46_1-xbmc-win32\include\* "%CUR_PATH%\include\" /E /Q /I /Y
+xcopy boost-1_46_1-xbmc-win32\lib\* "%CUR_PATH%\lib\" /E /Q /I /Y
 
 cd %LOC_PATH%

@@ -20,6 +20,7 @@
  */
 
 #include "keyboard.h"
+#include "pythreadstate.h"
 #include "pyutil.h"
 #include "guilib/GUIWindowManager.h"
 #include "dialogs/GUIDialogKeyboard.h"
@@ -27,12 +28,6 @@
 
 using namespace std;
 
-#ifndef __GNUC__
-#pragma code_seg("PY_TEXT")
-#pragma data_seg("PY_DATA")
-#pragma bss_seg("PY_BSS")
-#pragma const_seg("PY_RDATA")
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -62,6 +57,9 @@ namespace PYXBMC
     self->strDefault = utf8Line;
     self->strHeading = utf8Heading;
     self->bHidden = (0 != bHidden);
+    PyXBMCGUILock();
+    self->dlg = (CGUIDialogKeyboard*)g_windowManager.GetWindow(WINDOW_DIALOG_KEYBOARD);
+    PyXBMCGUIUnlock();
 
     return (PyObject*)self;
   }
@@ -84,7 +82,7 @@ namespace PYXBMC
 
   PyObject* Keyboard_DoModal(Keyboard *self, PyObject *args)
   {
-    CGUIDialogKeyboard *pKeyboard = (CGUIDialogKeyboard*)g_windowManager.GetWindow(WINDOW_DIALOG_KEYBOARD);
+    CGUIDialogKeyboard *pKeyboard = ((Keyboard*)self)->dlg;
     if(!pKeyboard)
     {
       PyErr_SetString(PyExc_SystemError, "Unable to load virtual keyboard");
@@ -94,6 +92,7 @@ namespace PYXBMC
 
     if (!PyArg_ParseTuple(args, (char*)"|i", &autoClose)) return NULL;
 
+    PyXBMCGUILock();
     pKeyboard->Initialize();
     pKeyboard->SetHeading(self->strHeading);
     CStdString strDefault(self->strDefault);
@@ -103,6 +102,7 @@ namespace PYXBMC
       pKeyboard->SetAutoClose(autoClose);
 
     // do modal of dialog
+    PyXBMCGUIUnlock();
     PyXBMCWaitForThreadMessage(TMSG_DIALOG_DOMODAL, WINDOW_DIALOG_KEYBOARD, g_windowManager.GetActiveWindow());
 
     Py_INCREF(Py_None);
@@ -127,7 +127,7 @@ namespace PYXBMC
     if (line && !PyXBMCGetUnicodeString(utf8Line, line, 1)) return NULL;
     self->strDefault = utf8Line;
 
-    CGUIDialogKeyboard *pKeyboard = (CGUIDialogKeyboard*)g_windowManager.GetWindow(WINDOW_DIALOG_KEYBOARD);
+    CGUIDialogKeyboard *pKeyboard = ((Keyboard*)self)->dlg;
     if(!pKeyboard)
     {
       PyErr_SetString(PyExc_SystemError, "Unable to load keyboard");
@@ -135,7 +135,9 @@ namespace PYXBMC
     }
 
     CStdString strDefault(self->strDefault);
+    PyXBMCGUILock();
     pKeyboard->SetText(strDefault);
+    PyXBMCGUIUnlock();
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -155,14 +157,16 @@ namespace PYXBMC
     if (!PyArg_ParseTuple(args, (char*)"|b", &bHidden)) return NULL;
     self->bHidden = (0 != bHidden);
 
-    CGUIDialogKeyboard *pKeyboard = (CGUIDialogKeyboard*)g_windowManager.GetWindow(WINDOW_DIALOG_KEYBOARD);
+    CGUIDialogKeyboard *pKeyboard = ((Keyboard*)self)->dlg;
     if(!pKeyboard)
     {
       PyErr_SetString(PyExc_SystemError, "Unable to load keyboard");
       return NULL;
     }
 
+    PyXBMCGUILock();
     pKeyboard->SetHiddenInput(self->bHidden);
+    PyXBMCGUIUnlock();
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -186,14 +190,16 @@ namespace PYXBMC
     if (line && !PyXBMCGetUnicodeString(utf8Line, line, 1)) return NULL;
     self->strHeading = utf8Line;
 
-    CGUIDialogKeyboard *pKeyboard = (CGUIDialogKeyboard*)g_windowManager.GetWindow(WINDOW_DIALOG_KEYBOARD);
+    CGUIDialogKeyboard *pKeyboard = ((Keyboard*)self)->dlg;
     if(!pKeyboard)
     {
       PyErr_SetString(PyExc_SystemError, "Unable to load keyboard");
       return NULL;
     }
 
+    PyXBMCGUILock();
     pKeyboard->SetHeading(self->strHeading);
+    PyXBMCGUIUnlock();
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -211,14 +217,17 @@ namespace PYXBMC
 
   PyObject* Keyboard_GetText(Keyboard *self, PyObject *args)
   {
-    CGUIDialogKeyboard *pKeyboard = (CGUIDialogKeyboard*)g_windowManager.GetWindow(WINDOW_DIALOG_KEYBOARD);
+    CGUIDialogKeyboard *pKeyboard = ((Keyboard*)self)->dlg;
     if(!pKeyboard)
     {
       PyErr_SetString(PyExc_SystemError, "Unable to load keyboard");
       return NULL;
     }
 
-    return Py_BuildValue((char*)"s", pKeyboard->GetText().c_str());
+    PyXBMCGUILock();
+    CStdString result = pKeyboard->GetText();
+    PyXBMCGUIUnlock();
+    return Py_BuildValue((char*)"s", result.c_str());
   }
 
   // isConfirmed() Method
@@ -230,14 +239,17 @@ namespace PYXBMC
 
   PyObject* Keyboard_IsConfirmed(Keyboard *self, PyObject *args)
   {
-    CGUIDialogKeyboard *pKeyboard = (CGUIDialogKeyboard*)g_windowManager.GetWindow(WINDOW_DIALOG_KEYBOARD);
+    CGUIDialogKeyboard *pKeyboard = ((Keyboard*)self)->dlg;
     if(!pKeyboard)
     {
       PyErr_SetString(PyExc_SystemError, "Unable to load keyboard");
       return NULL;
     }
 
-    return Py_BuildValue((char*)"b", pKeyboard->IsConfirmed());
+    PyXBMCGUILock();
+    bool result = pKeyboard->IsConfirmed();
+    PyXBMCGUIUnlock();
+    return Py_BuildValue((char*)"b", result);
   }
 
   PyMethodDef Keyboard_methods[] = {
@@ -270,12 +282,6 @@ namespace PYXBMC
     "  -   text = kb.getText()");
 
 // Restore code and data sections to normal.
-#ifndef __GNUC__
-#pragma code_seg()
-#pragma data_seg()
-#pragma bss_seg()
-#pragma const_seg()
-#endif
 
   PyTypeObject Keyboard_Type;
 

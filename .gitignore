@@ -1,4 +1,5 @@
 # global patterns
+testMain
 
 # commonly used editors
 # vim
@@ -48,6 +49,7 @@ config.log
 /build/
 .DS_Store
 *.dSYM
+._*
 /tools/darwin/depends/config.site
 /tools/darwin/depends/config.site.mk
 /tools/darwin/depends/Makefile
@@ -56,11 +58,6 @@ config.log
 /tools/darwin/depends/python26/Makefile
 /tools/darwin/depends/**/.gitignore
 /tools/darwin/depends/**/.installed
-/tools/osx/osx-depends/**/.gitignore
-/tools/osx/osx-depends/**/.installed
-/tools/osx/ios-depends/**/.gitignore
-/tools/osx/ios-depends/**/.installed
-/tools/osx/ios-depends/**/.compiled
 
 .libs/
 .deps/
@@ -128,6 +125,10 @@ config.log
 /xbmc/guilib/Profile
 /xbmc/guilib/Profile_FastCap
 
+# /xbmc/peripherals/
+/xbmc/peripherals/bus/Makefile
+/xbmc/peripherals/devices/Makefile
+
 # /lib/
 /lib/Makefile
 
@@ -137,6 +138,12 @@ config.log
 
 # /lib/asap/
 /lib/asap/Makefile
+/lib/asap/players.h
+/lib/asap/players/*.obx
+/lib/asap/win32/xbmc_asap.dll
+/lib/asap/win32/xbmc_asap.lib
+/lib/asap/xbmc/xbmc_asap.res
+
 
 # /lib/cmyth/
 lib/cmyth/Makefile
@@ -167,6 +174,9 @@ lib/cmyth/Makefile
 /lib/cpluff/libcpluff/cpluffdef.h
 /lib/cpluff/libcpluff/win32/Debug
 /lib/cpluff/libcpluff/win32/Release
+
+# /lib/libcec
+/lib/libcec/libcec
 
 # /lib/enca
 /lib/enca/libenca_win32/Debug
@@ -222,10 +232,6 @@ lib/cmyth/Makefile
 /lib/libass/m4/ltsugar.m4
 /lib/libass/m4/ltversion.m4
 /lib/libass/m4/lt~obsolete.m4
-
-# /lib/libcdio
-/lib/libcdio/Debug
-/lib/libcdio/Release
 
 # /lib/libiconv
 /lib/libiconv/libiconv_win32/Debug
@@ -287,6 +293,7 @@ lib/cmyth/Makefile
 # /lib/libapetag
 /lib/libapetag/Makefile
 /lib/libapetag/config.h
+/lib/libapetag/install-sh
 /lib/libapetag/libtool
 /lib/libapetag/stamp-h1
 
@@ -294,19 +301,12 @@ lib/cmyth/Makefile
 /project/obj
 /project/output
 
-# /project/Win32BuildSetup/dependencies
-/project/Win32BuildSetup/dependencies/SDL.dll
-/project/Win32BuildSetup/dependencies/glew32.dll
-/project/Win32BuildSetup/dependencies/pcre.dll
-/project/Win32BuildSetup/dependencies/pcrecpp.dll
-/project/Win32BuildSetup/dependencies/python26.dll
-project/Win32BuildSetup/dependencies/libcdio-10.dll
-
 # /project/Win32BuildSetup/
-/project/Win32BuildSetup/BuildLog.htm
+/project/Win32BuildSetup/XBMC.log
 /project/Win32BuildSetup/XBMCSetup*.exe
 /project/Win32BuildSetup/languages.nsi
 /project/Win32BuildSetup/BUILD_WIN32/
+/project/Win32BuildSetup/dependencies
 
 # /project/BuildDependencies
 /project/BuildDependencies/downloads
@@ -338,6 +338,7 @@ project/Win32BuildSetup/dependencies/libcdio-10.dll
 /project/VS2010Express/libs
 /project/VS2010Express/objs
 /project/VS2010Express/ipch
+/project/VS2010Express/*.vsp
 
 # /skin/
 /skin/Confluence/media/Textures.xbt
@@ -349,6 +350,7 @@ project/Win32BuildSetup/dependencies/libcdio-10.dll
 /system/libcmyth.dll
 /system/libcurl.dll
 /system/libeay32.dll
+/system/librtmp.dll
 /system/libexif.dll
 /system/libexpat.dll
 /system/libid3tag.dll
@@ -359,6 +361,10 @@ project/Win32BuildSetup/dependencies/libcdio-10.dll
 /system/ssh.dll
 /system/sqlite3.dll
 /system/libsamplerate-0.dll
+/system/libnfs.dll
+/system/dnssd.dll
+/system/libcec.dll
+/system/pthreadVC2.dll
 
 # /system/cdrip
 /system/cdrip/lame_enc.dll
@@ -371,6 +377,7 @@ project/Win32BuildSetup/dependencies/libcdio-10.dll
 /system/players/dvdplayer/avcore-0.dll
 /system/players/dvdplayer/avformat-52.dll
 /system/players/dvdplayer/avutil-50.dll
+/system/players/dvdplayer/avfilter-1.dll
 /system/players/dvdplayer/freetype6.dll
 /system/players/dvdplayer/libass.dll
 /system/players/dvdplayer/libdvdcss-2.dll
@@ -379,13 +386,12 @@ project/Win32BuildSetup/dependencies/libcdio-10.dll
 /system/players/dvdplayer/libfontconfig-1.dll
 /system/players/dvdplayer/librtmp.dll
 /system/players/dvdplayer/postproc-51.dll
-/system/players/dvdplayer/swscale-0.6.1.dll
+/system/players/dvdplayer/swscale-0.dll
 /system/players/dvdplayer/libbluray.dll
 /system/players/dvdplayer/libmpeg2-0.dll
 /system/players/dvdplayer/libmad.dll
 
 # /system/players/paplayer
-/system/players/paplayer/wavpack.dll
 /system/players/paplayer/libmodplug.dll
 /system/players/paplayer/StSoundLibrary.dll
 /system/players/paplayer/vorbisfile.dll
@@ -408,6 +414,8 @@ project/Win32BuildSetup/dependencies/libcdio-10.dll
 
 # /system/webserver
 /system/webserver
+
+/system/airplay
 
 # /system
 /system/zlib1.dll
@@ -452,6 +460,7 @@ project/Win32BuildSetup/dependencies/libcdio-10.dll
 /tools/EventClients/*.pyc
 /tools/EventClients/Clients/OSXRemote/Makefile
 /tools/EventClients/Clients/OSXRemote/build/
+/tools/EventClients/Clients/WiiRemote/WiiRemote
 
 # /tools/Linux/
 /tools/Linux/xbmc.sh
@@ -652,6 +661,7 @@ project/Win32BuildSetup/dependencies/libcdio-10.dll
 /lib/libmpeg2/libtool
 /lib/libmpeg2/configure.lineno
 /lib/libmpeg2/Makefile
+/lib/libmpeg2/src/*.exe
 
 # /lib/libmpeg2/doc/
 /lib/libmpeg2/doc/Makefile
@@ -881,11 +891,6 @@ project/Win32BuildSetup/dependencies/libcdio-10.dll
 /lib/win32/libsamplerate/libsamplerate_win32/Debug
 /lib/win32/libsamplerate/libsamplerate_win32/Release
 
-# /lib/win32/libwavpack/
-/lib/win32/libwavpack/Makefile
-/lib/win32/libwavpack/Debug
-/lib/win32/libwavpack/Release
-
 # /lib/win32/sqlite
 /lib/win32/sqlite/libsqlite_win32/Debug
 /lib/win32/sqlite/libsqlite_win32/Release
@@ -1006,6 +1011,7 @@ project/Win32BuildSetup/dependencies/libcdio-10.dll
 /lib/libapetag/m4/ltoptions.m4
 /lib/libapetag/m4/ltsugar.m4
 /lib/libapetag/m4/ltversion.m4
+/lib/libapetag/m4/lt~obsolete.m4
 /lib/libapetag/Makefile.in
 /lib/libapetag/missing
 
@@ -1180,6 +1186,20 @@ project/Win32BuildSetup/dependencies/libcdio-10.dll
 /xbmc/visualizations/DirectXSpectrum/Release (DirectX)
 
 /xbmc/visualizations/Goom/Makefile
+/xbmc/visualizations/Goom/goom2k4-0/aclocal.m4
+/xbmc/visualizations/Goom/goom2k4-0/configure
+/xbmc/visualizations/Goom/goom2k4-0/INSTALL
+/xbmc/visualizations/Goom/goom2k4-0/Makefile.in
+/xbmc/visualizations/Goom/goom2k4-0/config.guess
+/xbmc/visualizations/Goom/goom2k4-0/config.sub
+/xbmc/visualizations/Goom/goom2k4-0/depcomp
+/xbmc/visualizations/Goom/goom2k4-0/install-sh
+/xbmc/visualizations/Goom/goom2k4-0/ltmain.sh
+/xbmc/visualizations/Goom/goom2k4-0/missing
+/xbmc/visualizations/Goom/goom2k4-0/sdl-goom/Makefile.in
+/xbmc/visualizations/Goom/goom2k4-0/src/Makefile.in
+/xbmc/visualizations/Goom/goom2k4-0/xmms-goom/Makefile.in
+/xbmc/visualizations/Goom/goom2k4-0/ylwrap
 
 /xbmc/visualizations/Milkdrop/Debug
 /xbmc/visualizations/Milkdrop/Release

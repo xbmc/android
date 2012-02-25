@@ -22,7 +22,8 @@
 
 #include "utils/StdString.h"
 #include "threads/Thread.h"
-#if defined(__ANDROID__)
+#include "threads/CriticalSection.h"
+#if defined(TARGET_ANDROID)
 #include <linux/socket.h>
 #endif
 #include <sys/socket.h>
@@ -66,5 +67,5 @@ protected:
   std::vector<UdpCommand> commands;
   typedef std::vector<UdpCommand> ::iterator COMMANDITERATOR;
 
-  CRITICAL_SECTION critical_section;
+  CCriticalSection critical_section;
 };

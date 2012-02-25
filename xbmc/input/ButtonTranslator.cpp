@@ -54,7 +54,9 @@ static const ActionMapping actions[] =
         {"pagedown"          , ACTION_PAGE_DOWN},
         {"select"            , ACTION_SELECT_ITEM},
         {"highlight"         , ACTION_HIGHLIGHT_ITEM},
-        {"parentdir"         , ACTION_PARENT_DIR},
+        {"parentdir"         , ACTION_NAV_BACK},       // backward compatibility
+        {"parentfolder"      , ACTION_PARENT_DIR},
+        {"back"              , ACTION_NAV_BACK},
         {"previousmenu"      , ACTION_PREVIOUS_MENU},
         {"info"              , ACTION_SHOW_INFO},
         {"pause"             , ACTION_PAUSE},
@@ -91,13 +93,16 @@ static const ActionMapping actions[] =
         {"resetcalibration"  , ACTION_CALIBRATE_RESET},
         {"analogmove"        , ACTION_ANALOG_MOVE},
         {"rotate"            , ACTION_ROTATE_PICTURE},
-        {"close"             , ACTION_CLOSE_DIALOG},
+        {"close"             , ACTION_NAV_BACK}, // backwards compatibility
         {"subtitledelayminus", ACTION_SUBTITLE_DELAY_MIN},
         {"subtitledelay"     , ACTION_SUBTITLE_DELAY},
         {"subtitledelayplus" , ACTION_SUBTITLE_DELAY_PLUS},
         {"audiodelayminus"   , ACTION_AUDIO_DELAY_MIN},
         {"audiodelay"        , ACTION_AUDIO_DELAY},
         {"audiodelayplus"    , ACTION_AUDIO_DELAY_PLUS},
+        {"subtitleshiftup"   , ACTION_SUBTITLE_VSHIFT_UP},
+        {"subtitleshiftdown" , ACTION_SUBTITLE_VSHIFT_DOWN},
+        {"subtitlealign"     , ACTION_SUBTITLE_ALIGN},
         {"audionextlanguage" , ACTION_AUDIO_NEXT_LANGUAGE},
         {"verticalshiftup"   , ACTION_VSHIFT_UP},
         {"verticalshiftdown" , ACTION_VSHIFT_DOWN},
@@ -304,7 +309,9 @@ static const ActionMapping windows[] =
         {"musicoverlay"             , WINDOW_DIALOG_MUSIC_OVERLAY},
         {"videooverlay"             , WINDOW_DIALOG_VIDEO_OVERLAY},
         {"startwindow"              , WINDOW_START},
-        {"startup"                  , WINDOW_STARTUP_ANIM}};
+        {"startup"                  , WINDOW_STARTUP_ANIM},
+        {"peripherals"              , WINDOW_DIALOG_PERIPHERAL_MANAGER},
+        {"peripheralsettings"       , WINDOW_DIALOG_PERIPHERAL_SETTINGS}};
 
 static const ActionMapping mousecommands[] =
 {
@@ -342,7 +349,9 @@ static const ActionMapping appcommands[] =
   { "play",                APPCOMMAND_MEDIA_PLAY },
   { "pause",               APPCOMMAND_MEDIA_PAUSE },
   { "fastforward",         APPCOMMAND_MEDIA_FAST_FORWARD },
-  { "rewind",              APPCOMMAND_MEDIA_REWIND }
+  { "rewind",              APPCOMMAND_MEDIA_REWIND },
+  { "channelup",           APPCOMMAND_MEDIA_CHANNEL_UP },
+  { "channeldown",         APPCOMMAND_MEDIA_CHANNEL_DOWN }
 };
 #endif
 
@@ -353,19 +362,66 @@ CButtonTranslator& CButtonTranslator::GetInstance()
 }
 
 CButtonTranslator::CButtonTranslator()
-{}
+{
+  m_baseMap.clear();
+  m_deviceList.clear();
+  m_Loaded = false;
+}
 
 CButtonTranslator::~CButtonTranslator()
-{}
-
-bool CButtonTranslator::Load()
 {
-  translatorMap.clear();
+#if defined(HAS_LIRC) || defined(HAS_IRSERVERSUITE)
+  vector<lircButtonMap*> maps;
+  for (map<CStdString,lircButtonMap*>::iterator it  = lircRemotesMap.begin();
+                                                it != lircRemotesMap.end();++it)
+    maps.push_back(it->second);
+  sort(maps.begin(),maps.end());
+  vector<lircButtonMap*>::iterator itend = unique(maps.begin(),maps.end());
+  for (vector<lircButtonMap*>::iterator it = maps.begin(); it != itend;++it)
+    delete *it;
+#endif
+}
 
-  //directories to search for keymaps
-  //they're applied in this order,
-  //so keymaps in profile/keymaps/
-  //override e.g. system/keymaps
+// Add the supplied device name to the list of connected devices
+void CButtonTranslator::AddDevice(CStdString& strDevice)
+{
+  // Only add the device if it isn't already in the list
+  std::list<CStdString>::iterator it;
+  for (it = m_deviceList.begin(); it != m_deviceList.end(); it++)
+    if (*it == strDevice)
+      return;
+
+  // Add the device
+  m_deviceList.push_back(strDevice);
+  m_deviceList.sort();
+
+  // New device added so reload the key mappings
+  Load();
+}
+
+void CButtonTranslator::RemoveDevice(CStdString& strDevice)
+{
+  // Find the device
+  std::list<CStdString>::iterator it;
+  for (it = m_deviceList.begin(); it != m_deviceList.end(); it++)
+    if (*it == strDevice)
+      break;
+  if (it == m_deviceList.end())
+    return;
+
+  // Remove the device
+  m_deviceList.remove(strDevice);
+
+  // Device removed so reload the key mappings
+  Load();
+}
+
+bool CButtonTranslator::Load(bool AlwaysLoad)
+{
+  m_translatorMap.clear();
+
+  // Directories to search for keymaps. They're applied in this order,
+  // so keymaps in profile/keymaps/ override e.g. system/keymaps
   static const char* DIRS_TO_CHECK[] = {
     "special://xbmc/system/keymaps/",
     "special://masterprofile/keymaps/",
@@ -373,23 +429,37 @@ bool CButtonTranslator::Load()
   };
   bool success = false;
 
-  for(unsigned int dirIndex = 0; dirIndex < sizeof(DIRS_TO_CHECK)/sizeof(DIRS_TO_CHECK[0]); ++dirIndex) {
-    if( XFILE::CDirectory::Exists(DIRS_TO_CHECK[dirIndex]) )
-    {
-      CFileItemList files;
-      XFILE::CDirectory::GetDirectory(DIRS_TO_CHECK[dirIndex], files, "*.xml");
-      //sort the list for filesystem based prioties, e.g. 01-keymap.xml, 02-keymap-overrides.xml
-      files.Sort(SORT_METHOD_FILE, SORT_ORDER_ASC);
-      for(int fileIndex = 0; fileIndex<files.Size(); ++fileIndex)
-        success |= LoadKeymap(files[fileIndex]->m_strPath);
-    }
+  // If we've already loaded the m_baseMap we don't need to load it
+  // again - this speeds up reloads caused by plugging and unplugging
+  // HID devices. However if AlwaysLoad is true always load the keymaps
+  // from scratch.
+  if (m_Loaded && !AlwaysLoad)
+  {
+    m_translatorMap = m_baseMap;
   }
 
-  if (!success)
+  // Else load the standard mappings
+  else
   {
-    CLog::Log(LOGERROR, "Error loading keymaps from: %s or %s or %s", DIRS_TO_CHECK[0], DIRS_TO_CHECK[1], DIRS_TO_CHECK[2]);
-    return false;
-  }
+    for(unsigned int dirIndex = 0; dirIndex < sizeof(DIRS_TO_CHECK)/sizeof(DIRS_TO_CHECK[0]); ++dirIndex) {
+      if( XFILE::CDirectory::Exists(DIRS_TO_CHECK[dirIndex]) )
+      {
+        CFileItemList files;
+        XFILE::CDirectory::GetDirectory(DIRS_TO_CHECK[dirIndex], files, "*.xml");
+        // Sort the list for filesystem based priorities, e.g. 01-keymap.xml, 02-keymap-overrides.xml
+        files.Sort(SORT_METHOD_FILE, SORT_ORDER_ASC);
+        // In (at least) Windows the GetDirectory returns all files not just *.xml files
+        for(int fileIndex = 0; fileIndex<files.Size(); ++fileIndex)
+          if (files[fileIndex]->GetPath().Right(4) == ".xml")
+            success |= LoadKeymap(files[fileIndex]->GetPath());
+      }
+    }
+
+    if (!success)
+    {
+      CLog::Log(LOGERROR, "Error loading keymaps from: %s or %s or %s", DIRS_TO_CHECK[0], DIRS_TO_CHECK[1], DIRS_TO_CHECK[2]);
+      return false;
+    }
 
 #if defined(HAS_LIRC) || defined(HAS_IRSERVERSUITE)
 #ifdef _LINUX
@@ -397,27 +467,55 @@ bool CButtonTranslator::Load()
 #else
 #define REMOTEMAP "IRSSmap.xml"
 #endif
-  CStdString lircmapPath;
-  URIUtils::AddFileToFolder("special://xbmc/system/", REMOTEMAP, lircmapPath);
-  lircRemotesMap.clear();
-  if(CFile::Exists(lircmapPath))
-    success |= LoadLircMap(lircmapPath);
-  else
-    CLog::Log(LOGDEBUG, "CButtonTranslator::Load - no system %s found, skipping", REMOTEMAP);
+    CStdString lircmapPath;
+    URIUtils::AddFileToFolder("special://xbmc/system/", REMOTEMAP, lircmapPath);
+    lircRemotesMap.clear();
+    if(CFile::Exists(lircmapPath))
+      success |= LoadLircMap(lircmapPath);
+    else
+      CLog::Log(LOGDEBUG, "CButtonTranslator::Load - no system %s found, skipping", REMOTEMAP);
 
-  lircmapPath = g_settings.GetUserDataItem(REMOTEMAP);
-  if(CFile::Exists(lircmapPath))
-    success |= LoadLircMap(lircmapPath);
-  else
-    CLog::Log(LOGDEBUG, "CButtonTranslator::Load - no userdata %s found, skipping", REMOTEMAP);
+    lircmapPath = g_settings.GetUserDataItem(REMOTEMAP);
+    if(CFile::Exists(lircmapPath))
+      success |= LoadLircMap(lircmapPath);
+    else
+      CLog::Log(LOGDEBUG, "CButtonTranslator::Load - no userdata %s found, skipping", REMOTEMAP);
 
-  if (!success)
-    CLog::Log(LOGERROR, "CButtonTranslator::Load - unable to load remote map %s", REMOTEMAP);
+    if (!success)
+      CLog::Log(LOGERROR, "CButtonTranslator::Load - unable to load remote map %s", REMOTEMAP);
     // don't return false - it is to only indicate a fatal error (which this is not)
-
 #endif
 
+    // Standard mappings have been loaded into m_translatorMap, copy them to
+    // m_baseMap for future reuse.
+    m_baseMap = m_translatorMap;
+  }
+
+  // Load mappings for any HID devices we have connected
+  std::list<CStdString>::iterator it;
+  for (it = m_deviceList.begin(); it != m_deviceList.end(); it++)
+  {
+    for(unsigned int dirIndex = 0; dirIndex < sizeof(DIRS_TO_CHECK)/sizeof(DIRS_TO_CHECK[0]); ++dirIndex)
+    {
+      CStdString devicedir = DIRS_TO_CHECK[dirIndex];
+      devicedir.append(*it);
+      devicedir.append("/");
+      if( XFILE::CDirectory::Exists(devicedir) )
+      {
+        CFileItemList files;
+        XFILE::CDirectory::GetDirectory(devicedir, files, "*.xml");
+        // Sort the list for filesystem based priorities, e.g. 01-keymap.xml, 02-keymap-overrides.xml
+        files.Sort(SORT_METHOD_FILE, SORT_ORDER_ASC);
+        // In (at least) Windows the GetDirectory returns all files not just *.xml files
+        for(int fileIndex = 0; fileIndex<files.Size(); ++fileIndex)
+          if (files[fileIndex]->GetPath().Right(4) == ".xml")
+            success |= LoadKeymap(files[fileIndex]->GetPath());
+      }
+    }
+  }
+
   // Done!
+  m_Loaded = true;
   return true;
 }
 
@@ -511,14 +609,11 @@ bool CButtonTranslator::LoadLircMap(const CStdString &lircmapPath)
 void CButtonTranslator::MapRemote(TiXmlNode *pRemote, const char* szDevice)
 {
   CLog::Log(LOGINFO, "* Adding remote mapping for device '%s'", szDevice);
-  lircButtonMap buttons;
   vector<string> RemoteNames;
-  map<CStdString, lircButtonMap>::iterator it = lircRemotesMap.find(szDevice);
-  if (it != lircRemotesMap.end())
-  {
-    buttons = it->second;
-    lircRemotesMap.erase(it);
-  }
+  map<CStdString, lircButtonMap*>::iterator it = lircRemotesMap.find(szDevice);
+  if (it == lircRemotesMap.end())
+    lircRemotesMap[szDevice] = new lircButtonMap;
+  lircButtonMap& buttons = *lircRemotesMap[szDevice];
 
   TiXmlElement *pButton = pRemote->FirstChildElement();
   while (pButton)
@@ -533,34 +628,24 @@ void CButtonTranslator::MapRemote(TiXmlNode *pRemote, const char* szDevice)
 
     pButton = pButton->NextSiblingElement();
   }
-
-  lircRemotesMap[szDevice] = buttons;
-  vector<string>::iterator itr = RemoteNames.begin();
-  while (itr!=RemoteNames.end())
+  for (vector<string>::iterator it  = RemoteNames.begin();
+                                it != RemoteNames.end();++it)
   {
-    it = lircRemotesMap.find(itr->c_str());
-    if (it != lircRemotesMap.end())
-    {
-      buttons = it->second;
-      lircRemotesMap.erase(it);
-    }
-    CLog::Log(LOGINFO, "* Linking remote mapping for '%s' to '%s'", szDevice, itr->c_str());
-    lircRemotesMap[itr->c_str()] = buttons;
-    itr++;
+    CLog::Log(LOGINFO, "* Linking remote mapping for '%s' to '%s'", szDevice, it->c_str());
+    lircRemotesMap[*it] = &buttons;
   }
-  RemoteNames.clear();
 }
 
 int CButtonTranslator::TranslateLircRemoteString(const char* szDevice, const char *szButton)
 {
   // Find the device
-  map<CStdString, lircButtonMap>::iterator it = lircRemotesMap.find(szDevice);
+  map<CStdString, lircButtonMap*>::iterator it = lircRemotesMap.find(szDevice);
   if (it == lircRemotesMap.end())
     return 0;
 
   // Find the button
-  lircButtonMap::iterator it2 = (*it).second.find(szButton);
-  if (it2 == (*it).second.end())
+  lircButtonMap::iterator it2 = (*it).second->find(szButton);
+  if (it2 == (*it).second->end())
     return 0;
 
   // Convert the button to code
@@ -782,13 +867,14 @@ CAction CButtonTranslator::GetAction(int window, const CKey &key, bool fallback)
   return action;
 }
 
-int CButtonTranslator::GetActionCode(int window, const CKey &key, CStdString &strAction)
+int CButtonTranslator::GetActionCode(int window, const CKey &key, CStdString &strAction) const
 {
   uint32_t code = key.GetButtonCode();
-  map<int, buttonMap>::iterator it = translatorMap.find(window);
-  if (it == translatorMap.end())
+
+  map<int, buttonMap>::const_iterator it = m_translatorMap.find(window);
+  if (it == m_translatorMap.end())
     return 0;
-  buttonMap::iterator it2 = (*it).second.find(code);
+  buttonMap::const_iterator it2 = (*it).second.find(code);
   int action = 0;
   while (it2 != (*it).second.end())
   {
@@ -802,7 +888,7 @@ int CButtonTranslator::GetActionCode(int window, const CKey &key, CStdString &st
   {
     CLog::Log(LOGDEBUG, "%s: Trying Hardy keycode for %#04x", __FUNCTION__, code);
     code &= ~0x0F00;
-    buttonMap::iterator it2 = (*it).second.find(code);
+    buttonMap::const_iterator it2 = (*it).second.find(code);
     while (it2 != (*it).second.end())
     {
       action = (*it2).second.id;
@@ -844,13 +930,7 @@ void CButtonTranslator::MapWindowActions(TiXmlNode *pWindow, int windowID)
 {
   if (!pWindow || windowID == WINDOW_INVALID) 
     return;
-  buttonMap map;
-  std::map<int, buttonMap>::iterator it = translatorMap.find(windowID);
-  if (it != translatorMap.end())
-  {
-    map = it->second;
-    translatorMap.erase(it);
-  }
+
   TiXmlNode* pDevice;
 
   const char* types[] = {"gamepad", "remote", "universalremote", "keyboard", "mouse", "appcommand", NULL};
@@ -859,8 +939,18 @@ void CButtonTranslator::MapWindowActions(TiXmlNode *pWindow, int windowID)
     CStdString type(types[i]);
     if (HasDeviceType(pWindow, type))
     {
+      buttonMap map;
+      std::map<int, buttonMap>::iterator it = m_translatorMap.find(windowID);
+      if (it != m_translatorMap.end())
+      {
+        map = it->second;
+        m_translatorMap.erase(it);
+      }
+
       pDevice = pWindow->FirstChild(type);
+
       TiXmlElement *pButton = pDevice->FirstChildElement();
+
       while (pButton)
       {
         uint32_t buttonCode=0;
@@ -881,8 +971,13 @@ void CButtonTranslator::MapWindowActions(TiXmlNode *pWindow, int windowID)
           MapAction(buttonCode, pButton->FirstChild()->Value(), map);
         pButton = pButton->NextSiblingElement();
       }
+
+      // add our map to our table
+      if (map.size() > 0)
+        m_translatorMap.insert(pair<int, buttonMap>( windowID, map));
     }
   }
+
 #if defined(HAS_SDL_JOYSTICK) || defined(HAS_EVENT_SERVER)
   if ((pDevice = pWindow->FirstChild("joystick")) != NULL)
   {
@@ -894,9 +989,6 @@ void CButtonTranslator::MapWindowActions(TiXmlNode *pWindow, int windowID)
     }
   }
 #endif
-  // add our map to our table
-  if (map.size() > 0)
-    translatorMap.insert(pair<int, buttonMap>( windowID, map));
 }
 
 bool CButtonTranslator::TranslateActionString(const char *szAction, int &action)
@@ -1191,7 +1283,7 @@ uint32_t CButtonTranslator::TranslateMouseCommand(const char *szButton)
 
 void CButtonTranslator::Clear()
 {
-  translatorMap.clear();
+  m_translatorMap.clear();
 #if defined(HAS_LIRC) || defined(HAS_IRSERVERSUITE)
   lircRemotesMap.clear();
 #endif
@@ -1201,4 +1293,6 @@ void CButtonTranslator::Clear()
   m_joystickAxisMap.clear();
   m_joystickHatMap.clear();
 #endif
+
+  m_Loaded = false;
 }

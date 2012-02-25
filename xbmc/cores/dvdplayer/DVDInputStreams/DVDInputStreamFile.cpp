@@ -20,9 +20,9 @@
  */
 
 #include "DVDInputStreamFile.h"
-#include "FileItem.h"
 #include "filesystem/File.h"
 #include "utils/log.h"
+#include "utils/URIUtils.h"
 
 using namespace XFILE;
 
@@ -44,20 +44,15 @@ bool CDVDInputStreamFile::IsEOF()
 
 bool CDVDInputStreamFile::Open(const char* strFile, const std::string& content)
 {
-  if (!CDVDInputStream::Open(strFile, content)) return false;
-
-  CStdString stdFile = strFile;
+  if (!CDVDInputStream::Open(strFile, content))
+    return false;
 
   m_pFile = new CFile();
-  if (!m_pFile) return false;
-
-  unsigned int flags = READ_TRUNCATED | READ_BITRATE | READ_CHUNKED;
-
-  if( CFileItem(strFile, false).IsInternetStream() )
-    flags |= READ_CACHED;
+  if (!m_pFile)
+    return false;
 
   // open file in binary mode
-  if (!m_pFile->Open(strFile, flags))
+  if (!m_pFile->Open(strFile, READ_TRUNCATED | READ_BITRATE | READ_CHUNKED))
   {
     delete m_pFile;
     m_pFile = NULL;

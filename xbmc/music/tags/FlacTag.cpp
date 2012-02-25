@@ -26,6 +26,7 @@
 #include "filesystem/File.h"
 #include "utils/log.h"
 #include "utils/EndianSwap.h"
+#include "ThumbnailCache.h"
 
 
 #define BYTES_TO_CHECK_FOR_BAD_TAGS 16384
@@ -113,9 +114,9 @@ bool CFlacTag::Read(const CStdString& strFile)
 
   CStdString strCoverArt;
   if (!m_musicInfoTag.GetAlbum().IsEmpty() && (!m_musicInfoTag.GetAlbumArtist().IsEmpty() || !m_musicInfoTag.GetArtist().IsEmpty()))
-    strCoverArt = CUtil::GetCachedAlbumThumb(m_musicInfoTag.GetAlbum(), m_musicInfoTag.GetAlbumArtist().IsEmpty() ? m_musicInfoTag.GetArtist() : m_musicInfoTag.GetAlbumArtist());
+    strCoverArt = CThumbnailCache::GetAlbumThumb(&m_musicInfoTag);
   else
-    strCoverArt = CUtil::GetCachedMusicThumb(m_musicInfoTag.GetURL());
+    strCoverArt = CThumbnailCache::GetMusicThumb(m_musicInfoTag.GetURL());
 
   if (cover && !CUtil::ThumbExists(strCoverArt))
   {
@@ -181,7 +182,8 @@ int CFlacTag::ReadFlacHeader(void)
   m_file->Read(buffer, 8);    // read 64 bits of data
   int iFreq = (buffer[0] << 12) | (buffer[1] << 4) | (buffer[2] >> 4);
   int64_t iNumSamples = ( (int64_t) (buffer[3] & 0x0F) << 32) | ( (int64_t) buffer[4] << 24) | (buffer[5] << 16) | (buffer[6] << 8) | buffer[7];
-  m_musicInfoTag.SetDuration((int)((iNumSamples) / iFreq));
+  if (iFreq != 0)
+    m_musicInfoTag.SetDuration((int)((iNumSamples) / iFreq));
   return iPos + 38;
 }
 

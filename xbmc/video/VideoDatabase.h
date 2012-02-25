@@ -70,6 +70,7 @@ namespace VIDEO
 #define VIDEODB_DETAILS_EPISODE_TVSHOW_ID	VIDEODB_MAX_COLUMNS + 8
 #define VIDEODB_DETAILS_EPISODE_TVSHOW_AIRED	VIDEODB_MAX_COLUMNS + 9
 #define VIDEODB_DETAILS_EPISODE_TVSHOW_MPAA	VIDEODB_MAX_COLUMNS + 10
+#define VIDEODB_DETAILS_EPISODE_TVSHOW_PATH	VIDEODB_MAX_COLUMNS + 11
 						
 #define VIDEODB_DETAILS_TVSHOW_PATH		VIDEODB_MAX_COLUMNS + 1
 #define VIDEODB_DETAILS_TVSHOW_NUM_EPISODES	VIDEODB_MAX_COLUMNS + 2
@@ -355,10 +356,11 @@ public:
   void UpdateLastPlayed(const CFileItem &item);
 
   /*! \brief Get the playcount of a list of items
+   \param path the path to fetch videos from
    \param items CFileItemList to fetch the playcounts for
    \sa GetPlayCount, SetPlayCount, IncrementPlayCount
    */
-  bool GetPlayCounts(CFileItemList &items);
+  bool GetPlayCounts(const CStdString &path, CFileItemList &items);
 
   void UpdateMovieTitle(int idMovie, const CStdString& strNewMovieTitle, VIDEODB_CONTENT_TYPE iType=VIDEODB_CONTENT_MOVIES);
 
@@ -378,11 +380,11 @@ public:
   int GetTvShowForEpisode(int idEpisode);
 
   bool LoadVideoInfo(const CStdString& strFilenameAndPath, CVideoInfoTag& details);
-  void GetMovieInfo(const CStdString& strFilenameAndPath, CVideoInfoTag& details, int idMovie = -1);
-  void GetTvShowInfo(const CStdString& strPath, CVideoInfoTag& details, int idTvShow = -1);
+  bool GetMovieInfo(const CStdString& strFilenameAndPath, CVideoInfoTag& details, int idMovie = -1);
+  bool GetTvShowInfo(const CStdString& strPath, CVideoInfoTag& details, int idTvShow = -1);
   bool GetEpisodeInfo(const CStdString& strFilenameAndPath, CVideoInfoTag& details, int idEpisode = -1);
-  void GetMusicVideoInfo(const CStdString& strFilenameAndPath, CVideoInfoTag& details, int idMVideo=-1);
-  void GetSetInfo(int idSet, CVideoInfoTag& details);
+  bool GetMusicVideoInfo(const CStdString& strFilenameAndPath, CVideoInfoTag& details, int idMVideo=-1);
+  bool GetSetInfo(int idSet, CVideoInfoTag& details);
 
   int GetPathId(const CStdString& strPath);
   int GetTvShowId(const CStdString& strPath);
@@ -424,6 +426,7 @@ public:
   bool GetBookMarkForEpisode(const CVideoInfoTag& tag, CBookmark& bookmark);
   void AddBookMarkForEpisode(const CVideoInfoTag& tag, const CBookmark& bookmark);
   void DeleteBookMarkForEpisode(const CVideoInfoTag& tag);
+  bool GetResumePoint(CVideoInfoTag& tag) const;
 
   // scraper settings
   void SetScraperForPath(const CStdString& filePath, const ADDON::ScraperPtr& info, const VIDEO::SScanSettings& settings);
@@ -450,14 +453,6 @@ public:
    */
   CStdString GetContentForPath(const CStdString& strPath);
 
-  /*! \brief Get a video of the given content type from the given path, if it exists
-   \param content the content type to fetch.
-   \param path the path to fetch a video from.
-   \param item the returned item.
-   \return true if an item is found, false otherwise.
-   */
-  bool GetItemForPath(const CStdString &content, const CStdString &path, CFileItem &item);
-
   /*! \brief Get videos of the given content type from the given path
    \param content the content type to fetch.
    \param path the path to fetch videos from.
@@ -476,7 +471,7 @@ public:
   bool SetPathHash(const CStdString &path, const CStdString &hash);
   bool GetPathHash(const CStdString &path, CStdString &hash);
   bool GetPaths(std::set<CStdString> &paths);
-  bool GetPathsForTvShow(int idShow, std::vector<int>& paths);
+  bool GetPathsForTvShow(int idShow, std::set<int>& paths);
 
   /*! \brief retrieve subpaths of a given path.  Assumes a heirarchical folder structure
    \param basepath the root path to retrieve subpaths for
@@ -553,7 +548,7 @@ public:
   bool HasContent(VIDEODB_CONTENT_TYPE type);
   bool HasSets() const;
 
-  void CleanDatabase(VIDEO::IVideoInfoScannerObserver* pObserver=NULL, const std::vector<int>* paths=NULL);
+  void CleanDatabase(VIDEO::IVideoInfoScannerObserver* pObserver=NULL, const std::set<int>* paths=NULL);
 
   /*! \brief Add a file to the database, if necessary
    If the file is already in the database, we simply return its id.
@@ -693,7 +688,7 @@ private:
   /*! \brief (Re)Create the generic database views for movies, tvshows,
      episodes and music videos
    */
-  void CreateViews();
+  virtual void CreateViews();
 
   /*! \brief Run a query on the main dataset and return the number of rows
    If no rows are found we close the dataset and return 0.
@@ -703,16 +698,17 @@ private:
   int RunQuery(const CStdString &sql);
 
   /*! \brief Update routine for base path of videos
-   Only required for videodb version < 44
+   Only required for videodb version < 59
    \param table the table to update
    \param id the primary id in the given table
    \param column the basepath column to update
    \param shows whether we're fetching shows (defaults to false)
+   \param where restrict updating of items that match the where clause
    */
-  void UpdateBasePath(const char *table, const char *id, int column, bool shows = false);
+  void UpdateBasePath(const char *table, const char *id, int column, bool shows = false, const CStdString &where = "");
 
   /*! \brief Update routine for base path id of videos
-   Only required for videodb version < 52
+   Only required for videodb version < 59
    \param table the table to update
    \param id the primary id in the given table
    \param column the column of the basepath
@@ -726,7 +722,7 @@ private:
    */
   bool LookupByFolders(const CStdString &path, bool shows = false);
 
-  virtual int GetMinVersion() const { return 52; };
+  virtual int GetMinVersion() const { return 60; };
   virtual int GetExportVersion() const { return 1; };
   const char *GetBaseDBName() const { return "MyVideos"; };
 

@@ -24,6 +24,8 @@
 #include "pythreadstate.h"
 #include "addons/AddonManager.h"
 #include "addons/GUIDialogAddonSettings.h"
+#include "guilib/GUIWindowManager.h"
+#include "GUIUserMessages.h"
 #include "utils/log.h"
 
 namespace PYXBMC
@@ -60,12 +62,6 @@ namespace PYXBMC
 
 }
 
-#ifndef __GNUC__
-#pragma code_seg("PY_TEXT")
-#pragma data_seg("PY_DATA")
-#pragma bss_seg("PY_BSS")
-#pragma const_seg("PY_RDATA")
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -147,11 +143,13 @@ namespace PYXBMC
       }
     }
 
+    CAddonMgr::Get().AddToUpdateableAddons(self->pAddon);
     return (PyObject*)self;
   }
 
   void Addon_Dealloc(Addon* self)
   {
+    CAddonMgr::Get().RemoveFromUpdateableAddons(self->pAddon);  
     self->ob_type->tp_free((PyObject*)self);
   }
 
@@ -251,8 +249,27 @@ namespace PYXBMC
 
     AddonPtr addon(self->pAddon);
     CPyThreadState pyState;
-    addon->UpdateSetting(id, value);
-    addon->SaveSettings();
+    bool save=true;
+    if (g_windowManager.IsWindowActive(WINDOW_DIALOG_ADDON_SETTINGS))
+    {
+      CGUIDialogAddonSettings* dialog = (CGUIDialogAddonSettings*)g_windowManager.GetWindow(WINDOW_DIALOG_ADDON_SETTINGS);
+      if (dialog->GetCurrentID() == addon->ID())
+      {
+        CGUIMessage message(GUI_MSG_SETTING_UPDATED,0,0);
+        std::vector<CStdString> params;
+        params.push_back(id);
+        params.push_back(value);
+        message.SetStringParams(params);
+        g_windowManager.SendThreadMessage(message,WINDOW_DIALOG_ADDON_SETTINGS);
+        save=false;
+      }
+    }
+    if (save)
+    {
+      addon->UpdateSetting(id, value);
+      addon->SaveSettings();
+    }
+
     pyState.Restore();
 
     Py_INCREF(Py_None);
@@ -365,12 +382,6 @@ namespace PYXBMC
     " - self.Addon = xbmcaddon.Addon(id='script.recentlyadded')\n");
 
 // Restore code and data sections to normal.
-#ifndef __GNUC__
-#pragma code_seg()
-#pragma data_seg()
-#pragma bss_seg()
-#pragma const_seg()
-#endif
 
   PyTypeObject Addon_Type;
 

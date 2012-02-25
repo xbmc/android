@@ -247,6 +247,8 @@ CStdString StringUtils::SecondsToTimeString(long lSeconds, TIME_FORMAT format)
   CStdString strHMS;
   if (format & TIME_FORMAT_HH)
     strHMS.AppendFormat("%02.2i", hh);
+  else if (format & TIME_FORMAT_H)
+    strHMS.AppendFormat("%i", hh);
   if (format & TIME_FORMAT_MM)
     strHMS.AppendFormat(strHMS.IsEmpty() ? "%02.2i" : ":%02.2i", mm);
   if (format & TIME_FORMAT_SS)
@@ -263,6 +265,14 @@ bool StringUtils::IsNaturalNumber(const CStdString& str)
     if ((str[i] < '0') || (str[i] > '9')) return false;
   }
   return true;
+}
+
+bool StringUtils::IsInteger(const CStdString& str)
+{
+  if (str.size() > 0 && str[0] == '-')
+    return IsNaturalNumber(str.Mid(1));
+  else
+    return IsNaturalNumber(str);
 }
 
 void StringUtils::RemoveCRLF(CStdString& strLine)

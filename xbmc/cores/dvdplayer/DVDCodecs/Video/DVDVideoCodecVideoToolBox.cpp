@@ -1020,8 +1020,8 @@ bool validate_avcC_spc(uint8_t *extradata, uint32_t extrasize, int32_t *max_ref_
   uint32_t sps_size = VDA_RB16(spc);
   if (sps_size)
     parseh264_sps(spc+3, sps_size-1, &interlaced, max_ref_frames);
-  if (interlaced)
-    return false;
+  //if (interlaced)
+  //  return false;
   return true;
 }
 
@@ -1071,6 +1071,13 @@ bool CDVDVideoCodecVideoToolBox::Open(CDVDStreamInfo &hints, CDVDCodecOptions &o
     extrasize = hints.extrasize;
     extradata = (uint8_t*)hints.extradata;
  
+    if (width <= 0 || height <= 0 || profile <= 0 || level <= 0)
+    {
+      CLog::Log(LOGNOTICE, "%s - bailing with bogus hints, width(%d), height(%d), profile(%d), level(%d)",
+        __FUNCTION__, width, height, profile, level);
+      return false;
+    }
+    
     switch (hints.codec)
     {
       case CODEC_ID_MPEG4:
@@ -1185,6 +1192,14 @@ bool CDVDVideoCodecVideoToolBox::Open(CDVDStreamInfo &hints, CDVDCodecOptions &o
       break;
     }
 
+    if (profile == 77 && level == 32 && m_max_ref_frames > 4)
+    {
+      // Main@L3.2, VTB cannot handle greater than 4 ref frames (ie. flash video)
+      CLog::Log(LOGNOTICE, "%s - Main@L3.2 detected, VTB cannot decode with %d ref frames",
+        __FUNCTION__, m_max_ref_frames);
+      return false;
+    }
+ 
     if(m_fmt_desc == NULL)
     {
       CLog::Log(LOGNOTICE, "%s - created avcC atom of failed", __FUNCTION__);
@@ -1462,12 +1477,12 @@ CDVDVideoCodecVideoToolBox::CreateVTSession(int width, int height, CMFormatDescr
   OSStatus status;
 
   #if defined(__arm__)
-    // decoding, scaling and rendering above 1920 x 900 runs into
+    // decoding, scaling and rendering above 1920 x 800 runs into
     // some bandwidth limit. detect and scale down to reduce
     // the bandwidth requirements.
     int width_clamp = 1280;
-    if ((width * height) > (1920 * 900))
-      width_clamp = 1024;
+    if ((width * height) > (1920 * 800))
+      width_clamp = 960;
 
     int new_width = CheckNP2(width);
     if (width != new_width)
@@ -1536,7 +1551,7 @@ CDVDVideoCodecVideoToolBox::DestroyVTSession(void)
   if (m_vt_session)
   {
     VTDecompressionSessionInvalidate((VTDecompressionSessionRef)m_vt_session);
-    VTDecompressionSessionRelease((VTDecompressionSessionRef)m_vt_session);
+    CFRelease((VTDecompressionSessionRef)m_vt_session);
     m_vt_session = NULL;
   }
 }

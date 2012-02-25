@@ -32,10 +32,12 @@
 #include "URL.h"
 
 using namespace XFILE;
-using namespace Json;
 using namespace JSONRPC;
 
-JSON_STATUS CFileOperations::GetRootDirectory(const CStdString &method, ITransportLayer *transport, IClient *client, const Value &parameterObject, Value &result)
+static const unsigned int SourcesSize = 5;
+static CStdString SourceNames[] = { "programs", "files", "video", "music", "pictures" };
+
+JSON_STATUS CFileOperations::GetRootDirectory(const CStdString &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
 {
   CStdString media = parameterObject["media"].asString();
   media = media.ToLower();
@@ -45,28 +47,34 @@ JSON_STATUS CFileOperations::GetRootDirectory(const CStdString &method, ITranspo
   {
     CFileItemList items;
     for (unsigned int i = 0; i < (unsigned int)sources->size(); i++)
+    {
+      // Do not show sources which are locked
+      if (sources->at(i).m_iHasLock == 2)
+        continue;
+
       items.Add(CFileItemPtr(new CFileItem(sources->at(i))));
+    }
 
     for (unsigned int i = 0; i < (unsigned int)items.Size(); i++)
     {
       if (items[i]->IsSmb())
       {
-        CURL url(items[i]->m_strPath);
-        items[i]->m_strPath = url.GetWithoutUserDetails();
+        CURL url(items[i]->GetPath());
+        items[i]->SetPath(url.GetWithoutUserDetails());
       }
     }
 
-    Value param = parameterObject["fields"];
-    param["fields"] = Value(arrayValue);
-    param["fields"].append("file");
+    CVariant param(CVariant::VariantTypeObject);
+    param["properties"] = CVariant(CVariant::VariantTypeArray);
+    param["properties"].append("file");
 
-    HandleFileItemList(NULL, true, "shares", items, param, result);
+    HandleFileItemList(NULL, true, "sources", items, param, result);
   }
 
   return OK;
 }
 
-JSON_STATUS CFileOperations::GetDirectory(const CStdString &method, ITransportLayer *transport, IClient *client, const Value &parameterObject, Value &result)
+JSON_STATUS CFileOperations::GetDirectory(const CStdString &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
 {
   CStdString media = parameterObject["media"].asString();
   media = media.ToLower();
@@ -74,6 +82,17 @@ JSON_STATUS CFileOperations::GetDirectory(const CStdString &method, ITransportLa
   CDirectory directory;
   CFileItemList items;
   CStdString strPath = parameterObject["directory"].asString();
+
+  // Check if this directory is part of a source and whether it's locked
+  VECSOURCES *sources;
+  bool isSource;
+  for (unsigned int index = 0; index < SourcesSize; index++)
+  {
+    sources = g_settings.GetSourcesFromType(SourceNames[index]);
+    int sourceIndex = CUtil::GetMatchingSource(strPath, *sources, isSource);
+    if (sourceIndex >= 0 && sourceIndex < (int)sources->size() && sources->at(sourceIndex).m_iHasLock == 2)
+      return InvalidParams;
+  }
 
   CStdStringArray regexps;
   CStdString extensions = "";
@@ -98,36 +117,54 @@ JSON_STATUS CFileOperations::GetDirectory(const CStdString &method, ITransportLa
     CFileItemList filteredDirectories, filteredFiles;
     for (unsigned int i = 0; i < (unsigned int)items.Size(); i++)
     {
-      if (CUtil::ExcludeFileOrFolder(items[i]->m_strPath, regexps))
+      if (CUtil::ExcludeFileOrFolder(items[i]->GetPath(), regexps))
         continue;
 
       if (items[i]->IsSmb())
       {
-        CURL url(items[i]->m_strPath);
-        items[i]->m_strPath = url.GetWithoutUserDetails();
+        CURL url(items[i]->GetPath());
+        items[i]->SetPath(url.GetWithoutUserDetails());
       }
 
-      if (items[i]->m_bIsFolder)
-        filteredDirectories.Add(items[i]);
+      if ((media == "video" && items[i]->HasVideoInfoTag()) ||
+          (media == "music" && items[i]->HasMusicInfoTag()))
+      {
+        if (items[i]->m_bIsFolder)
+          filteredDirectories.Add(items[i]);
+        else 
+          filteredFiles.Add(items[i]);
+      }
       else
       {
         CFileItem fileItem;
-        if (FillFileItem(items[i]->m_strPath, fileItem, media))
-          filteredFiles.Add(CFileItemPtr(new CFileItem(fileItem)));
+        if (FillFileItem(items[i], fileItem, media))
+        {
+          if (items[i]->m_bIsFolder)
+            filteredDirectories.Add(CFileItemPtr(new CFileItem(fileItem)));
+          else
+            filteredFiles.Add(CFileItemPtr(new CFileItem(fileItem)));
+        }
+        else
+        {
+          if (items[i]->m_bIsFolder)
+            filteredDirectories.Add(items[i]);
+          else
+            filteredFiles.Add(items[i]);
+        }
       }
     }
 
-    // Check if the "fields" list exists
+    // Check if the "properties" list exists
     // and make sure it contains the "file"
     // field
-    Value param = parameterObject;
-    if (!param.isMember("fields"))
-      param["fields"] = Value(arrayValue);
+    CVariant param = parameterObject;
+    if (!param.isMember("properties"))
+      param["properties"] = CVariant(CVariant::VariantTypeArray);
 
     bool hasFileField = false;
-    for (unsigned int i = 0; i < param["fields"].size(); i++)
+    for (CVariant::const_iterator_array itr = param["properties"].begin_array(); itr != param["properties"].end_array(); itr++)
     {
-      if (param["fields"][i].asString().compare("file") == 0)
+      if (*itr == CVariant("file"))
       {
         hasFileField = true;
         break;
@@ -135,21 +172,21 @@ JSON_STATUS CFileOperations::GetDirectory(const CStdString &method, ITransportLa
     }
 
     if (!hasFileField)
-      param["fields"].append("file");
+      param["properties"].append("file");
 
-    HandleFileItemList(NULL, true, "files", filteredDirectories, param, result);
+    HandleFileItemList("id", true, "files", filteredDirectories, param, result);
     for (unsigned int index = 0; index < result["files"].size(); index++)
     {
       result["files"][index]["filetype"] = "directory";
     }
-    int count = result["limits"]["total"].asInt();
+    int count = (int)result["limits"]["total"].asInteger();
 
     HandleFileItemList("id", true, "files", filteredFiles, param, result);
     for (unsigned int index = count; index < result["files"].size(); index++)
     {
       result["files"][index]["filetype"] = "file";
     }
-    count += result["limits"]["total"].asInt();
+    count += (int)result["limits"]["total"].asInteger();
 
     result["limits"]["end"] = count;
     result["limits"]["total"] = count;
@@ -160,39 +197,65 @@ JSON_STATUS CFileOperations::GetDirectory(const CStdString &method, ITransportLa
   return InvalidParams;
 }
 
-JSON_STATUS CFileOperations::Download(const CStdString &method, ITransportLayer *transport, IClient *client, const Value &parameterObject, Value &result)
+JSON_STATUS CFileOperations::PrepareDownload(const CStdString &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
 {
-  return transport->Download(parameterObject["path"].asString().c_str(), &result) ? OK : InvalidParams;
+  std::string protocol;
+  if (transport->PrepareDownload(parameterObject["path"].asString().c_str(), result["details"], protocol))
+  {
+    result["protocol"] = protocol;
+
+    if ((transport->GetCapabilities() & FileDownloadDirect) == FileDownloadDirect)
+      result["mode"] = "direct";
+    else
+      result["mode"] = "redirect";
+
+    return OK;
+  }
+  
+  return InvalidParams;
 }
 
-bool CFileOperations::FillFileItem(const CStdString &strFilename, CFileItem &item, CStdString media /* = "" */)
+JSON_STATUS CFileOperations::Download(const CStdString &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
 {
+  return transport->Download(parameterObject["path"].asString().c_str(), result) ? OK : InvalidParams;
+}
+
+bool CFileOperations::FillFileItem(const CFileItemPtr &originalItem, CFileItem &item, CStdString media /* = "" */)
+{
+  if (originalItem.get() == NULL)
+    return false;
+
   bool status = false;
-  if (!strFilename.empty() && !CDirectory::Exists(strFilename) && CFile::Exists(strFilename))
+  CStdString strFilename = originalItem->GetPath();
+  if (!strFilename.empty() && (CDirectory::Exists(strFilename) || CFile::Exists(strFilename)))
   {
     if (media.Equals("video"))
-      status |= CVideoLibrary::FillFileItem(strFilename, item);
+      status = CVideoLibrary::FillFileItem(strFilename, item);
     else if (media.Equals("music"))
-      status |= CAudioLibrary::FillFileItem(strFilename, item);
+      status = CAudioLibrary::FillFileItem(strFilename, item);
 
-    if (!status)
+    if (!status && originalItem->GetLabel().empty())
     {
-      item = CFileItem(strFilename, false);
-      if (item.GetLabel().IsEmpty())
-        item.SetLabel(CUtil::GetTitleFromPath(strFilename, false));
-    }
+      bool isDir = CDirectory::Exists(strFilename);
+      CStdString label = CUtil::GetTitleFromPath(strFilename, isDir);
+      if (!label.empty())
+      {
+        item = CFileItem(strFilename, isDir);
+        item.SetLabel(label);
 
-    status = true;
+        status = true;
+      }
+    }
   }
 
   return status;
 }
 
-bool CFileOperations::FillFileItemList(const Value &parameterObject, CFileItemList &list)
+bool CFileOperations::FillFileItemList(const CVariant &parameterObject, CFileItemList &list)
 {
   if (parameterObject.isMember("directory"))
   {
-    CStdString media =  parameterObject.get("media", "").asString();
+    CStdString media =  parameterObject["media"].asString();
     media = media.ToLower();
 
     CStdString strPath = parameterObject["directory"].asString();
@@ -202,50 +265,53 @@ bool CFileOperations::FillFileItemList(const Value &parameterObject, CFileItemLi
       CStdString extensions = "";
       CStdStringArray regexps;
 
-      if (media.Equals("video") || media.Equals("music") || media.Equals("pictures"))
+      if (media.Equals("video"))
       {
-        if (media.Equals("video"))
-        {
-          regexps = g_advancedSettings.m_videoExcludeFromListingRegExps;
-          extensions = g_settings.m_videoExtensions;
-        }
-        else if (media.Equals("music"))
-        {
-          regexps = g_advancedSettings.m_audioExcludeFromListingRegExps;
-          extensions = g_settings.m_musicExtensions;
-        }
-        else if (media.Equals("pictures"))
-        {
-          regexps = g_advancedSettings.m_pictureExcludeFromListingRegExps;
-          extensions = g_settings.m_pictureExtensions;
-        }
+        regexps = g_advancedSettings.m_videoExcludeFromListingRegExps;
+        extensions = g_settings.m_videoExtensions;
+      }
+      else if (media.Equals("music"))
+      {
+        regexps = g_advancedSettings.m_audioExcludeFromListingRegExps;
+        extensions = g_settings.m_musicExtensions;
+      }
+      else if (media.Equals("pictures"))
+      {
+        regexps = g_advancedSettings.m_pictureExcludeFromListingRegExps;
+        extensions = g_settings.m_pictureExtensions;
       }
 
       CDirectory directory;
       if (directory.GetDirectory(strPath, items, extensions))
       {
+        items.Sort(SORT_METHOD_FILE, SORT_ORDER_ASC);
         CFileItemList filteredDirectories;
         for (unsigned int i = 0; i < (unsigned int)items.Size(); i++)
         {
-          if (CUtil::ExcludeFileOrFolder(items[i]->m_strPath, regexps))
+          if (CUtil::ExcludeFileOrFolder(items[i]->GetPath(), regexps))
             continue;
 
           if (items[i]->m_bIsFolder)
             filteredDirectories.Add(items[i]);
+          else if ((media == "video" && items[i]->HasVideoInfoTag()) ||
+                   (media == "music" && items[i]->HasMusicInfoTag()))
+            list.Add(items[i]);
           else
           {
             CFileItem fileItem;
-            if (FillFileItem(items[i]->m_strPath, fileItem, media))
+            if (FillFileItem(items[i], fileItem, media))
               list.Add(CFileItemPtr(new CFileItem(fileItem)));
+            else if (media == "files")
+              list.Add(items[i]);
           }
         }
 
-        if (parameterObject.isMember("recursive") && parameterObject["recursive"].isBool())
+        if (parameterObject.isMember("recursive") && parameterObject["recursive"].isBoolean())
         {
           for (int i = 0; i < filteredDirectories.Size(); i++)
           {
-            Value val = parameterObject;
-            val["directory"] = filteredDirectories[i]->m_strPath;
+            CVariant val = parameterObject;
+            val["directory"] = filteredDirectories[i]->GetPath();
             FillFileItemList(val, list);
           }
         }

@@ -55,7 +55,7 @@ public:
 
   void GetLocalDrives(VECSOURCES &localDrives, bool includeQ = true);
   void GetRemovableDrives(VECSOURCES &removableDrives);
-  void GetNetworkLocations(VECSOURCES &locations);
+  void GetNetworkLocations(VECSOURCES &locations, bool autolocations = true);
 
   bool AddNetworkLocation(const CStdString &path);
   bool HasLocation(const CStdString& path) const;
@@ -72,6 +72,7 @@ public:
   CCdInfo* GetCdInfo(const CStdString& devicePath="");
   bool RemoveCdInfo(const CStdString& devicePath="");
   CStdString GetDiskLabel(const CStdString& devicePath="");
+  CStdString GetDiskUniqueId(const CStdString& devicePath="");
 #endif
   CStdString GetDiscPath();
   void SetHasOpticalDrive(bool bstatus);
@@ -93,6 +94,7 @@ protected:
   CCriticalSection m_muAutoSource, m_CritSecStorageProvider;
 #ifdef HAS_DVD_DRIVE
   std::map<CStdString,CCdInfo*> m_mapCdInfo;
+  bool HashDVD(const CStdString& dvdpath, uint32_t& crc);
 #endif
   bool m_bhasoptical;
 

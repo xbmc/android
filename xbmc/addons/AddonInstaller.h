@@ -35,6 +35,14 @@ public:
   bool GetProgress(const CStdString &addonID, unsigned int &percent) const;
   bool Cancel(const CStdString &addonID);
 
+  /*! \brief Prompt the user as to whether they wish to install an addon.
+   \param addonID the addon ID of the item to install.
+   \param addon [out] the installed addon for later use.
+   \return true on successful install, false otherwise.
+   \sa Install
+   */
+  bool PromptForInstall(const CStdString &addonID, ADDON::AddonPtr &addon);
+
   /*! \brief Install an addon if it is available in a repository
    \param addonID the addon ID of the item to install
    \param force whether to force the install even if the addon is already installed (eg for updating). Defaults to false.
@@ -72,6 +80,13 @@ public:
    \param force whether we should run an update regardless of the normal update cycle. Defaults to false.
    \param wait whether we should busy wait for the updates to be performed. Defaults to false.
    */
+
+  /*! \brief Check if an installation job for a given add-on is already queued up
+   *  \param ID The ID of the add-on
+   *  \return true if a job exists, false otherwise
+   */
+  bool HasJob(const CStdString& ID) const;
+
   void UpdateRepos(bool force = false, bool wait = false);
 
   void OnJobComplete(unsigned int jobID, bool success, CJob* job);

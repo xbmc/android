@@ -25,6 +25,7 @@
 #include "settings/GUISettings.h"
 #include "settings/Settings.h"
 #include "FileItem.h"
+#include "utils/Variant.h"
 
 using namespace XFILE::VIDEODATABASEDIRECTORY;
 
@@ -47,6 +48,13 @@ CStdString CDirectoryNodeSeasons::GetLocalizedName() const
     return g_localizeStrings.Get(20381); // Specials
   case -1:
     return g_localizeStrings.Get(20366); // All Seasons
+  case -2:
+  {
+    CDirectoryNode *pParent = GetParent();
+    if (pParent)
+      return pParent->GetLocalizedName();
+    return "";
+  }
   default:
     CStdString season;
     season.Format(g_localizeStrings.Get(20358), GetID()); // Season <season>
@@ -75,7 +83,7 @@ bool CDirectoryNodeSeasons::GetContent(CFileItemList& items) const
     int count = 0;
     for(int i = 0; i < items.Size(); i++) 
     {
-      if (items[i]->GetPropertyInt("unwatchedepisodes") != 0 && items[i]->GetVideoInfoTag()->m_iSeason != 0)
+      if (items[i]->GetProperty("unwatchedepisodes").asInteger() != 0 && items[i]->GetVideoInfoTag()->m_iSeason != 0)
         count++;
     }
     bFlatten = (count < 2); // flatten if there is only 1 unwatched season (not counting specials)
@@ -84,8 +92,8 @@ bool CDirectoryNodeSeasons::GetContent(CFileItemList& items) const
   if (bFlatten)
   { // flatten if one season or flatten always
     items.Clear();
-    bSuccess=videodatabase.GetEpisodesNav(BuildPath()+"-1/",items,params.GetGenreId(),params.GetYear(),params.GetActorId(),params.GetDirectorId(),params.GetTvShowId());
-    items.m_strPath = BuildPath()+"-1/";
+    bSuccess=videodatabase.GetEpisodesNav(BuildPath()+"-2/",items,params.GetGenreId(),params.GetYear(),params.GetActorId(),params.GetDirectorId(),params.GetTvShowId());
+    items.SetPath(BuildPath()+"-2/");
   }
 
   videodatabase.Close();

@@ -71,7 +71,9 @@ MP3Codec::MP3Codec()
   
   m_HaveData = false;
   flushcnt = 0;
-  madx_init(&mxhouse);
+
+  if (m_dll.Load())
+    madx_init(&mxhouse);
 }
 
 MP3Codec::~MP3Codec()
@@ -84,7 +86,8 @@ MP3Codec::~MP3Codec()
   delete[] m_OutputBuffer;
   m_OutputBuffer = NULL;
   
-  madx_deinit(&mxhouse);
+  if (m_dll.IsLoaded())
+    madx_deinit(&mxhouse);
 }
 
 //Eventhandler if filereader is clearedwe flush the decoder.
@@ -95,8 +98,9 @@ void MP3Codec::OnFileReaderClearEvent()
 
 bool MP3Codec::Init(const CStdString &strFile, unsigned int filecache)
 {
-  if (!m_dll.IsLoaded())
-    m_dll.Load();
+  if (!m_dll.Load())
+    return false;
+
   // set defaults...
   m_InputBufferPos = 0;
   m_OutputBufferPos = 0;
@@ -106,6 +110,7 @@ bool MP3Codec::Init(const CStdString &strFile, unsigned int filecache)
   m_lastByteOffset = 0;
   m_eof = false;
   m_CallAgainWithSameBuffer = false;
+  m_readRetries = 5;
 
   CFileItem item(strFile, false);
   CMusicInfoTagLoaderMP3 mp3info;
@@ -268,6 +273,8 @@ int MP3Codec::Read(int size, bool init)
       {
         if (init)
         {
+          if (result == 0 && m_readRetries-- > 0)
+            return Read(size,init);
           // Make sure some data was decoded. Without a valid frame, we cannot determine the audio format
           if (!outputsize)
             return DECODING_ERROR;
@@ -327,6 +334,7 @@ int MP3Codec::Read(int size, bool init)
       return result;
     }
   }
+  m_readRetries = 5;
   return DECODING_SUCCESS;
 }
 

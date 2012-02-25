@@ -23,6 +23,7 @@
 
 #include <string>
 #include <map>
+#include "utils/Job.h"
 
 class CCriticalSection;
 /// this class provides support for zeroconf
@@ -48,7 +49,8 @@ public:
   bool PublishService(const std::string& fcr_identifier,
                       const std::string& fcr_type,
                       const std::string& fcr_name,
-                      unsigned int f_port);
+                      unsigned int f_port,
+                      std::map<std::string, std::string> txt);
 
   ///removes the specified service
   ///returns false if fcr_identifier does not exist
@@ -82,12 +84,16 @@ protected:
   virtual bool doPublishService(const std::string& fcr_identifier,
                                 const std::string& fcr_type,
                                 const std::string& fcr_name,
-                                unsigned int f_port) = 0;
+                                unsigned int f_port,
+                                std::map<std::string, std::string> txt) = 0;
   //removes the service if published
   virtual bool doRemoveService(const std::string& fcr_ident) = 0;
 
   //removes all services (short hand for "for i in m_service_map doRemoveService(i)")
   virtual void doStop() = 0;
+
+  // return true if the zeroconf daemon is running
+  virtual bool IsZCdaemonRunning() { return  true; }
 
 protected:
   //singleton: we don't want to get instantiated nor copied or deleted from outside
@@ -100,6 +106,7 @@ private:
     std::string type;
     std::string name;
     unsigned int port;
+    std::map<std::string, std::string> txt;
   };
 
   //protects data
@@ -111,4 +118,16 @@ private:
   //protects singleton creation/destruction
   static long sm_singleton_guard;
   static CZeroconf* smp_instance;
+
+  class CPublish : public CJob
+  {
+  public:
+    CPublish(const std::string& fcr_identifier, const PublishInfo& pubinfo);
+    CPublish(const tServiceMap& servmap);
+
+    bool DoWork();
+
+  private:
+    tServiceMap m_servmap;
+  };
 };

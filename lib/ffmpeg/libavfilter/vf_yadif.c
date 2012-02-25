@@ -44,48 +44,54 @@ typedef struct {
 
     int frame_pending;
 
+    /**
+     *  0: deinterlace all frames
+     *  1: only deinterlace frames marked as interlaced
+     */
+    int auto_enable;
+
     AVFilterBufferRef *cur;
     AVFilterBufferRef *next;
     AVFilterBufferRef *prev;
     AVFilterBufferRef *out;
     void (*filter_line)(uint8_t *dst,
                         uint8_t *prev, uint8_t *cur, uint8_t *next,
-                        int w, int refs, int parity, int mode);
+                        int w, int prefs, int mrefs, int parity, int mode);
 } YADIFContext;
 
 static void filter_line_c(uint8_t *dst,
                           uint8_t *prev, uint8_t *cur, uint8_t *next,
-                          int w, int refs, int parity, int mode)
+                          int w, int prefs, int mrefs, int parity, int mode)
 {
     int x;
     uint8_t *prev2 = parity ? prev : cur ;
     uint8_t *next2 = parity ? cur  : next;
     for (x = 0;  x < w; x++) {
-        int c = cur[-refs];
+        int c = cur[mrefs];
         int d = (prev2[0] + next2[0])>>1;
-        int e = cur[+refs];
+        int e = cur[prefs];
         int temporal_diff0 = FFABS(prev2[0] - next2[0]);
-        int temporal_diff1 =(FFABS(prev[-refs] - c) + FFABS(prev[+refs] - e) )>>1;
-        int temporal_diff2 =(FFABS(next[-refs] - c) + FFABS(next[+refs] - e) )>>1;
+        int temporal_diff1 =(FFABS(prev[mrefs] - c) + FFABS(prev[prefs] - e) )>>1;
+        int temporal_diff2 =(FFABS(next[mrefs] - c) + FFABS(next[prefs] - e) )>>1;
         int diff = FFMAX3(temporal_diff0>>1, temporal_diff1, temporal_diff2);
         int spatial_pred = (c+e)>>1;
-        int spatial_score = FFABS(cur[-refs-1] - cur[+refs-1]) + FFABS(c-e)
-                          + FFABS(cur[-refs+1] - cur[+refs+1]) - 1;
+        int spatial_score = FFABS(cur[mrefs-1] - cur[prefs-1]) + FFABS(c-e)
+                          + FFABS(cur[mrefs+1] - cur[prefs+1]) - 1;
 
 #define CHECK(j)\
-    {   int score = FFABS(cur[-refs-1+j] - cur[+refs-1-j])\
-                  + FFABS(cur[-refs  +j] - cur[+refs  -j])\
-                  + FFABS(cur[-refs+1+j] - cur[+refs+1-j]);\
+    {   int score = FFABS(cur[mrefs-1+j] - cur[prefs-1-j])\
+                  + FFABS(cur[mrefs  +j] - cur[prefs  -j])\
+                  + FFABS(cur[mrefs+1+j] - cur[prefs+1-j]);\
         if (score < spatial_score) {\
             spatial_score= score;\
-            spatial_pred= (cur[-refs  +j] + cur[+refs  -j])>>1;\
+            spatial_pred= (cur[mrefs  +j] + cur[prefs  -j])>>1;\
 
         CHECK(-1) CHECK(-2) }} }}
         CHECK( 1) CHECK( 2) }} }}
 
         if (mode < 2) {
-            int b = (prev2[-2*refs] + next2[-2*refs])>>1;
-            int f = (prev2[+2*refs] + next2[+2*refs])>>1;
+            int b = (prev2[2*mrefs] + next2[2*mrefs])>>1;
+            int f = (prev2[2*prefs] + next2[2*prefs])>>1;
 #if 0
             int a = cur[-3*refs];
             int g = cur[+3*refs];
@@ -133,7 +139,8 @@ static void filter(AVFilterContext *ctx, AVFilterBufferRef *dstpic,
                 uint8_t *cur  = &yadif->cur ->data[i][y*refs];
                 uint8_t *next = &yadif->next->data[i][y*refs];
                 uint8_t *dst  = &dstpic->data[i][y*dstpic->linesize[i]];
-                yadif->filter_line(dst, prev, cur, next, w, refs, parity ^ tff, yadif->mode);
+                int     mode  = y==1 || y+2==h ? 2 : yadif->mode;
+                yadif->filter_line(dst, prev, cur, next, w, y+1<h ? refs : -refs, y ? -refs : refs, parity ^ tff, mode);
             } else {
                 memcpy(&dstpic->data[i][y*dstpic->linesize[i]],
                        &yadif->cur->data[i][y*refs], w);
@@ -176,9 +183,12 @@ static void return_frame(AVFilterContext *ctx, int is_second)
         tff = yadif->parity^1;
     }
 
-    if (is_second)
+    if (is_second) {
         yadif->out = avfilter_get_video_buffer(link, AV_PERM_WRITE | AV_PERM_PRESERVE |
                                                AV_PERM_REUSE, link->w, link->h);
+        avfilter_copy_buffer_ref_props(yadif->out, yadif->cur);
+        yadif->out->video->interlaced = 0;
+    }
 
     filter(ctx, yadif->out, tff ^ !is_second, tff);
 
@@ -216,6 +226,14 @@ static void start_frame(AVFilterLink *link, AVFilterBufferRef *picref)
     if (!yadif->cur)
         return;
 
+    if (yadif->auto_enable && !yadif->cur->video->interlaced) {
+        yadif->out  = avfilter_ref_buffer(yadif->cur, AV_PERM_READ);
+        avfilter_unref_buffer(yadif->prev);
+        yadif->prev = NULL;
+        avfilter_start_frame(ctx->outputs[0], yadif->out);
+        return;
+    }
+
     if (!yadif->prev)
         yadif->prev = avfilter_ref_buffer(yadif->cur, AV_PERM_READ);
 
@@ -234,6 +252,12 @@ static void end_frame(AVFilterLink *link)
 
     if (!yadif->out)
         return;
+
+    if (yadif->auto_enable && !yadif->cur->video->interlaced) {
+        avfilter_draw_slice(ctx->outputs[0], 0, link->h, 1);
+        avfilter_end_frame(ctx->outputs[0]);
+        return;
+    }
 
     return_frame(ctx, 0);
 }
@@ -275,6 +299,9 @@ static int poll_frame(AVFilterLink *link)
     }
     assert(yadif->next);
 
+    if (yadif->auto_enable && yadif->next && !yadif->next->video->interlaced)
+        return val;
+
     return val * ((yadif->mode&1)+1);
 }
 
@@ -307,8 +334,9 @@ static av_cold int init(AVFilterContext *ctx, const char *args, void *opaque)
 
     yadif->mode = 0;
     yadif->parity = -1;
+    yadif->auto_enable = 0;
 
-    if (args) sscanf(args, "%d:%d", &yadif->mode, &yadif->parity);
+    if (args) sscanf(args, "%d:%d:%d", &yadif->mode, &yadif->parity, &yadif->auto_enable);
 
     yadif->filter_line = filter_line_c;
     if (HAVE_SSSE3 && cpu_flags & AV_CPU_FLAG_SSSE3)
@@ -318,7 +346,7 @@ static av_cold int init(AVFilterContext *ctx, const char *args, void *opaque)
     else if (HAVE_MMX && cpu_flags & AV_CPU_FLAG_MMX)
         yadif->filter_line = ff_yadif_filter_line_mmx;
 
-    av_log(ctx, AV_LOG_INFO, "mode:%d parity:%d\n", yadif->mode, yadif->parity);
+    av_log(ctx, AV_LOG_INFO, "mode:%d parity:%d auto_enable:%d\n", yadif->mode, yadif->parity, yadif->auto_enable);
 
     return 0;
 }

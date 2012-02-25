@@ -21,6 +21,7 @@
  */
 
 #include "IAddon.h"
+#include "addons/AddonVersion.h"
 #include "tinyXML/tinyxml.h"
 #include "Util.h"
 #include "URL.h"
@@ -43,22 +44,6 @@ const CStdString    GetIcon(const TYPE &type);
       TYPE          TranslateType(const CStdString &string);
 const CStdString    UpdateVideoScraper(const CStdString &scraper);
 const CStdString    UpdateMusicScraper(const CStdString &scraper);
-
-class AddonVersion
-{
-public:
-  AddonVersion(const CStdString &str) : str(str) {}
-  bool operator==(const AddonVersion &rhs) const;
-  bool operator!=(const AddonVersion &rhs) const;
-  bool operator>(const AddonVersion &rhs) const;
-  bool operator>=(const AddonVersion &rhs) const;
-  bool operator<(const AddonVersion &rhs) const;
-  bool operator<=(const AddonVersion &rhs) const;
-  CStdString Print() const;
-  const char *c_str() const { return str.c_str(); };
-private:
-  CStdString str;
-};
 
 class AddonProps
 {
@@ -183,6 +168,7 @@ public:
    \return true if  min_version <= version <= current_version, false otherwise.
    */
   bool MeetsVersion(const AddonVersion &version) const;
+  virtual bool ReloadSettings();
 
 protected:
   CAddon(const CAddon&); // protected as all copying is handled by Clone()
@@ -191,10 +177,11 @@ protected:
   virtual void BuildLibName(const cp_extension_t *ext = NULL);
 
   /*! \brief Load the default settings and override these with any previously configured user settings
+   \param bForce force the load of settings even if they are already loaded (reload)
    \return true if settings exist, false otherwise
    \sa LoadUserSettings, SaveSettings, HasSettings, HasUserSettings, GetSetting, UpdateSetting
    */
-  virtual bool LoadSettings();
+  virtual bool LoadSettings(bool bForce = false);
 
   /*! \brief Load the user settings
    \return true if user settings exist, false otherwise

@@ -1,7 +1,7 @@
-SRCS=
-# LIRC.cpp
+SRCS = LIRC.cpp
+SRCS+= LinuxInputDevices.cpp
 
-LIB=input_linux.a
+LIB  = input_linux.a
 
 include ../../../Makefile.include
 -include $(patsubst %.cpp,%.P,$(patsubst %.c,%.P,$(SRCS)))
