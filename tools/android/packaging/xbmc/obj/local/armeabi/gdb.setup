@@ -1,0 +1,4 @@
+set solib-search-path /home/speedy/workspace/NativeActivity/obj/local/armeabi
+directory /mnt/bighdd/Documents/xbmc/android-ndk-r6b/platforms/android-9/arch-arm/usr/include /mnt/bighdd/Documents/xbmc/android-ndk-r6b/sources/android/native_app_glue /mnt/bighdd/Documents/xbmc/android-ndk-r6b/sources/cxx-stl/stlport/stlport /mnt/bighdd/Documents/xbmc/android-ndk-r6b/sources/cxx-stl/system/include /home/speedy/workspace/NativeActivity/jni
+file /home/speedy/workspace/NativeActivity/obj/local/armeabi/app_process
+target remote :5039
