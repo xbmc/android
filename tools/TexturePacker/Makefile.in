@@ -3,11 +3,14 @@ ifneq ($(or $(findstring powerpc,@ARCH@),$(findstring ppc, @ARCH@)),)
 DEFINES += -DHOST_BIGENDIAN
 endif
 
-CXXFLAGS+= \
-  -I. \
-  -I@abs_top_srcdir@/lib \
-  -I@abs_top_srcdir@/xbmc \
-  -I@abs_top_srcdir@/xbmc/linux
+ifeq (@USE_TEXTUREPACKER_NATIVE@,1)
+CXXFLAGS =-I.
+else
+CXXFLAGS+=-I.
+endif
+CXXFLAGS+=-I@abs_top_srcdir@/lib
+CXXFLAGS+=-I@abs_top_srcdir@/xbmc
+CXXFLAGS+=-I@abs_top_srcdir@/xbmc/linux
 
 ifeq (@USE_TEXTUREPACKER_NATIVE@,1)
 NATIVE_ROOT_PATH=@USE_TEXTUREPACKER_NATIVE_ROOT@
