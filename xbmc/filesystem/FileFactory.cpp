@@ -41,7 +41,9 @@
 #include "FileCDDA.h"
 #endif
 #ifdef HAS_FILESYSTEM
+#ifdef HAVE_CDIO_ISO9660_H
 #include "FileISO.h"
+#endif
 #ifdef HAS_FILESYSTEM_RTV
 #include "FileRTV.h"
 #endif
@@ -117,7 +119,7 @@ IFile* CFileFactory::CreateLoader(const CURL& url)
 #if defined(HAS_FILESYSTEM_CDDA) && defined(HAS_DVD_DRIVE)
   else if (strProtocol == "cdda") return new CFileCDDA();
 #endif
-#ifdef HAS_FILESYSTEM
+#if defined(HAS_FILESYSTEM) && defined(HAVE_CDIO_ISO9660_H)
   else if (strProtocol == "iso9660") return new CFileISO();
 #endif
   else if(strProtocol == "udf") return new CFileUDF();

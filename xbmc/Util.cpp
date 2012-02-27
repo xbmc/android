@@ -52,7 +52,9 @@
 #ifdef HAS_FILESYSTEM_RAR
 #include "filesystem/RarManager.h"
 #endif
+#ifdef HAS_MYSQL
 #include "filesystem/MythDirectory.h"
+#endif
 #ifdef HAS_UPNP
 #include "filesystem/UPnPDirectory.h"
 #endif
@@ -1900,6 +1902,7 @@ bool CUtil::SupportsFileOperations(const CStdString& strPath)
     return true;
   if (URIUtils::IsAfp(strPath))
     return true;
+#ifdef HAS_MYSQL
   if (URIUtils::IsMythTV(strPath))
   {
     /*
@@ -1909,6 +1912,7 @@ bool CUtil::SupportsFileOperations(const CStdString& strPath)
      */
     return CMythDirectory::SupportsFileOperations(strPath);
   }
+#endif
   if (URIUtils::IsStack(strPath))
     return SupportsFileOperations(CStackDirectory::GetFirstStackedFile(strPath));
   if (URIUtils::IsMultiPath(strPath))

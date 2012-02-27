@@ -25,7 +25,6 @@ SRCS=AddonsDirectory.cpp \
      FileFactory.cpp \
      FileFileReader.cpp \
      FileHD.cpp \
-     FileISO.cpp \
      FileLastFM.cpp \
      FileMusicDatabase.cpp \
      FilePipe.cpp \
@@ -46,15 +45,12 @@ SRCS=AddonsDirectory.cpp \
      HTTPDirectory.cpp \
      IDirectory.cpp \
      IFile.cpp \
-     iso9660.cpp \
-     ISO9660Directory.cpp \
      LastFMDirectory.cpp \
      MultiPathDirectory.cpp \
      MultiPathFile.cpp \
      MusicDatabaseDirectory.cpp \
      MusicFileDirectory.cpp \
      MusicSearchDirectory.cpp \
-     MythDirectory.cpp \
      MythFile.cpp \
      MythSession.cpp \
      NptXbmcFile.cpp \
@@ -87,6 +83,16 @@ SRCS=AddonsDirectory.cpp \
      ZeroconfDirectory.cpp \
      ZipDirectory.cpp \
      ZipManager.cpp
+
+ifeq (@USE_LIBCDIO@,1)
+SRCS+=FileISO.cpp
+SRCS+=iso9660.cpp
+SRCS+=ISO9660Directory.cpp
+endif
+
+ifeq (@USE_MYSQL@,1)
+SRCS+=MythDirectory.cpp
+endif
 
 ifeq (@HAVE_XBMC_NONFREE@,1)
 SRCS+=FileRar.cpp

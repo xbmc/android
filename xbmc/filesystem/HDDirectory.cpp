@@ -73,6 +73,7 @@ bool CHDDirectory::GetDirectory(const CStdString& strPath1, CFileItemList &items
 #ifdef _WIN32
   strRoot.Replace("/", "\\");
 #endif
+#ifdef HAVE_CDIO_ISO9660_H
   if (URIUtils::IsDVD(strRoot) && m_isoReader.IsScanned())
   {
     // Reset iso reader and remount or
@@ -82,6 +83,7 @@ bool CHDDirectory::GetDirectory(const CStdString& strPath1, CFileItemList &items
     CIoSupport::Dismount("Cdrom0");
     CIoSupport::RemapDriveLetter('D', "Cdrom0");
   }
+#endif
 
 #ifdef _WIN32
   CStdStringW strSearchMask;

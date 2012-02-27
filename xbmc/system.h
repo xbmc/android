@@ -79,6 +79,10 @@
   #define HAS_AIRTUNES
 #endif
 
+#ifdef HAVE_MYSQL
+  #define HAS_MYSQL
+#endif
+
 /**********************
  * Non-free Components
  **********************/
@@ -139,12 +143,11 @@
  * Linux Specific
  *****************/
 
-#if defined(TARGET_LINUX)
+#if defined(TARGET_LINUX) && !defined(TARGET_ANDROID)
 #if defined(HAVE_LIBAVAHI_COMMON) && defined(HAVE_LIBAVAHI_CLIENT)
 #define HAS_ZEROCONF
 #define HAS_AVAHI
 #endif
-#warning("__LINUX__")
 #define HAS_LCD
 #ifdef HAVE_DBUS
 #define HAS_DBUS
@@ -176,6 +179,28 @@
 
 #ifdef HAVE_LIBSSH
 #define HAS_FILESYSTEM_SFTP
+#endif
+
+#if defined(TARGET_ANDROID)
+#undef HAS_SDL
+#undef HAS_SDL_AUDIO
+#undef HAS_SDL_OPENGL
+#undef HAS_SDL_JOYSTICK
+#undef HAS_SDL_WIN_EVENTS
+#undef HAS_DVD_DRIVE
+#undef HAS_ZEROCONF
+#undef HAS_AVAHI
+//#undef HAS_DBUS
+//#undef HAS_DBUS_SERVER
+#undef HAS_CDDA_RIPPER
+#undef HAS_RTORRENT
+//#undef HAS_REMOTECONTROL
+
+#define HAS_EGL
+#define HAS_GLES 2
+#define HAS_LINUX_NETWORK
+#define HAS_LINUX_EVENTS
+//#define HAS_LIRC
 #endif
 
 /*****************
