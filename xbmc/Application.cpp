@@ -1474,9 +1474,8 @@ bool CApplication::StopEventServer(bool bWait, bool promptuser)
 
     CEventServer::GetInstance()->StopServer(bWait);
   }
-
-  return true;
 #endif
+  return true;
 }
 
 void CApplication::RefreshEventServer()
