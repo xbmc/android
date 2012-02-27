@@ -28,6 +28,9 @@
 #include <linux/wireless.h>
 #include <linux/sockios.h>
 #endif
+#ifdef TARGET_ANDROID
+#include "linux/getdelim.h"
+#endif
 #include <errno.h>
 #include <resolv.h>
 #if defined(__APPLE__)

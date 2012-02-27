@@ -669,13 +669,6 @@ typedef struct tWAVEFORMATEXTENSIBLE
   GUID SubFormat;
 } __attribute__((__packed__)) WAVEFORMATEXTENSIBLE;
 
-#if defined(__ANDROID__)
-extern "C" int strverscmp (const char *s1, const char *s2);
-
-#include <cstdio>
-extern "C" ssize_t getdelim(char **lineptr, size_t *n, int delimiter, FILE *stream);
-#endif
-
 #endif
 
 #endif //__PLATFORM_DEFS_H__
