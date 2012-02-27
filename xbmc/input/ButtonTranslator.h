@@ -25,6 +25,7 @@
 #pragma once
 
 #include <map>
+#include <list>
 #include "system.h" // for HAS_EVENT_SERVER, HAS_SDL_JOYSTICK, HAS_LIRC
 #include <utils/StdString.h>
 
