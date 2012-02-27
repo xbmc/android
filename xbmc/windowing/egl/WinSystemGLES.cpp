@@ -55,10 +55,13 @@ bool CWinSystemGLES::InitWindowSystem()
     m_fb_width, m_fb_height, m_fb_bpp);
 
   m_display = EGL_DEFAULT_DISPLAY;
+#if defined(TARGET_ANDROID)
+  m_window  = 0;
+#else
   m_window  = (fbdev_window*)calloc(1, sizeof(fbdev_window));
 	m_window->width  = m_fb_width;
 	m_window->height = m_fb_height;
-
+#endif
   if (!CWinSystemBase::InitWindowSystem())
     return false;
 
