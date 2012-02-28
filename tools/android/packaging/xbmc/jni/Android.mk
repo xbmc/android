@@ -12,13 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-LOCAL_PATH := $(call my-dir)
+TOP_LOCAL_PATH := $(call my-dir)
+include $(call all-subdir-makefiles)
 
+LOCAL_PATH := $(TOP_LOCAL_PATH)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE    := native-activity
-LOCAL_SRC_FILES := main.c main2.cpp WinBindingAndroid.cpp WinSystemAndroid.cpp
+LOCAL_SRC_FILES := main.cpp main2.cpp WinBindingAndroid.cpp WinSystemAndroid.cpp
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/lib/include
 LOCAL_LDLIBS    := -llog -landroid -lEGL -lGLESv1_CM
+LOCAL_SHARED_LIBRARIES := xbmc
 LOCAL_STATIC_LIBRARIES := android_native_app_glue
 
 include $(BUILD_SHARED_LIBRARY)

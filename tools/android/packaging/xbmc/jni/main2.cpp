@@ -235,7 +235,6 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
  * android_native_app_glue.  It runs in its own thread, with its own
  * event loop for receiving input events and doing other things.
  */
-extern "C"
 void xbmc_main(struct android_app* state) {
     struct engine engine;
 

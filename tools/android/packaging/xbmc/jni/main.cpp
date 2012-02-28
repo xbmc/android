@@ -1,3 +1,4 @@
+
 #include <android_native_app_glue.h>
 
 extern void xbmc_main(struct android_app*);
