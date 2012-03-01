@@ -493,9 +493,12 @@ CStdString CSysInfo::GetHddSpaceInfo(int& percent, int drive, bool shortText)
   return strRet;
 }
 
-#if defined(_LINUX) && !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(TARGET_ANDROID)
+#if defined(_LINUX) && !defined(__APPLE__) && !defined(__FreeBSD__)
 CStdString CSysInfo::GetLinuxDistro()
 {
+#if defined(TARGET_ANDROID)
+  return "Android";
+#endif
   static const char* release_file[] = { "/etc/debian_version",
                                         "/etc/SuSE-release",
                                         "/etc/mandrake-release",
@@ -530,9 +533,12 @@ CStdString CSysInfo::GetLinuxDistro()
 }
 #endif
 
-#ifdef _LINUX && !defined(TARGET_ANDROID)
+#if defined(_LINUX)
 CStdString CSysInfo::GetUnameVersion()
 {
+#if defined(TARGET_ANDROID)
+  return "Android";
+#endif
   CStdString result = "";
 
   FILE* pipe = popen("uname -rm", "r");
