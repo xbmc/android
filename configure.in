@@ -547,8 +547,8 @@ case $use_platform in
      AC_SUBST(ARCH_DEFINES, "-DTARGET_POSIX -DTARGET_LINUX -D_LINUX -D_ARMEL -DTARGET_ANDROID")
      use_cpu=cortex-a9
      AC_DEFINE(HAS_EGLGLES, [1], [Define if supporting EGL based GLES Framebuffer])
-     CFLAGS="$CFLAGS -Wno-psabi -Wa,-mno-warn-deprecated"
-     CXXFLAGS="$CXXFLAGS -Wno-psabi -Wa,-mno-warn-deprecated"
+     CFLAGS="$CFLAGS -Wno-psabi"
+     CXXFLAGS="$CXXFLAGS -Wno-psabi"
      ;;
   *)
 esac
