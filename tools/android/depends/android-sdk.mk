@@ -1,4 +1,5 @@
-export ARCH_FLAGS=-march=armv7-a -mtune=cortex-a9 -mfloat-abi=softfp -mfpu=neon
+#export ARCH_FLAGS=-march=armv7-a -mtune=cortex-a9 -mfloat-abi=softfp -mfpu=neon
+export ARCH_FLAGS=-march=armv5te -mtune=xscale -msoft-float -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__ -DANDROID
 export HOST=arm-linux-androideabi
 export SYSROOT=$(TOOLCHAIN)/sysroot
 export CROSSTOOLS=$(TOOLCHAIN)/bin/arm-linux-androideabi-

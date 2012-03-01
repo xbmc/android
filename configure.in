@@ -626,8 +626,8 @@ elif test "$use_arch" = "arm"; then
         use_cpu=cortex-a8])
   else
     # Compile for ARMv7a architecture, CortexA8/CortexA9 cpu and check for enabled NEON coprocessor
-    CFLAGS="$CFLAGS -Wa,-march=armv7-a -mtune=$use_cpu"
-    CXXFLAGS="$CXXFLAGS -Wa,-march=armv7a -mtune=$use_cpu"
+#    CFLAGS="$CFLAGS -Wa,-march=armv7-a -mtune=$use_cpu"
+#    CXXFLAGS="$CXXFLAGS -Wa,-march=armv7a -mtune=$use_cpu"
     if test "$use_neon" = "yes"; then 
       CFLAGS="$CFLAGS -mfpu=neon -mvectorize-with-neon-quad"
       CXXFLAGS="$CXXFLAGS -mfpu=neon -mvectorize-with-neon-quad"
