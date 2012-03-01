@@ -493,7 +493,7 @@ CStdString CSysInfo::GetHddSpaceInfo(int& percent, int drive, bool shortText)
   return strRet;
 }
 
-#if defined(_LINUX) && !defined(__APPLE__) && !defined(__FreeBSD__)
+#if defined(_LINUX) && !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(TARGET_ANDROID)
 CStdString CSysInfo::GetLinuxDistro()
 {
   static const char* release_file[] = { "/etc/debian_version",
@@ -530,7 +530,7 @@ CStdString CSysInfo::GetLinuxDistro()
 }
 #endif
 
-#ifdef _LINUX
+#ifdef _LINUX && !defined(TARGET_ANDROID)
 CStdString CSysInfo::GetUnameVersion()
 {
   CStdString result = "";
