@@ -1,4 +1,4 @@
-include ../Makefile.include
+-include ../Makefile.include
 include ../android-sdk.mk
 
 SOURCE=../../../../
@@ -19,13 +19,28 @@ CONFIGURE=./configure --prefix=$(PREFIX) --host=$(HOST) \
   --disable-mysql --disable-optical-drive --disable-webserver --disable-joystick \
   --with-platform=android
 
-all: configure
 
-configure:
-	cd $(SOURCE); ./bootstrap
+all: $(SOURCE)/libxbmc.so
+
+$(SOURCE)/libxbmc.so: $(SOURCE)/Makefile
+	cd $(SOURCE); make -j4 libxbmc.so
+
+$(SOURCE)/Makefile: $(SOURCE)/configure
 	cd $(SOURCE); $(CONFIGURE)
-	cd $(SOURCE); make -j $(JOBS)
-	cd $(SOURCE); make install
+
+$(SOURCE)/configure: $(SDKROOT)/platforms $(NDKROOT)/ndk-build
+	echo $(NDKROOT)
+	cd $(SOURCE); ./bootstrap
+
+../Makefile.include:
+	$(error Please run edit and run setup-sdk.sh)
+
+$(NDKROOT)/ndk-build:
+	$(error NDKROOT is missing. Please run setup-sdk.sh or check Makefile.include)
+
+$(SDKROOT)/platforms:
+	$(error SDKROOT is missing. Please run setup-sdk.sh or check Makefile.include)
+
 clean:
 	cd $(SOURCE); make clean
 
