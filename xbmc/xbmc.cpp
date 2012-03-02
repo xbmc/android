@@ -44,6 +44,9 @@
 #ifdef HAS_LIRC
 #include "input/linux/LIRC.h"
 #endif
+#if defined(TARGET_ANDROID)
+#include <android/log.h>
+#endif
 
 bool XBMC_Init(GRFXA grfxa, const char *sLogName, int argc, const char** argv)
 {
@@ -86,6 +89,7 @@ bool XBMC_Init(GRFXA grfxa, const char *sLogName, int argc, const char** argv)
   }
 #endif
   g_application.Preflight();
+  __android_log_print(ANDROID_LOG_VERBOSE, "XBMC", "Creating application. Hello from Android!");
   if (!g_application.Create())
   {
     fprintf(stderr, "ERROR: Unable to create application. Exiting\n");
