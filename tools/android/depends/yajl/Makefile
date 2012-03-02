@@ -26,6 +26,7 @@ $(SOURCE): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	sed -ie "s|./run_tests.sh|#./run_tests.sh|g" "$(SOURCE)/CMakeLists.txt"
 	sed -ie "s|WORKING_DIRECTORY|#WORKING_DIRECTORY|g" "$(SOURCE)/CMakeLists.txt"
 	sed -ie "s|ADD_SUBDIRECTORY(reformatter)|#ADD_SUBDIRECTORY(reformatter)|g" "$(SOURCE)/CMakeLists.txt"
+	cd $(SOURCE); patch -p0 < ../libmath.patch
 	cd $(SOURCE); mkdir build; cd build; $(CMAKE) -DCMAKE_INSTALL_PREFIX='$(PREFIX)' ../
 
 $(LIBDYLIB): $(SOURCE)
