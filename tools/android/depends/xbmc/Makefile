@@ -3,6 +3,8 @@ include ../android-sdk.mk
 
 SOURCE=../../../../
 
+LIBS+=-llog
+
 export PYTHON_VERSION=2.6
 export PYTHON_LDFLAGS=-L$(PREFIX)/lib -lpython$(PYTHON_VERSION) -lc -ldl -lm
 export PYTHON_CPPFLAGS=-I$(PREFIX)/include/python$(PYTHON_VERSION)
