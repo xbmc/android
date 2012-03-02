@@ -17,8 +17,8 @@ mkdir -p $XBMCPREFIX/lib $XBMCPREFIX/include
 
 #
 #
-echo "NDKROOT=$NDKROOT"                                              >  $SCRIPT_PATH/Makefile.include
-echo "SDKROOT=$NDKROOT"                                              >  $SCRIPT_PATH/Makefile.include
+echo "NDKROOT=$NDKROOT"                                                >  $SCRIPT_PATH/Makefile.include
+echo "SDKROOT=$SDKROOT"                                                >> $SCRIPT_PATH/Makefile.include
 echo "XBMCPREFIX=$XBMCPREFIX"                                          >> $SCRIPT_PATH/Makefile.include
 echo "TOOLCHAIN=$TOOLCHAIN"                                            >> $SCRIPT_PATH/Makefile.include
 echo "BASE_URL=http://mirrors.xbmc.org/build-deps/darwin-libs"         >> $SCRIPT_PATH/Makefile.include
