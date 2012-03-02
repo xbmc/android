@@ -26,11 +26,8 @@
 
 #include "rendering/gles/RenderSystemGLES.h"
 #include "utils/GlobalsHandling.h"
+#include "windowing/egl/WinEGLPlatform.h"
 #include "windowing/WinSystem.h"
-
-class CWinBindingEGL;
-
-typedef struct fbdev_window fbdev_window;
 
 class CWinSystemGLES : public CWinSystemBase, public CRenderSystemGLES
 {
@@ -60,11 +57,8 @@ protected:
   virtual bool  PresentRenderImpl(const CDirtyRegionList &dirty);
   virtual void  SetVSyncImpl(bool enable);
   void                  *m_display;
-  fbdev_window          *m_window;
-  CWinBindingEGL        *m_eglBinding;
-  int                   m_fb_width;
-  int                   m_fb_height;
-  int                   m_fb_bpp;
+  EGLNativeWindowType   m_window;
+  CWinEGLPlatform       *m_eglplatform;
 };
 
 XBMC_GLOBAL_REF(CWinSystemGLES,g_Windowing);
