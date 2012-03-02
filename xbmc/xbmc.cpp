@@ -48,6 +48,7 @@
 #include <android/log.h>
 #endif
 
+extern "C"
 bool XBMC_Init(GRFXA grfxa, const char *sLogName, int argc, const char** argv)
 {
   g_application.Configure(grfxa, sLogName);
