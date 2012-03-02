@@ -1226,6 +1226,7 @@ bool CApplication::Initialize()
     ADDON::CAddonMgr::Get().StartServices(false);
     g_windowManager.ActivateWindow(g_SkinInfo->GetFirstWindow());
   }
+  }
 
   if (m_grfxa & fxaServices)
     g_sysinfo.Refresh();
