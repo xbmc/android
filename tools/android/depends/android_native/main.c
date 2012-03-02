@@ -35,29 +35,29 @@ extern void android_main(struct android_app* state)
   // make sure that the linker doesn't strip out our glue
   app_dummy();
 
-  tryopen("/data/data/com.nativetest/lib/libsqlite.so");
-  tryopen("/data/data/com.nativetest/lib/libyajl.so");
-  tryopen("/data/data/com.nativetest/lib/libtiff.so");
-  tryopen("/data/data/com.nativetest/lib/libjpeg.so");
-  tryopen("/data/data/com.nativetest/lib/libgpg-error.so");
-  tryopen("/data/data/com.nativetest/lib/libgcrypt.so");
-  tryopen("/data/data/com.nativetest/lib/libiconv.so");
-  tryopen("/data/data/com.nativetest/lib/libfreetype.so");
-  tryopen("/data/data/com.nativetest/lib/libfontconfig.so");
-  tryopen("/data/data/com.nativetest/lib/libfribidi.so");
-  tryopen("/data/data/com.nativetest/lib/libsqlite3.so");
-  tryopen("/data/data/com.nativetest/lib/libpng12.so");
-  tryopen("/data/data/com.nativetest/lib/libpcre.so");
-  tryopen("/data/data/com.nativetest/lib/libsamplerate.so");
-  tryopen("/data/data/com.nativetest/lib/libpython2.6.so");
-  tryopen("/data/data/com.nativetest/lib/libpcre.so");
+  tryopen("/data/data/org.xbmc/lib/libsqlite.so");
+  tryopen("/data/data/org.xbmc/lib/libyajl.so");
+  tryopen("/data/data/org.xbmc/lib/libtiff.so");
+  tryopen("/data/data/org.xbmc/lib/libjpeg.so");
+  tryopen("/data/data/org.xbmc/lib/libgpg-error.so");
+  tryopen("/data/data/org.xbmc/lib/libgcrypt.so");
+  tryopen("/data/data/org.xbmc/lib/libiconv.so");
+  tryopen("/data/data/org.xbmc/lib/libfreetype.so");
+  tryopen("/data/data/org.xbmc/lib/libfontconfig.so");
+  tryopen("/data/data/org.xbmc/lib/libfribidi.so");
+  tryopen("/data/data/org.xbmc/lib/libsqlite3.so");
+  tryopen("/data/data/org.xbmc/lib/libpng12.so");
+  tryopen("/data/data/org.xbmc/lib/libpcre.so");
+  tryopen("/data/data/org.xbmc/lib/libsamplerate.so");
+  tryopen("/data/data/org.xbmc/lib/libpython2.6.so");
+  tryopen("/data/data/org.xbmc/lib/libpcrecpp.so");
 
   // gdb sleeps before attaching for some reason. let it attach before we try
   // to load libxbmc.
   sleep(1);
 
   void* soHandle;
-  soHandle = tryopen("/data/data/com.nativetest/lib/libxbmc.so");
+  soHandle = tryopen("/data/data/org.xbmc/lib/libxbmc.so");
 
   typedef void (*xbmc_t)(unsigned int, const char*, int, const char**);
   xbmc_t xbmcinit = (xbmc_t)dlsym (soHandle, "XBMC_Init");
