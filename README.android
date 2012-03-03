@@ -1,0 +1,215 @@
+TOC
+1. Introduction
+2. Installing and setting up the Android environment
+3. Getting the source code
+4. Installing the required Ubuntu packages
+5. How to compile
+6. Installing XBMC in an Android system
+7. Running and debugging XBMC in an Android system
+
+-----------------------------------------------------------------------------
+1. Introduction
+-----------------------------------------------------------------------------
+
+We currently recommend Ubuntu Hardy(8.04) or later. The setup can also be
+done with OSX or Windows (using Cygwin) but may require extra work not
+described in this document.
+
+NOTE TO NEW LINUX USERS: All lines that are prefixed with the '#'
+character are commands that need to be typed into a terminal window /
+console (similar to the command prompt for Windows). Note that the '#'
+character itself should NOT be typed as part of the command.
+
+-----------------------------------------------------------------------------
+2. Installing and setting up the Android environment
+-----------------------------------------------------------------------------
+
+To develop XBMC for Android the Android SDK and NDK are required.
+
+--------------------------------------------------------------------
+2.1. Getting the Android SDK and NDK
+--------------------------------------------------------------------
+
+To get the Android SDK, go to http://developer.android.com/sdk and
+download the latest version for your operating system. The Android NDK
+can be downloaded from http://developer.android.com/sdk/ndk
+
+[NOTICE] Compiling XBMC for Android requires at least Android NDK
+         Revision 7b. Android NDK Revision 7 and earlier do not work
+         properly for our cause.
+         
+After downloading the SDK and NDK extract the files contained in the
+archives to your harddisk.
+
+--------------------------------------------------------------------
+2.2. Installing Android SDK packages
+--------------------------------------------------------------------
+
+After having extracted the Android SDK to <android-sdk> you need to
+install some android packages using the Android SDK Manager:
+
+   # cd <android-sdk>/tools
+   # android &
+
+Install at least the following packages:
+  - Tools
+    - Android SDK Tools
+    - Android SDK Platform-tools
+  - Android 2.3.3 (API 10)
+    - SDK Platform
+  - Android 2.2 (API 8)
+    - SDK Platform
+
+--------------------------------------------------------------------
+2.3. Creating an Android Virtual Device
+--------------------------------------------------------------------
+
+In the Android SDK Manager (see 2.2) go to Tools -> Manage AVDs...
+to open the Android Virtual Device Manager. Click on "New..." to
+create a new Android Virtual Device (AVD). Enter a name (<avd-name>)
+and select "Android 2.3.3 - API Level 10" as the Target. For the
+"SD Card Size" choose at least 512 MB. In the "Hardware" part specify
+at least "256" MB for "Device ram size". Click on "Create AVD" to
+create your AVD.
+
+--------------------------------------------------------------------
+2.4. Setup the Android toolchain
+--------------------------------------------------------------------
+
+To be able to compile XBMC and the libraries it depends on for the
+Android platform you first need to setup an Android toolchain using
+the Android NDK which you earlier extracted to <android-ndk>.
+
+   # cd <android-ndk>
+   # ls platforms
+   # cd build/tools
+   # ./make-standalone-toolchain.sh --platform=android-<x> --install-dir=<android-toolchain>
+
+The output of "ls platforms" gives you a list of available platforms
+which you can pass to the --platform option of the
+make-standalone-toolchain.sh script. Make sure that <x> is at least 9.
+The --install-dir option (and therefore the <android-toolchain> value)
+specifies the path whereto the script will copy the necessary files.
+The script will automatically create a sub-directory named "android-<x>"
+in the <android-toolchain> directory.
+
+-----------------------------------------------------------------------------
+3. Getting the source code
+-----------------------------------------------------------------------------
+
+   # sudo apt-get install git-core
+   # cd $HOME
+   # git clone git://github.com/xbmc/android.git xbmc-android
+
+-----------------------------------------------------------------------------
+4. Installing the required Ubuntu packages
+-----------------------------------------------------------------------------
+
+   # sudo apt-get install git-core make g++ gcc cvs rpl TODO
+
+*** For developers and anyone else who compiles frequently it is recommended to use ccache
+sudo apt-get install ccache
+
+*** A tip for those with multiple computers at home is to check out distcc (totally unsupported from xbmc of course)
+sudo apt-get install distcc
+
+-----------------------------------------------------------------------------
+5. How to compile
+-----------------------------------------------------------------------------
+
+Compiling XBMC for Android consists of compiling the libraries XBMC depends
+on with the Android toolchain and creating an Android Application Package
+(APK) which can be installed in an Android system.
+
+--------------------------------------------------------------------
+5.1. Building dependencies
+--------------------------------------------------------------------
+
+   # cd $HOME/xbmc-android/tools/android/depends
+
+Open the script setup-sdk.sh in your preferred text editor and complete
+the following variable definitions:
+  
+  - NDKROOT:    Path to the root directory of the Android NDK (<android-ndk>)
+  - SDKROOT:    Path to the root directory of the Android SDK (<android-sdk>)
+  - TARBALLS:   Path to a directory where the tarballs containing the 
+                sources of the dependencies are stored after downloading
+  - TOOLCHAIN:  Path to the Android toolchain used for compiling the
+                dependencies (<android-toolchain>/android-<x>)
+  - XBMCPREFIX: Path to the directory where the built binaries and libraries
+                will be stored (e.g. $HOME/xbmc-android/tools/android/build)
+                
+   # ./setup-sdk.sh
+   # make
+
+--------------------------------------------------------------------
+5.2. Building the APK
+--------------------------------------------------------------------
+
+   # cd $HOME/xbmc-android/tools/android/packaging
+   # make
+
+This will create the debug APK named "xbmcapp-debug.apk" in the
+"images" sub-directory
+
+-----------------------------------------------------------------------------
+6. Installing XBMC in an Android system
+-----------------------------------------------------------------------------
+
+To install XBMC through the previously built APK in an Android system you can
+either install it on a real device (smartphone/tablet/...) running Android
+2.3.x or use the Android emulator and the previously created AVD.
+
+--------------------------------------------------------------------
+6.1. Installing XBMC in the Android emulator
+--------------------------------------------------------------------
+
+   # cd $HOME/xbmc-android/tools/android/packaging
+   # emulator-arm -avd <avd-name> -wipe-data &
+   # adb install images/xbmcapp-debug.apk
+
+--------------------------------------------------------------------
+6.2. Installing XBMC on the Android device
+--------------------------------------------------------------------
+
+Make sure your Android device is connected to your computer through
+USB. Furthermore you have to enable the following option in your
+device's Android settings:
+
+  - Applications
+    [X] Unknown sources
+
+   # cd $HOME/xbmc-android/tools/android/packaging
+   # adb devices
+   # adb -s <device-id> install images/xbmcapp-debug.apk
+      
+The <device-id> can be retrieved from the list returned by the
+"adb devices" command and is the first value in the row representing
+your device.
+
+-----------------------------------------------------------------------------
+7. Running and debugging XBMC in an Android system
+-----------------------------------------------------------------------------
+
+After installing XBMC's APK in an Android system you can start it using its
+Launcher icon in Android's Application Launcher.
+
+--------------------------------------------------------------------
+7.1. Debugging XBMC
+--------------------------------------------------------------------
+
+To be able to see what is happening while running XBMC you first need
+to enable USB debugging in your Android settings (this is already done
+when using the emulator):
+
+  - Applications
+    [X] Unknown sources
+     -  Development
+      [X] USB debugging
+
+To access the log output of your Android system run (the -s parameter
+and the <device-id> may not be needed when using the Android emulator)
+
+  # adb -s <device-id> logcat
+
+
