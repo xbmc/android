@@ -12,7 +12,7 @@ SUBDIRS = \
 	libass libsamplerate \
 	libmodplug librtmp libxml2 yajl \
 	python26 \
-	boost android_native xbmc \
+	boost xbmc \
 
 .PHONY: $(BUILDTOOLS) $(SUBDIRS)
 

@@ -82,7 +82,6 @@ DIRECTORY_ARCHIVES=$(DVDPLAYER_ARCHIVES) \
                    xbmc/windows/windows.a \
                    xbmc/xbmc.a \
 
-
 ifeq (@USE_OPENGL@,1)
 DIRECTORY_ARCHIVES += xbmc/rendering/gl/rendering_gl.a
 endif
@@ -328,6 +327,9 @@ DYNOBJSXBMC= \
 OBJSXBMC:=$(filter-out $(DYNOBJSXBMC), $(OBJSXBMC))
 
 libxbmc.so: $(OBJSXBMC) $(DYNOBJSXBMC)
+ifeq (@USE_ANDROID@,1)
+	$(MAKE) -C xbmc/android
+endif
 ifeq ($(findstring osx,@ARCH@), osx)
 	$(SILENT_LD) $(CXX) $(LDFLAGS) -shared -o $@ -Wl,-all_load,-ObjC $(DYNOBJSXBMC) $(OBJSXBMC) $(LIBS) -rdynamic
 else

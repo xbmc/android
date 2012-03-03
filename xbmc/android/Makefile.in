@@ -1,0 +1,29 @@
+#this build is a bit awkward because I've tried to mimic ndk-build exactly.
+
+include @abs_top_srcdir@/tools/android/depends/Makefile.include
+include @abs_top_srcdir@/tools/android/depends/android-sdk.mk
+
+GLUEPATH = $(NDKROOT)/sources/android/native_app_glue
+GLUESRC  = android_native_app_glue.c
+CFLAGS  += -I$(NDKROOT)/sources/android/native_app_glue
+LDFLAGS += -llog -landroid -lEGL -lGLESv2 -lstdc++ -ldl -lstdc++
+
+SOURCE = android_main.c
+OBJ    = $(SOURCE:.c=.o)
+SOLIB  = libxbmcapp.so
+
+all: $(PREFIX)/lib/$(SOLIB)
+
+$(GLUESRC:.c=.a):
+	$(CC) $(CFLAGS) -o $(GLUESRC:.c=.o) -c $(GLUEPATH)/$(GLUESRC)
+	$(AR) crs $(GLUESRC:.c=.a) $(GLUESRC:.c=.o)
+
+$(OBJ): $(GLUESRC:.c=.a) $(SOURCE)
+	$(CC) $(CFLAGS) -o $(OBJ) -c $(SOURCE)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $(SOLIB) -shared android_main.o $(GLUESRC:.c=.a)
+
+$(PREFIX)/lib/$(SOLIB): $(OBJ)
+	install $(SOLIB) $(PREFIX)/lib/$(SOLIB)
+
+clean:
+	-@rm -f $(OBJ) $(SOLIB) android_native_app_glue.* 2>/dev/null || true

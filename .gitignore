@@ -111,6 +111,9 @@ config.log
 /addons/visualization.itunes/iTunes.mvis
 /addons/script.module.pil/
 
+# /xbmc/android
+/xbmc/android/Makefile
+
 # /xbmc/guilib/
 /xbmc/guilib/Makefile
 /xbmc/guilib/*.obj
