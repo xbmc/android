@@ -213,3 +213,60 @@ and the <device-id> may not be needed when using the Android emulator)
   # adb -s <device-id> logcat
 
 
+--------------------------------------------------------------------
+8.0 Architecture
+--------------------------------------------------------------------
+
+!!Warning!!
+This is an early port with an emphasis on getting up and running. There are
+several ugly hacks and a few methods that are flat-out disgusting. These need
+to be cleaned up over time as we actually start running on devices.
+
+The life of xbmcapp:
+Android can not run native applications (in any supported fashion anyway), but
+does allow for a purely c/c++ library to be loaded as a "native activity". This
+This library has an android_main() entry point. Thus, we split xbmc into
+libxbmc.so and a small main stub that calls it so that it can be run as an
+application or a lib.
+
+However, due to the flimsy nature of the android lib loader, we cannot just
+stick android_main() directly into this lib and let it call in. The loader does
+not load deps recursively, so it simply throws an error when trying to load the
+native activity. Instead, we create a stub library that dlopens all of our deps
+in reverse order, then finally libxbmc.so itself. From there we can call the
+entry function and we're up and running as usual. There are probably many ways
+to do this much cleaner, but this was the first that worked. This MUST be
+re-evaluated.
+
+So execution looks like this
+Android calls into libxbmcapp.so directly which contains android_main(). It
+loads our deps, loads libxbmc.so, calls XBMC_Init(), and we're into xbmc.
+
+See here for a thorough explanation:
+http://groups.google.com/group/android-ndk/browse_thread/thread/976136aa1d7b43a2
+
+Additionally, Android does not use versioned solibs. libfoo.so.1 which is
+typical on linux would not be found by the loader. This means that we must
+strip the SONAME and NEEDED values out of the libs as well as changing the
+filenames themselves. The cleaner solution would be to patch libtool/cmake/etc
+to not add versioning in the first place. For now, we use the brute-force
+approach of modifying the binary and blanking out the versions.
+See the gory details in tools/android/packaging/fixsolib.sh.
+
+See here for more info:
+http://www.bernawebdesign.ch/byteblog/2011/11/23/creating-non-versioned-shared-libraries-for-android/
+
+Development:
+Typical android native activities are built with ndk-build which is a wrapper
+around Make. It would be a nightmare to port our entire buildsystem over, so
+instead we build as usual then package ourselves. It may be beneficial to use
+ndk-build to do the actual packaging, but for now its behavior is emulated.
+
+ABI:
+Presently we are targeting armv5te as the android emulator is known to be
+unstable with newer ABIs. This meant removing some of our asm (MathUtils and
+Atomics). This is a temporary hack until we are able to run cleanly on native
+hardware, at which point we should switch back to armv7a+neon as our minimum
+supported hardware. Note that zero effort was made to disable these functions
+gracefully. If it is desired to run XBMC fully in the emulator, these functions
+will need to be fixed up to work properly.
