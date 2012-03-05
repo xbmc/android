@@ -51,6 +51,7 @@ extern void android_main(struct android_app* state)
   tryopen("/data/data/org.xbmc/lib/libsamplerate.so");
   tryopen("/data/data/org.xbmc/lib/libpython2.6.so");
   tryopen("/data/data/org.xbmc/lib/libpcrecpp.so");
+  tryopen("/data/data/org.xbmc/lib/libzip.so");
 
   // gdb sleeps before attaching for some reason. let it attach before we try
   // to load libxbmc.
