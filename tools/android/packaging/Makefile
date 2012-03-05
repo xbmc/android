@@ -10,9 +10,10 @@ OBJS = libgcrypt.so.11 libgpg-error.so.0 libfontconfig.so.1 libfreetype.so.6 \
 all: package
 
 package:
-	mkdir -p xbmc/libs/armeabi images
+	mkdir -p xbmc/libs/armeabi images xbmc/assets
 	$(foreach var,$(OBJS),$(STRIP) --strip-unneeded $(XBMCPREFIX)/lib/$(var) -o xbmc/libs/armeabi/`echo $(var) | sed -e 's/\.so.*/\.so/g'`;)
 	$(STRIP) --strip-unneeded ../../../libxbmc.so -o xbmc/libs/armeabi/libxbmc.so
 	$(STRIP) --strip-unneeded ../../../xbmc/android/libxbmcapp.so -o xbmc/libs/armeabi/libxbmcapp.so
+	cp -rf ../../../system ../../../addons ../../../language xbmc/assets/
 	./fixsolib.sh
 	echo $(sdk.dir); cd xbmc; ant -Dout.dir=../images -Dsdk.dir=$(SDKROOT) debug clean; ant -Dout.dir=../images -Dsdk.dir=$(SDKROOT) debug
