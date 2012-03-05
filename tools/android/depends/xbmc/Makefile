@@ -3,6 +3,7 @@ include ../android-sdk.mk
 
 SOURCE=../../../../
 
+CXXFLAGS+=-I$(NDKROOT)/sources/android/native_app_glue
 LIBS+=-llog
 
 export PYTHON_VERSION=2.6

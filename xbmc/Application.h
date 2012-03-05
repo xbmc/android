@@ -66,6 +66,10 @@ namespace MEDIA_DETECT
 #include "network/WebServer.h"
 #endif
 
+#if defined(TARGET_ANDROID)
+#include <android_native_app_glue.h>
+#endif
+
 class CKaraokeLyricsManager;
 class CInertialScrollingHandler;
 class CApplicationMessenger;
@@ -107,6 +111,9 @@ public:
   virtual bool Create();
   virtual bool Cleanup();
 
+#if defined(TARGET_ANDROID)
+  void SetAndroidState(android_app *state) { m_androidState = state; };
+#endif
   void StartServices();
   void StopServices();
   bool StartWebServer();
@@ -300,6 +307,10 @@ public:
 protected:
   GRFXA m_grfxa;  // application options
   CStdString m_sLogName;
+
+#if defined(TARGET_ANDROID)
+  android_app *m_androidState;
+#endif
 
   bool LoadSkin(const CStdString& skinID);
   void LoadSkin(const boost::shared_ptr<ADDON::CSkinInfo>& skin);

@@ -1,21 +1,8 @@
 #include <android_native_app_glue.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-
-#include <unistd.h>
-#include <fcntl.h>
-#include <dlfcn.h>
-#include <sys/mman.h>
-
-#include <jni.h>
-
 #include <android/log.h>
+#include <stdlib.h>
+#include <dlfcn.h>
 #include <errno.h>
-#include <stdbool.h>
-//#include "xbmc.h"
 
 void* tryopen(const char *path)
 {
@@ -30,11 +17,8 @@ void* tryopen(const char *path)
   return handle;
 }
 
-extern void android_main(struct android_app* state)
+void preload()
 {
-  // make sure that the linker doesn't strip out our glue
-  app_dummy();
-
   tryopen("/data/data/org.xbmc/lib/libsqlite.so");
   tryopen("/data/data/org.xbmc/lib/libyajl.so");
   tryopen("/data/data/org.xbmc/lib/libtiff.so");
@@ -56,18 +40,26 @@ extern void android_main(struct android_app* state)
   // gdb sleeps before attaching for some reason. let it attach before we try
   // to load libxbmc.
   sleep(1);
+}
+
+extern void android_main(struct android_app* state)
+{
+  preload();
+
+  // make sure that the linker doesn't strip out our glue
+  app_dummy();
 
   void* soHandle;
   soHandle = tryopen("/data/data/org.xbmc/lib/libxbmc.so");
 
-  typedef void (*xbmc_t)(unsigned int, const char*, int, const char**);
-  xbmc_t xbmcinit = (xbmc_t)dlsym (soHandle, "XBMC_Init");
+  typedef void (*xbmc_t)(struct android_app*);
+  xbmc_t xbmcinit = (xbmc_t)dlsym (soHandle, "android_init");
   if (xbmcinit == NULL)
   {
     __android_log_print(ANDROID_LOG_VERBOSE, "XBMC", "could not find function. Error: %s",dlerror());
    exit(1);
   }
-  xbmcinit(7,"xbmc",0,NULL);
+  xbmcinit(state);
 
   //Now to relax.
   while(1)

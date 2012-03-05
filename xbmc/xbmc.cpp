@@ -48,7 +48,6 @@
 #include <android/log.h>
 #endif
 
-extern "C"
 bool XBMC_Init(GRFXA grfxa, const char *sLogName, int argc, const char** argv)
 {
   g_application.Configure(grfxa, sLogName);
@@ -97,4 +96,25 @@ bool XBMC_Init(GRFXA grfxa, const char *sLogName, int argc, const char** argv)
     return false;
   }
   return true;
+}
+
+extern "C"
+bool android_init(android_app *state)
+{
+  g_application.SetAndroidState(state);
+
+  if (!XBMC_Init(grfxaXBMC, "xbmc", NULL, NULL))
+    return -1;
+
+  int status;
+  try
+  {
+    status = g_application.Run();
+  }
+  catch(...)
+  {
+    __android_log_print(ANDROID_LOG_VERBOSE, "XBMC", "ERROR: Exception caught on main loop. Exiting\n");
+    status = -1;
+  }
+  return status;
 }

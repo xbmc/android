@@ -24,4 +24,4 @@
 #include "Application.h"
 
 bool XBMC_Init(GRFXA grfxa, const char *sLogName, int argc = 0, const char** argv = NULL);
-
+bool android_init(android_app *state);
