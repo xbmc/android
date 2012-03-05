@@ -553,9 +553,20 @@ bool CApplication::Create()
   jmethodID getPackageResourcePath = env->GetMethodID(activityClass, "getPackageResourcePath", "()Ljava/lang/String;");
   jstring jpath = (jstring)env->CallObjectMethod(m_androidState->activity->clazz, getPackageResourcePath);
   const char* apkPath = env->GetStringUTFChars(jpath, NULL);
-  CStdString androidHome(apkPath);
-  __android_log_print(ANDROID_LOG_VERBOSE, "XBMC", "APK Path: %s",androidHome.c_str());
+  CStdString binHome(apkPath);
   env->ReleaseStringUTFChars(jpath, apkPath);
+  setenv("XBMC_BIN_HOME", binHome+"/assets", 0);
+  setenv("XBMC_HOME", binHome+"/assets", 0);
+
+  jmethodID getCacheDir = env->GetMethodID(activityClass, "getCacheDir", "()Ljava/io/File;");
+  jobject file = env->CallObjectMethod(m_androidState->activity->clazz, getCacheDir);
+  jclass fileClass = env->FindClass("java/io/File");
+  jmethodID getAbsolutePath = env->GetMethodID(fileClass, "getAbsolutePath", "()Ljava/lang/String;");
+  jpath = (jstring)env->CallObjectMethod(file, getAbsolutePath);
+  const char* cachePath = env->GetStringUTFChars(jpath, NULL);
+  setenv("HOME", cachePath, 0);
+  env->ReleaseStringUTFChars(jpath, cachePath);
+
 #endif
 
 
