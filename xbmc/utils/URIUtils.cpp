@@ -552,7 +552,7 @@ bool URIUtils::IsRAR(const CStdString& strFile)
 
 bool URIUtils::IsInArchive(const CStdString &strFile)
 {
-  return IsInZIP(strFile) || IsInRAR(strFile);
+  return IsInZIP(strFile) || IsInRAR(strFile) || IsInAPK(strFile);
 }
 
 bool URIUtils::IsInAPK(const CStdString& strFile)
