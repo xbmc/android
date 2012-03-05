@@ -486,6 +486,11 @@ extern "C"
         str[size-1] = '\0';
     }
 
+    // might have embedded protocol so url translate the path.
+    CStdString path;
+    path = str;
+    CURL url(path);
+
     CFile* pFile = new CFile();
     bool bWrite = false;
     if ((iMode & O_RDWR) || (iMode & O_WRONLY))
@@ -500,9 +505,9 @@ extern "C"
     // or the python DLLs have malformed slashes on Win32 & Xbox
     // (-> E:\test\VIDEO_TS/VIDEO_TS.BUP))
     if (bWrite)
-      bResult = pFile->OpenForWrite(CUtil::ValidatePath(str), bOverwrite);
+      bResult = pFile->OpenForWrite(CUtil::ValidatePath(path), bOverwrite);
     else
-      bResult = pFile->Open(CUtil::ValidatePath(str));
+      bResult = pFile->Open(CUtil::ValidatePath(path));
 
     if (bResult)
     {

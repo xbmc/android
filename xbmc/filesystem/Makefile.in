@@ -84,6 +84,11 @@ SRCS=AddonsDirectory.cpp \
      ZipDirectory.cpp \
      ZipManager.cpp
 
+ifeq (@USE_ANDROID@,1)
+SRCS+=FileAPK.cpp
+SRCS+=APKDirectory.cpp
+endif
+
 ifeq (@USE_LIBCDIO@,1)
 SRCS+=FileISO.cpp
 SRCS+=iso9660.cpp
