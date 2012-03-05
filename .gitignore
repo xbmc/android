@@ -991,6 +991,8 @@ lib/cmyth/Makefile
 
 /xbmc/filesystem/Makefile
 
+/xbmc/dbwrappers/Makefile
+
 # /xbmc/music/karaoke/
 /xbmc/music/karaoke/Makefile
 
