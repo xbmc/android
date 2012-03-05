@@ -270,3 +270,20 @@ hardware, at which point we should switch back to armv7a+neon as our minimum
 supported hardware. Note that zero effort was made to disable these functions
 gracefully. If it is desired to run XBMC fully in the emulator, these functions
 will need to be fixed up to work properly.
+
+
+--------------------------------------------------------------------
+9.0 Useful Commands
+--------------------------------------------------------------------
+
+Below are a few helpful commands when building/debugging. These assume that pwd
+is 'tools/android/packaging' and that the proper sdk/ndk paths are set.
+
+-Install a new build over the existing one
+  # adb -e install -r images/xbmcapp-debug.apk
+
+-Launch XBMC on the emulator without the GUI
+  # adb shell am start -a android.intent.action.MAIN -n org.xbmc/android.app.NativeActivity
+
+-Kill a misbehaving XBMC
+  # adb shell ps | grep org.xbmc | awk '{print $2}' | xargs adb shell kill
