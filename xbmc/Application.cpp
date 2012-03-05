@@ -300,6 +300,11 @@
 #include "XHandle.h"
 #endif
 
+#if defined(TARGET_ANDROID)
+#include <jni.h>
+#include <android/log.h>
+#endif
+
 #ifdef HAS_LIRC
 #include "input/linux/LIRC.h"
 #endif
@@ -539,6 +544,21 @@ bool CApplication::Create()
 
   // only the InitDirectories* for the current platform should return true
   // putting this before the first log entries saves another ifdef for g_settings.m_logFolder
+#if defined(TARGET_ANDROID)
+  JNIEnv* env = m_androidState->activity->env;
+  JavaVM* vm = m_androidState->activity->vm;
+  vm->AttachCurrentThread(&env, NULL);
+  jclass activityClass = env->GetObjectClass(m_androidState->activity->clazz);
+
+  jmethodID getPackageResourcePath = env->GetMethodID(activityClass, "getPackageResourcePath", "()Ljava/lang/String;");
+  jstring jpath = (jstring)env->CallObjectMethod(m_androidState->activity->clazz, getPackageResourcePath);
+  const char* apkPath = env->GetStringUTFChars(jpath, NULL);
+  CStdString androidHome(apkPath);
+  __android_log_print(ANDROID_LOG_VERBOSE, "XBMC", "APK Path: %s",androidHome.c_str());
+  env->ReleaseStringUTFChars(jpath, apkPath);
+#endif
+
+
   bool inited = InitDirectoriesLinux();
   if (!inited)
     inited = InitDirectoriesOSX();
