@@ -41,10 +41,12 @@ bool CAPKDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items
 
   CStdString path = url.GetFileName();
   CStdString host = url.GetHostName();
+  URIUtils::AddSlashAtEnd(path);
+
   // host name might be encoded rfc1738.txt, decode it.
   CURL::Decode(host);
 
-  int zip_flags = 0, zip_error = 0;
+  int zip_flags = 0, zip_error = 0, dir_marker = 0;
   struct zip *zip_archive;
   zip_archive = zip_open(host.c_str(), zip_flags, &zip_error);
   if (!zip_archive || zip_error)
@@ -64,9 +66,20 @@ bool CAPKDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items
     if (!test_name.Left(path.size()).Equals(path))
       continue;
 
-    // check for paths below the level requested.
-    if (test_name.Find('/', path.size() + 1) > 0)
-      continue;
+    // libzip does not index folders, only filenames. We search for a /,
+    // add it if it's not in our list already, and hope that no one has
+    // any "file/name.exe" files in a zip.
+
+    dir_marker = test_name.Find('/', path.size() + 1);
+    if (dir_marker)
+    {
+      // return items relative to path
+      test_name=test_name.Left(dir_marker);
+      test_name=test_name.Right(test_name.size() - path.size());
+
+      if (items.Contains(host + "/" + test_name))
+        continue;
+    }
 
     struct zip_stat sb;
     zip_stat_init(&sb);
@@ -76,8 +89,7 @@ bool CAPKDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items
       CFileItemPtr pItem(new CFileItem(test_name));      
       pItem->m_dwSize    = sb.size;
       pItem->m_dateTime  = sb.mtime;    
-      // zip directories have a '/' at end.
-      pItem->m_bIsFolder = URIUtils::HasSlashAtEnd(test_name);
+      pItem->m_bIsFolder = dir_marker > 0 ;
       pItem->SetPath(host + "/" + test_name);      
       items.Add(pItem);      
     }
