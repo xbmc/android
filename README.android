@@ -214,6 +214,32 @@ and the <device-id> may not be needed when using the Android emulator)
 
 
 --------------------------------------------------------------------
+7.2. GDB
+--------------------------------------------------------------------
+
+GDB can be used to debug, though the support is rather primitive. Rather than
+using gdb directly, you will need to use ndk-gdb which wraps it. Do NOT trust
+the -p/--project switches, as of ndk7b they do not work. Instead you will need
+to cd to tools/android/packaging/xbmc and execute it from there.
+
+  # ndk-gdb --start
+
+This will open the installed version of XBMC and break. The warnings can be
+ignored as we have setup the appropriate paths already.
+
+Caveats:
+
+- Anything related to dlopen'd libs is hit or miss. Not good when libxbmc.so is
+  run that way. Basic functionality works, though be aware that breakpoints may
+  not be reliable yet.
+
+- Timings during the first second or two can be strange because gdb doesn't
+  know when we're actually into xbmc. For example, a breakpoint set for
+  android_init will likely never be hit. Use of ndk-gdb's --delay switch may
+  help.
+
+
+--------------------------------------------------------------------
 8.0 Architecture
 --------------------------------------------------------------------
 
