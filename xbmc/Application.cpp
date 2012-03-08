@@ -300,11 +300,6 @@
 #include "XHandle.h"
 #endif
 
-#if defined(TARGET_ANDROID)
-#include <jni.h>
-#include <android/log.h>
-#endif
-
 #ifdef HAS_LIRC
 #include "input/linux/LIRC.h"
 #endif
@@ -341,7 +336,7 @@ using namespace XbmcThreads;
 //extern IDirectSoundRenderer* m_pAudioDecoder;
 CApplication::CApplication(void)
   : m_pPlayer(NULL)
-  , m_grfxa(grfxaNil)
+  , m_RunFlags(XBMCRunNull)
 #ifdef HAS_WEB_SERVER
   , m_WebServer(*new CWebServer)
 #endif
@@ -494,7 +489,7 @@ static void CopyUserDataIfNeeded(const CStdString &strPath, const CStdString &fi
 
 void CApplication::Preflight()
 {
-  if (!(m_grfxa & fxaServices))
+  if (!(m_RunFlags & XBMCRunServices))
     return;
 #ifdef HAS_DBUS
   // call 'dbus_threads_init_default' before any other dbus calls in order to
@@ -519,7 +514,7 @@ bool CApplication::Create()
 
   g_settings.Initialize(); //Initialize default AdvancedSettings
 
-  if (m_grfxa & fxaGui)
+  if (m_RunFlags & XBMCRunGui)
   {
     m_bSystemScreenSaverEnable = g_Windowing.IsSystemScreenSaverEnabled();
     g_Windowing.EnableSystemScreenSaver(false);
@@ -544,32 +539,6 @@ bool CApplication::Create()
 
   // only the InitDirectories* for the current platform should return true
   // putting this before the first log entries saves another ifdef for g_settings.m_logFolder
-#if defined(TARGET_ANDROID)
-  JNIEnv* env = m_androidState->activity->env;
-  JavaVM* vm = m_androidState->activity->vm;
-  vm->AttachCurrentThread(&env, NULL);
-  jclass activityClass = env->GetObjectClass(m_androidState->activity->clazz);
-
-  jmethodID getPackageResourcePath = env->GetMethodID(activityClass, "getPackageResourcePath", "()Ljava/lang/String;");
-  jstring jpath = (jstring)env->CallObjectMethod(m_androidState->activity->clazz, getPackageResourcePath);
-  const char* apkPath = env->GetStringUTFChars(jpath, NULL);
-  CStdString binHome(apkPath);
-  env->ReleaseStringUTFChars(jpath, apkPath);
-  setenv("XBMC_BIN_HOME", binHome+"/assets", 0);
-  setenv("XBMC_HOME", binHome+"/assets", 0);
-
-  jmethodID getCacheDir = env->GetMethodID(activityClass, "getCacheDir", "()Ljava/io/File;");
-  jobject file = env->CallObjectMethod(m_androidState->activity->clazz, getCacheDir);
-  jclass fileClass = env->FindClass("java/io/File");
-  jmethodID getAbsolutePath = env->GetMethodID(fileClass, "getAbsolutePath", "()Ljava/lang/String;");
-  jpath = (jstring)env->CallObjectMethod(file, getAbsolutePath);
-  const char* cachePath = env->GetStringUTFChars(jpath, NULL);
-  setenv("HOME", cachePath, 0);
-  env->ReleaseStringUTFChars(jpath, cachePath);
-
-#endif
-
-
   bool inited = InitDirectoriesLinux();
   if (!inited)
     inited = InitDirectoriesOSX();
@@ -619,7 +588,7 @@ bool CApplication::Create()
   CUtil::GetHomePath(strExecutablePath);
 
   // if we are running from DVD our UserData location will be TDATA
-  if (m_grfxa & fxaServices && URIUtils::IsDVD(strExecutablePath))
+  if ((m_RunFlags & XBMCRunServices) && URIUtils::IsDVD(strExecutablePath))
   {
     // TODO: Should we copy over any UserData folder from the DVD?
     if (!CFile::Exists("special://masterprofile/guisettings.xml")) // first run - cache userdata folder
@@ -633,14 +602,14 @@ bool CApplication::Create()
   }
 
 #ifdef HAS_XRANDR
-  if (m_grfxa & fxaGui)
+  if (m_RunFlags & XBMCRunGui)
     g_xrandr.LoadCustomModeLinesToAllOutputs();
 #endif
 
   // Init our DllLoaders emu env
   init_emu_environ();
 
-  if (m_grfxa & fxaGui)
+  if (m_RunFlags & XBMCRunGui)
   {
 #ifdef HAS_SDL
     CLog::Log(LOGNOTICE, "Setup SDL");
@@ -702,7 +671,7 @@ bool CApplication::Create()
   // Initialize core peripheral port support. Note: If these parameters
   // are 0 and NULL, respectively, then the default number and types of
   // controllers will be initialized.
-  if (m_grfxa & fxaGui && !g_Windowing.InitWindowSystem())
+  if ((m_RunFlags & XBMCRunGui) && !g_Windowing.InitWindowSystem())
   {
     CLog::Log(LOGFATAL, "CApplication::Create: Unable to init windowing system");
     return false;
@@ -759,7 +728,7 @@ bool CApplication::Create()
 
   // Create the Mouse, Keyboard, Remote, and Joystick devices
   // Initialize after loading settings to get joystick deadzone setting
-  if (m_grfxa & fxaGui)
+  if (m_RunFlags & XBMCRunGui)
   {
     g_Mouse.Initialize();
     g_Mouse.SetEnabled(g_guiSettings.GetBool("input.enablemouse"));
@@ -890,7 +859,7 @@ bool CApplication::InitDirectoriesLinux()
     userHome = "/root";
 
   CStdString xbmcBinPath, xbmcPath;
-  if (m_grfxa & fxaPrimary)
+  if (m_RunFlags & XBMCRunPrimary)
     CUtil::GetHomePath(xbmcBinPath, "XBMC_BIN_HOME");
   else
     xbmcBinPath = BIN_INSTALL_PATH;
@@ -1088,6 +1057,13 @@ void CApplication::CreateUserDirs()
   CDirectory::Create("special://temp/temp"); // temp directory for python and dllGetTempPathA
 }
 
+void CApplication::PlatformInitialize(XBMC_PLATFORM *platform)
+{
+  m_platform = platform;
+  m_RunFlags = platform->flags;
+  m_sLogName = platform->log_name;
+}
+
 bool CApplication::Initialize()
 {
 #if defined(HAS_DVD_DRIVE) && !defined(_WIN32) // somehow this throws an "unresolved external symbol" on win32
@@ -1115,7 +1091,7 @@ bool CApplication::Initialize()
   //  curl_global_init() calls functions of other libraries that are similarly
   //  thread unsafe, it could conflict with any other thread that
   //  uses these other libraries."
-  if (m_grfxa & fxaServices)
+  if (m_RunFlags & XBMCRunServices)
   {
     g_curlInterface.Load();
     g_curlInterface.Unload();
@@ -1123,7 +1099,7 @@ bool CApplication::Initialize()
 
   StartServices();
 
-  if (m_grfxa & fxaGui)
+  if (m_RunFlags & XBMCRunGui)
   {
   // Init DPMS, before creating the corresponding setting control.
   m_dpms = new DPMSSupport();
@@ -1259,14 +1235,14 @@ bool CApplication::Initialize()
   }
   }
 
-  if (m_grfxa & fxaServices)
+  if (m_RunFlags & XBMCRunServices)
     g_sysinfo.Refresh();
 
   CLog::Log(LOGINFO, "removing tempfiles");
   CUtil::RemoveTempFiles();
 
   //  Restore volume
-  if (m_grfxa & fxaGui && g_settings.m_bMute)
+  if (m_RunFlags & XBMCRunGui && g_settings.m_bMute)
   {
     SetVolume(g_settings.m_iPreMuteVolumeLevel);
     Mute();
@@ -1278,13 +1254,13 @@ bool CApplication::Initialize()
 
   // if the user shutoff the xbox during music scan
   // restore the settings
-  if (m_grfxa & fxaPrimary && g_settings.m_bMyMusicIsScanning)
+  if ((m_RunFlags & XBMCRunPrimary) && g_settings.m_bMyMusicIsScanning)
   {
     CLog::Log(LOGWARNING,"System rebooted during music scan! ... restoring UseTags and FindRemoteThumbs");
     RestoreMusicScanSettings();
   }
 
-  if (m_grfxa & fxaPrimary && !g_settings.UsingLoginScreen())
+  if ((m_RunFlags & XBMCRunPrimary) && !g_settings.UsingLoginScreen())
   {
     UpdateLibraries();
 #ifdef HAS_PYTHON
@@ -1301,7 +1277,7 @@ bool CApplication::Initialize()
   CCrystalHD::GetInstance();
 #endif
 
-  if (m_grfxa & fxaServices)
+  if (m_RunFlags & XBMCRunServices)
   CAddonMgr::Get().StartServices(true);
 
   CLog::Log(LOGNOTICE, "initialize done");

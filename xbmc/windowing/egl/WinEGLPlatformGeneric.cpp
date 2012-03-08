@@ -139,6 +139,9 @@ bool CWinEGLPlatformGeneric::CreateWindow(EGLNativeDisplayType nativeDisplay, EG
     ReleaseSurface();
   }
 
+  // Allow platforms to perform any pre-create window surface needs
+  CreateWindowCallback();
+
   m_surface = eglCreateWindowSurface(m_display, m_config, m_nativeWindow, NULL);
   if (!m_surface)
   { 
@@ -207,6 +210,10 @@ bool CWinEGLPlatformGeneric::CreateWindow(EGLNativeDisplayType nativeDisplay, EG
   CLog::Log(LOGINFO, "EGL window and context creation complete");
 
   return true;
+}
+
+void CWinEGLPlatformGeneric::CreateWindowCallback()
+{
 }
 
 bool CWinEGLPlatformGeneric::DestroyWindow()

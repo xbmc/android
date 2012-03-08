@@ -28,7 +28,7 @@
 #include "threads/Thread.h"
 #include "utils/StdString.h"
 #if defined(TARGET_ANDROID)
-#include <android/log.h>
+#include "Application.h"
 #endif
 
 #define critSec XBMC_GLOBAL_USE(CLog::CLogGlobals).critSec
@@ -98,7 +98,7 @@ void CLog::Log(int loglevel, const char *format, ... )
       OutputDebugString(strData2);
       m_repeatCount = 0;
     }
-    
+
     m_repeatLine      = strData;
     m_repeatLogLevel  = loglevel;
 
@@ -113,7 +113,7 @@ void CLog::Log(int loglevel, const char *format, ... )
 
     if (!length)
       return;
-    
+
     OutputDebugString(strData);
 
     /* fixup newline alignment, number of spaces should equal prefix length */
@@ -124,7 +124,7 @@ void CLog::Log(int loglevel, const char *format, ... )
 
 //print to adb
 #if defined(TARGET_ANDROID) && defined(_DEBUG)
-     __android_log_print(ANDROID_LOG_VERBOSE, "XBMC", "%s%s",strPrefix.c_str(), strData.c_str());
+    g_application.GetPlatform()->android_printf("%s%s",strPrefix.c_str(), strData.c_str());
 #endif
 
     fputs(strPrefix.c_str(), m_file);

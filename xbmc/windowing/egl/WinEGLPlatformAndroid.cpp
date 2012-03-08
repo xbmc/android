@@ -28,12 +28,12 @@
 #include <sys/ioctl.h>
 
 #include "WinEGLPlatformAndroid.h"
+#include "Application.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 EGLNativeWindowType CWinEGLPlatformAndroid::InitWindowSystem(int width, int height, int bpp)
 {
-  // TODO:fetch and return the native android window here
-  return 0;
+  return (EGLNativeWindowType)g_application.GetPlatform()->window_type;
 }
 
 void CWinEGLPlatformAndroid::DestroyWindowSystem(EGLNativeWindowType native_window)
@@ -42,20 +42,34 @@ void CWinEGLPlatformAndroid::DestroyWindowSystem(EGLNativeWindowType native_wind
 
 bool CWinEGLPlatformAndroid::ClampToGUIDisplayLimits(int &width, int &height)
 {
-  // TODO:clamp to the native android window size
-  bool rtn = false;
-  if (width == 1920 && height == 1080)
-  {
-    width  = 1280;
-    height = 720;
-    rtn = true;
-  }
-  return rtn;
+  // clamp to the native android window size
+  width  = g_application.GetPlatform()->width;
+  height = g_application.GetPlatform()->height;
+  return true;
 }
 
 bool CWinEGLPlatformAndroid::ProbeDisplayResolutions(std::vector<CStdString> &resolutions)
 {
   resolutions.clear();
-  resolutions.push_back("1280x720p60Hz");
+
+  CStdString resolution;
+  // the only resolution we support is the native android window size
+  resolution.Format("%dx%dp60Hz",
+    g_application.GetPlatform()->width,
+    g_application.GetPlatform()->height);
+
+  resolutions.push_back(resolution);
   return true;
+}
+
+void CWinEGLPlatformAndroid::CreateWindowCallback()
+{
+  EGLint format;
+  // EGL_NATIVE_VISUAL_ID is an attribute of the EGLConfig that is
+  // guaranteed to be accepted by ANativeWindow_setBuffersGeometry().
+  // As soon as we picked a EGLConfig, we can safely reconfigure the
+  // ANativeWindow buffers to match, using EGL_NATIVE_VISUAL_ID.
+  eglGetConfigAttrib(m_display, m_config, EGL_NATIVE_VISUAL_ID, &format);
+
+  ANativeWindow_setBuffersGeometry(g_application.GetPlatform()->window_type, 0, 0, format);
 }

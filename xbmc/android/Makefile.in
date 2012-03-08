@@ -5,11 +5,12 @@ include @abs_top_srcdir@/tools/android/depends/android-sdk.mk
 
 GLUEPATH = $(NDKROOT)/sources/android/native_app_glue
 GLUESRC  = android_native_app_glue.c
+CFLAGS  += -I@abs_top_srcdir@/xbmc
 CFLAGS  += -I$(NDKROOT)/sources/android/native_app_glue
-LDFLAGS += -llog -landroid -lEGL -lGLESv2 -lstdc++ -ldl -lstdc++
+LDFLAGS += -llog -landroid -lEGL -lGLESv2 -lstdc++ -ldl
 
-SOURCE = android_main.c
-OBJ    = $(SOURCE:.c=.o)
+SOURCE = android_main.cpp
+OBJ    = $(SOURCE:.cpp=.o)
 SOLIB  = libxbmcapp.so
 
 all: $(PREFIX)/lib/$(SOLIB)

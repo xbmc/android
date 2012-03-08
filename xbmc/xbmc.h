@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- *      Copyright (C) 2005-2008 Team XBMC
+ *      Copyright (C) 2012 Team XBMC
  *      http://xbmc.org
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -21,7 +21,53 @@
  *
  */
 
-#include "Application.h"
+#include <stdint.h>
 
-bool XBMC_Init(GRFXA grfxa, const char *sLogName, int argc = 0, const char** argv = NULL);
-bool android_init(android_app *state);
+// runtime application flags
+typedef enum {
+  XBMCRunNull     = 0x00,
+  XBMCRunPrimary  = 0x01,  // XBMC application
+  XBMCRunGui      = 0x02,  // initialize GUI services
+  XBMCRunServices = 0x04,  // start services: dbus, web, etc.
+  XBMCRunAsApp    = XBMCRunPrimary | XBMCRunGui | XBMCRunServices
+} XBMC_RUNFLAGS;
+
+#if defined(ANDROID)
+struct ANativeWindow;
+typedef struct ANativeWindow ANativeWindow;
+
+typedef int (*android_printf_t)(const char *format, ...);
+typedef int32_t (*android_setBuffersGeometry_t)(ANativeWindow* window_type, int32_t width, int32_t height, int32_t format);
+
+struct XBMC_PLATFORM {
+  XBMC_RUNFLAGS flags;
+  const char    *log_name;
+  // android specific
+  int32_t       width;
+  int32_t       height;
+  int32_t       format;
+  ANativeWindow *window_type;
+  // callbacks from xbmc into android
+  // these are setup before call into XBMC_Initialize
+  android_printf_t android_printf;
+  android_setBuffersGeometry_t android_setBuffersGeometry;
+
+  // callbacks from android into xbmc
+  // these are valid after call into XBMC_Initialize
+
+};
+
+#else
+struct XBMC_PLATFORM {
+  XBMC_RUNFLAGS flags;
+, const char    *log_name;
+};
+#endif
+typedef struct XBMC_PLATFORM XBMC_PLATFORM;
+
+
+typedef int (*XBMC_Initialize_t)(XBMC_PLATFORM*, int, const char**);
+typedef int (*XBMC_Run_t)();
+
+extern int XBMC_Initialize(XBMC_PLATFORM *platform, int argc = 0, const char** argv = 0);
+extern int XBMC_Run();

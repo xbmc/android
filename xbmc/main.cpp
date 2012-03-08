@@ -24,13 +24,17 @@
 
 int main(int argc, const char* argv[])
 {
-  if (!XBMC_Init(grfxaXBMC, "xbmc", argc, argv))
+  XBMC_PLATFORM platform = {XBMCRunNull, 0 };
+
+  platform.flags = XBMCRunAsApp;
+  platform.log_name = "XBMC";
+  if (XBMC_Initialize(&platform, argc, argv))
     return -1;
 
   int status;
   try
   {
-    status = g_application.Run();
+    status = XBMC_Run();
   }
   catch(...)
   {
@@ -39,4 +43,3 @@ int main(int argc, const char* argv[])
   }
   return status;
 }
-

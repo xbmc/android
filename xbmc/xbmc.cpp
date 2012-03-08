@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2005-2008 Team XBMC
+ *      Copyright (C) 2012 Team XBMC
  *      http://www.xbmc.org
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -28,29 +28,23 @@
 //
 
 #include "system.h"
-#include "settings/AppParamParser.h"
-#include "settings/AdvancedSettings.h"
-#include "FileItem.h"
 #include "Application.h"
 #include "PlayListPlayer.h"
+#include "settings/AppParamParser.h"
+#include "settings/AdvancedSettings.h"
 #include "utils/log.h"
-#ifdef _LINUX
+
+#if defined(TARGET_LINUX) && defined(DEBUG)
 #include <sys/resource.h>
 #include <signal.h>
 #endif
-#ifdef __APPLE__
+#if defined(TARGET_DARWIN)
 #include "Util.h"
 #endif
-#ifdef HAS_LIRC
-#include "input/linux/LIRC.h"
-#endif
-#if defined(TARGET_ANDROID)
-#include <android/log.h>
-#endif
 
-bool XBMC_Init(GRFXA grfxa, const char *sLogName, int argc, const char** argv)
+extern int XBMC_Initialize(XBMC_PLATFORM *platform, int argc, const char** argv)
 {
-  g_application.Configure(grfxa, sLogName);
+  g_application.PlatformInitialize(platform);
 
   //this can't be set from CAdvancedSettings::Initialize() because it will overwrite
   //the loglevel set with the --debug flag
@@ -63,7 +57,7 @@ bool XBMC_Init(GRFXA grfxa, const char *sLogName, int argc, const char** argv)
 #endif
   CLog::SetLogLevel(g_advancedSettings.m_logLevel);
 
-#ifdef _LINUX
+#ifdef TARGET_LINUX
 #if defined(DEBUG)
   struct rlimit rlim;
   rlim.rlim_cur = rlim.rlim_max = RLIM_INFINITY;
@@ -81,8 +75,8 @@ bool XBMC_Init(GRFXA grfxa, const char *sLogName, int argc, const char** argv)
   setlocale(LC_NUMERIC, "C");
   g_advancedSettings.Initialize();
   
-#ifndef _WIN32
-  if (grfxa & fxaPrimary && argc > 0 && argv != NULL)
+#ifndef TARGET_WINDOWS
+  if ((platform->flags & XBMCRunPrimary) && argc > 0 && argv != NULL)
   {
     CAppParamParser appParamParser;
     appParamParser.Parse(argv, argc);
@@ -90,33 +84,18 @@ bool XBMC_Init(GRFXA grfxa, const char *sLogName, int argc, const char** argv)
 #endif
   g_application.Preflight();
 #if defined(TARGET_ANDROID)
-  __android_log_print(ANDROID_LOG_VERBOSE, "XBMC", "Creating application. Hello from Android!");
+  platform->android_printf("Creating application. Hello from Android!");
 #endif
+
   if (!g_application.Create())
   {
-    fprintf(stderr, "ERROR: Unable to create application. Exiting\n");
-    return false;
+    CLog::Log(LOGERROR, "ERROR: Unable to create application. Exiting");
+    return 1;
   }
-  return true;
+  return 0;
 }
 
-extern "C"
-bool android_init(android_app *state)
+extern int XBMC_Run()
 {
-  g_application.SetAndroidState(state);
-
-  if (!XBMC_Init(grfxaXBMC, "xbmc", NULL, NULL))
-    return -1;
-
-  int status;
-  try
-  {
-    status = g_application.Run();
-  }
-  catch(...)
-  {
-    __android_log_print(ANDROID_LOG_VERBOSE, "XBMC", "ERROR: Exception caught on main loop. Exiting\n");
-    status = -1;
-  }
-  return status;
+  return g_application.Run();
 }

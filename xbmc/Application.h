@@ -22,6 +22,7 @@
  */
 
 #include "system.h" // for HAS_DVD_DRIVE et. al.
+#include "xbmc.h"
 #include "XBApplicationEx.h"
 
 #include "guilib/IMsgTargetCallback.h"
@@ -66,10 +67,6 @@ namespace MEDIA_DETECT
 #include "network/WebServer.h"
 #endif
 
-#if defined(TARGET_ANDROID)
-#include <android_native_app_glue.h>
-#endif
-
 class CKaraokeLyricsManager;
 class CInertialScrollingHandler;
 class CApplicationMessenger;
@@ -89,20 +86,12 @@ protected:
   int       m_iPlayList;
 };
 
-typedef unsigned long GRFXA;  // application flags
-const GRFXA grfxaNil      = 0;
-const GRFXA fxaPrimary    = 0x1;  // XBMC application
-const GRFXA fxaGui        = 0x2;  // initialize GUI services
-const GRFXA fxaServices   = 0x4;  // start services: dbus, web, etc.
-const GRFXA grfxaXBMC     = fxaPrimary | fxaGui | fxaServices;
-
 class CApplication : public CXBApplicationEx, public IPlayerCallback, public IMsgTargetCallback
 {
 public:
   CApplication();
   virtual ~CApplication();
-  void Configure(GRFXA grfxa, const char *sLogName)
-    { m_grfxa = grfxa; m_sLogName = sLogName; }
+  virtual void PlatformInitialize(XBMC_PLATFORM *platform);
   virtual bool Initialize();
   virtual void FrameMove(bool processEvents);
   virtual void Render();
@@ -111,9 +100,6 @@ public:
   virtual bool Create();
   virtual bool Cleanup();
 
-#if defined(TARGET_ANDROID)
-  void SetAndroidState(android_app *state) { m_androidState = state; };
-#endif
   void StartServices();
   void StopServices();
   bool StartWebServer();
@@ -304,13 +290,13 @@ public:
   bool ToggleDPMS(bool manual);
 
   float GetDimScreenSaverLevel() const;
-protected:
-  GRFXA m_grfxa;  // application options
-  CStdString m_sLogName;
+  
+  XBMC_PLATFORM* GetPlatform() {return m_platform; };
 
-#if defined(TARGET_ANDROID)
-  android_app *m_androidState;
-#endif
+protected:
+  XBMC_PLATFORM *m_platform;
+  XBMC_RUNFLAGS m_RunFlags;  // application options
+  CStdString m_sLogName;
 
   bool LoadSkin(const CStdString& skinID);
   void LoadSkin(const boost::shared_ptr<ADDON::CSkinInfo>& skin);

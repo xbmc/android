@@ -39,6 +39,7 @@ public:
   virtual bool ClampToGUIDisplayLimits(int &width, int &height);
   virtual bool ProbeDisplayResolutions(std::vector<CStdString> &resolutions);
   virtual bool CreateWindow(EGLNativeDisplayType nativeDisplay, EGLNativeWindowType nativeWindow);
+  virtual void CreateWindowCallback();
   virtual bool DestroyWindow();
   virtual bool ShowWindow(bool show);
   virtual bool ReleaseSurface();

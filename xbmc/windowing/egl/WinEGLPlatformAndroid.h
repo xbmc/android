@@ -31,6 +31,7 @@ public:
   virtual void DestroyWindowSystem(EGLNativeWindowType native_window);
   virtual bool ClampToGUIDisplayLimits(int &width, int &height);
   virtual bool ProbeDisplayResolutions(std::vector<CStdString> &resolutions);
+  virtual void CreateWindowCallback();
 };
 
 #endif
