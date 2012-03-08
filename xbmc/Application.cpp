@@ -891,10 +891,15 @@ bool CApplication::InitDirectoriesLinux()
     // map our special drives
     CSpecialProtocol::SetXBMCBinPath(xbmcBinPath);
     CSpecialProtocol::SetXBMCPath(xbmcPath);
-    CSpecialProtocol::SetHomePath(userHome + "/.xbmc");
-    CSpecialProtocol::SetMasterProfilePath(userHome + "/.xbmc/userdata");
-
-    CStdString strTempPath = URIUtils::AddFileToFolder(userHome, ".xbmc/temp");
+    
+    userHome = URIUtils::AddFileToFolder(userHome, ".xbmc");
+    CSpecialProtocol::SetHomePath(userHome);
+    CSpecialProtocol::SetMasterProfilePath(userHome + "/userdata");
+    
+    CStdString strTempPath = userHome;
+    if (getenv("XBMC_TEMP"))
+      strTempPath = getenv("XBMC_TEMP");
+    strTempPath = URIUtils::AddFileToFolder(strTempPath, "temp");
     CSpecialProtocol::SetTempPath(strTempPath);
 
     URIUtils::AddSlashAtEnd(strTempPath);
@@ -913,7 +918,10 @@ bool CApplication::InitDirectoriesLinux()
     CSpecialProtocol::SetHomePath(URIUtils::AddFileToFolder(xbmcPath, "portable_data"));
     CSpecialProtocol::SetMasterProfilePath(URIUtils::AddFileToFolder(xbmcPath, "portable_data/userdata"));
 
-    CStdString strTempPath = URIUtils::AddFileToFolder(xbmcPath, "portable_data/temp");
+    CStdString strTempPath = xbmcPath;
+    if (getenv("XBMC_TEMP"))
+      strTempPath = getenv("XBMC_TEMP");
+    strTempPath = URIUtils::AddFileToFolder(strTempPath, "portable_data/temp");
     CSpecialProtocol::SetTempPath(strTempPath);
     CreateUserDirs();
 

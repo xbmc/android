@@ -62,26 +62,73 @@ void setup_env(struct android_app* state)
   JNIEnv* env = state->activity->env;
 
   vm->AttachCurrentThread(&env, NULL);
-  jclass activityClass = env->GetObjectClass(state->activity->clazz);
+  jobject activity = state->activity->clazz;
+  jclass activityClass = env->GetObjectClass(activity);
 
   char cstr[1024];
   jmethodID getPackageResourcePath = env->GetMethodID(activityClass, "getPackageResourcePath", "()Ljava/lang/String;");
-  jstring jpath = (jstring)env->CallObjectMethod(state->activity->clazz, getPackageResourcePath);
-  const char* apkPath = env->GetStringUTFChars(jpath, NULL);
+  jstring jApkPath = (jstring)env->CallObjectMethod(activity, getPackageResourcePath);
+  const char* apkPath = env->GetStringUTFChars(jApkPath, NULL);
   strcpy(cstr, apkPath);
-  env->ReleaseStringUTFChars(jpath, apkPath);
+  env->ReleaseStringUTFChars(jApkPath, apkPath);
   strcat(cstr, "/assets");
   setenv("XBMC_BIN_HOME", cstr, 0);
   setenv("XBMC_HOME"    , cstr, 0);
+  
+  memset(cstr, 0, 1024);
 
+  // Get the path to the temp/cache directory
   jmethodID getCacheDir = env->GetMethodID(activityClass, "getCacheDir", "()Ljava/io/File;");
-  jobject file = env->CallObjectMethod(state->activity->clazz, getCacheDir);
-  jclass fileClass = env->FindClass("java/io/File");
+  jobject jCacheDir = env->CallObjectMethod(activity, getCacheDir);
+  
+  jclass fileClass = env->GetObjectClass(jCacheDir);
   jmethodID getAbsolutePath = env->GetMethodID(fileClass, "getAbsolutePath", "()Ljava/lang/String;");
-  jpath = (jstring)env->CallObjectMethod(file, getAbsolutePath);
-  const char* cachePath = env->GetStringUTFChars(jpath, NULL);
-  setenv("HOME", cachePath, 0);
-  env->ReleaseStringUTFChars(jpath, cachePath);
+  
+  jstring jCachePath = (jstring)env->CallObjectMethod(jCacheDir, getAbsolutePath);
+  const char* cachePath = env->GetStringUTFChars(jCachePath, NULL);
+  setenv("XBMC_TEMP", cachePath, 0);
+  env->ReleaseStringUTFChars(jCachePath, cachePath);
+  
+  // Get the path to the external storage
+  if (state->activity->externalDataPath != NULL)
+    strcpy(cstr, state->activity->externalDataPath);
+  else
+  {
+    // We need to employ JNI to get the path because of a (known) bug in Android 2.3.x
+    jmethodID getExternalFilesDir = env->GetMethodID(activityClass, "getExternalFilesDir", "(Ljava/lang/String;)Ljava/io/File;");
+    jobject jExternalDir = env->CallObjectMethod(activity, getExternalFilesDir, (jstring)NULL);
+    
+    jstring jExternalPath = (jstring)env->CallObjectMethod(jExternalDir, getAbsolutePath);
+    const char *externalPath = env->GetStringUTFChars(jExternalPath, NULL);
+    strcpy(cstr, externalPath);
+    env->ReleaseStringUTFChars(jExternalPath, externalPath);
+  }
+
+  // Check if we don't have a valid path yet
+  if (strlen(cstr) <= 0)
+  {
+    // Get the path to the internal storage
+    if (state->activity->internalDataPath != NULL)
+      strcpy(cstr, state->activity->internalDataPath);
+    else
+    {
+      // We need to employ JNI to get the path because of a (known) bug in Android 2.3.x
+      jstring jstrName = env->NewStringUTF("org.xbmc");
+      jmethodID getDir = env->GetMethodID(activityClass, "getDir", "(Ljava/lang/String;I)Ljava/io/File;");
+      jobject jInternalDir = env->CallObjectMethod(activity, getDir, jstrName, 1 /* MODE_WORLD_READABLE */);
+    
+      jstring jInternalPath = (jstring)env->CallObjectMethod(jInternalDir, getAbsolutePath);
+      const char *internalPath = env->GetStringUTFChars(jInternalPath, NULL);
+      strcpy(cstr, internalPath);
+      env->ReleaseStringUTFChars(jInternalPath, internalPath);
+    }
+  }
+  
+  // Check if we have a valid home path
+  if (strlen(cstr) > 0)
+    setenv("HOME", cstr, 0);
+  else
+    setenv("HOME", getenv("XBMC_TEMP"), 0);
 }
 
 extern void android_main(struct android_app* state)
