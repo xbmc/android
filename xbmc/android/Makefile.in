@@ -13,17 +13,17 @@ SOURCE = android_main.cpp
 OBJ    = $(SOURCE:.cpp=.o)
 SOLIB  = libxbmcapp.so
 
-all: $(PREFIX)/lib/$(SOLIB)
+all: $(SOLIB)
 
 $(GLUESRC:.c=.a):
 	$(CC) $(CFLAGS) -o $(GLUESRC:.c=.o) -c $(GLUEPATH)/$(GLUESRC)
 	$(AR) crs $(GLUESRC:.c=.a) $(GLUESRC:.c=.o)
 
-$(OBJ): $(GLUESRC:.c=.a) $(SOURCE)
-	$(CC) $(CFLAGS) -o $(OBJ) -c $(SOURCE)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $(SOLIB) -shared android_main.o $(GLUESRC:.c=.a)
+$(SOLIB): $(GLUESRC:.c=.a) $(SOURCE)
+	$(CXX) $(CFLAGS) -o $(OBJ) -c $(SOURCE)
+	$(CXX) $(CFLAGS) $(LDFLAGS) -o $@ -shared android_main.o $(GLUESRC:.c=.a)
 
-$(PREFIX)/lib/$(SOLIB): $(OBJ)
+install: $(SOLIB)
 	install $(SOLIB) $(PREFIX)/lib/$(SOLIB)
 
 clean:
