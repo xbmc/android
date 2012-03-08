@@ -69,5 +69,5 @@ typedef struct XBMC_PLATFORM XBMC_PLATFORM;
 typedef int (*XBMC_Initialize_t)(XBMC_PLATFORM*, int, const char**);
 typedef int (*XBMC_Run_t)();
 
-extern int XBMC_Initialize(XBMC_PLATFORM *platform, int argc = 0, const char** argv = 0);
-extern int XBMC_Run();
+extern "C" int XBMC_Initialize(XBMC_PLATFORM *platform, int argc, const char** argv);
+extern "C" int XBMC_Run();

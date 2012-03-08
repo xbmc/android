@@ -42,7 +42,7 @@
 #include "Util.h"
 #endif
 
-extern int XBMC_Initialize(XBMC_PLATFORM *platform, int argc, const char** argv)
+extern "C" int XBMC_Initialize(XBMC_PLATFORM *platform, int argc, const char** argv)
 {
   g_application.PlatformInitialize(platform);
 
@@ -95,7 +95,7 @@ extern int XBMC_Initialize(XBMC_PLATFORM *platform, int argc, const char** argv)
   return 0;
 }
 
-extern int XBMC_Run()
+extern "C" int XBMC_Run()
 {
   return g_application.Run();
 }
