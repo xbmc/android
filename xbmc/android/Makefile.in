@@ -1,30 +1,20 @@
-#this build is a bit awkward because I've tried to mimic ndk-build exactly.
-
 include @abs_top_srcdir@/tools/android/depends/Makefile.include
 include @abs_top_srcdir@/tools/android/depends/android-sdk.mk
 
 GLUEPATH = $(NDKROOT)/sources/android/native_app_glue
-GLUESRC  = android_native_app_glue.c
-CFLAGS  += -I@abs_top_srcdir@/xbmc
-CFLAGS  += -I$(NDKROOT)/sources/android/native_app_glue
-LDFLAGS += -llog -landroid -lEGL -lGLESv2 -lstdc++ -ldl
+CFLAGS  += -I@abs_top_srcdir@/xbmc -I$(GLUEPATH)
+LDFLAGS += -llog -landroid
 
-SOURCE = android_main.cpp
-OBJ    = $(SOURCE:.cpp=.o)
-SOLIB  = libxbmcapp.so
+SRCS     = $(GLUEPATH)/android_native_app_glue.c android_main.cpp
+SOLIB    = libxbmcapp.so
 
 all: $(SOLIB)
 
-$(GLUESRC:.c=.a):
-	$(CC) $(CFLAGS) -o $(GLUESRC:.c=.o) -c $(GLUEPATH)/$(GLUESRC)
-	$(AR) crs $(GLUESRC:.c=.a) $(GLUESRC:.c=.o)
-
-$(SOLIB): $(GLUESRC:.c=.a) $(SOURCE)
-	$(CXX) $(CFLAGS) -o $(OBJ) -c $(SOURCE)
-	$(CXX) $(CFLAGS) $(LDFLAGS) -o $@ -shared android_main.o $(GLUESRC:.c=.a)
+$(SOLIB): $(SRCS)
+	$(CXX) $(CFLAGS) $(LDFLAGS) -o $@ -shared $(SRCS)
 
 install: $(SOLIB)
 	install $(SOLIB) $(PREFIX)/lib/$(SOLIB)
 
 clean:
-	-@rm -f $(OBJ) $(SOLIB) android_native_app_glue.* 2>/dev/null || true
+	-@rm -f $(SOLIB) 2>/dev/null || true
