@@ -10,7 +10,7 @@
 #include "xbmc.h"
 
 #define LOG_BUF_SIZE	1024
-int android_printf(const char *format, ...)
+static int android_printf(const char *format, ...)
 {
   va_list args;
   char buffer[LOG_BUF_SIZE];
@@ -116,9 +116,12 @@ extern void android_main(struct android_app* state)
   platform.flags  = XBMCRunAsApp;
   platform.log_name = "XBMC";
   // android specific
-  platform.width  = ANativeWindow_getWidth(state->window);
-  platform.height = ANativeWindow_getHeight(state->window);
-  platform.format = ANativeWindow_getFormat(state->window);
+  if(state && state->window)
+  {
+    platform.width  = ANativeWindow_getWidth(state->window);
+    platform.height = ANativeWindow_getHeight(state->window);
+    platform.format = ANativeWindow_getFormat(state->window);
+  }
   platform.window_type = state->window;
   // callbacks into android
   platform.android_printf = &android_printf;
