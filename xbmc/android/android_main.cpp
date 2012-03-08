@@ -127,22 +127,27 @@ extern void android_main(struct android_app* state)
   platform.android_printf = &android_printf;
   platform.android_setBuffersGeometry = &ANativeWindow_setBuffersGeometry;
 
-  if (XBMC_Initialize(&platform, NULL, NULL))
-    __android_log_print(ANDROID_LOG_VERBOSE, "XBMC", "ERROR: XBMC_Initialize failed. Exiting\n");
-
-  int status;
-  try
+  int status = 0;
+  status = XBMC_Initialize(&platform, NULL, NULL);
+  if (!status)
   {
+    try
+    {
     status = XBMC_Run();
+    }
+    catch(...)
+    {
+      __android_log_print(ANDROID_LOG_VERBOSE, "XBMC", "ERROR: Exception caught on main loop. Exiting\n");
+    }
   }
-  catch(...)
+  else
   {
-    __android_log_print(ANDROID_LOG_VERBOSE, "XBMC", "ERROR: Exception caught on main loop. Exiting\n");
+    __android_log_print(ANDROID_LOG_VERBOSE, "XBMC", "ERROR: XBMC_Initialize failed. Exiting\n");
   }
 
-  //Now to relax.
-  while(1)
-  {
-    usleep(1);
-  }
+  if (status == 0)
+    __android_log_print(ANDROID_LOG_VERBOSE, "XBMC", "DEBUG: Exiting gracefully.\n");
+
+  state->activity->vm->DetachCurrentThread();
+  return;
 }
