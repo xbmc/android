@@ -9,16 +9,13 @@
 
 #include "xbmc.h"
 
-#define LOG_BUF_SIZE	1024
 static int android_printf(const char *format, ...)
 {
   va_list args;
-  char buffer[LOG_BUF_SIZE];
   va_start(args, format);
-  vsnprintf(buffer, LOG_BUF_SIZE, format, args);
+  int result = __android_log_vprint(ANDROID_LOG_VERBOSE, "XBMC", format, args);
   va_end(args);
-  __android_log_print(ANDROID_LOG_VERBOSE, "XBMC", buffer);
-  return strlen(buffer);
+  return result;
 }
 
 void* tryopen(const char *path)
@@ -106,7 +103,7 @@ extern void android_main(struct android_app* state)
   XBMC_Initialize = (XBMC_Initialize_t)dlsym(soHandle, "XBMC_Initialize");
   if (XBMC_Run == NULL || XBMC_Initialize == NULL)
   {
-    __android_log_print(ANDROID_LOG_VERBOSE, "XBMC", "could not find functions. Error: %s\n", dlerror());
+    android_printf("could not find functions. Error: %s\n", dlerror());
     exit(1);
   }
 
@@ -133,20 +130,18 @@ extern void android_main(struct android_app* state)
   {
     try
     {
-    status = XBMC_Run();
+      status = XBMC_Run();
     }
     catch(...)
     {
-      __android_log_print(ANDROID_LOG_VERBOSE, "XBMC", "ERROR: Exception caught on main loop. Exiting\n");
+      android_printf("ERROR: Exception caught on main loop. Exiting\n");
     }
   }
   else
-  {
-    __android_log_print(ANDROID_LOG_VERBOSE, "XBMC", "ERROR: XBMC_Initialize failed. Exiting\n");
-  }
+    android_printf("ERROR: XBMC_Initialize failed. Exiting\n");
 
   if (status == 0)
-    __android_log_print(ANDROID_LOG_VERBOSE, "XBMC", "DEBUG: Exiting gracefully.\n");
+    android_printf("DEBUG: Exiting gracefully.\n");
 
   state->activity->vm->DetachCurrentThread();
   return;
