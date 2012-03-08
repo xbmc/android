@@ -71,5 +71,5 @@ void CWinEGLPlatformAndroid::CreateWindowCallback()
   // ANativeWindow buffers to match, using EGL_NATIVE_VISUAL_ID.
   eglGetConfigAttrib(m_display, m_config, EGL_NATIVE_VISUAL_ID, &format);
 
-  ANativeWindow_setBuffersGeometry(g_application.GetPlatform()->window_type, 0, 0, format);
+  g_application.GetPlatform()->android_setBuffersGeometry(g_application.GetPlatform()->window_type, 0, 0, format);
 }
