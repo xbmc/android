@@ -7,7 +7,7 @@ OBJS = libgcrypt.so.11 libgpg-error.so.0 libfontconfig.so.1 libfreetype.so.6 \
   libpython2.6.so.1.0 libpng12.so.0 libyajl.so.2.0.1 \
   libtiff.so.3 libjpeg.so.8.0.2 libzip.so
 XBMCROOT = $(CURDIR)/../../../
-
+COPYDIRS = system addons language media
 all: package
 
 package:
@@ -15,7 +15,7 @@ package:
 	$(foreach var,$(OBJS),$(STRIP) --strip-unneeded $(XBMCPREFIX)/lib/$(var) -o xbmc/libs/armeabi/`echo $(var) | sed -e 's/\.so.*/\.so/g'`;)
 	$(STRIP) --strip-unneeded ../../../libxbmc.so -o xbmc/libs/armeabi/libxbmc.so
 	$(STRIP) --strip-unneeded ../../../xbmc/android/libxbmcapp.so -o xbmc/libs/armeabi/libxbmcapp.so
-	cp -rf ../../../system ../../../addons ../../../language xbmc/assets/
+	$(foreach var,$(COPYDIRS), cp -rf ../../../$(var) ./xbmc/assets/;)
 	./fixsolib.sh
 	install -p $(NDKROOT)/toolchains/arm-linux-androideabi-4.4.3/prebuilt/gdbserver ./xbmc/libs/armeabi/gdbserver
 	echo "set solib-search-path ./obj/local/armeabi:$(PREFIX)/lib:$(XBMCROOT):$(XBMCROOT)/xbmc/android" > ./xbmc/libs/armeabi/gdb.setup
