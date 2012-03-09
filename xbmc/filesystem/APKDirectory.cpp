@@ -75,7 +75,6 @@ bool CAPKDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items
     {
       // return items relative to path
       test_name=test_name.Left(dir_marker);
-      test_name=test_name.Right(test_name.size() - path.size());
 
       if (items.Contains(host + "/" + test_name))
         continue;
