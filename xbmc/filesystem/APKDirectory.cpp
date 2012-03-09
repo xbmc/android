@@ -71,7 +71,7 @@ bool CAPKDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items
     // any "file/name.exe" files in a zip.
 
     dir_marker = test_name.Find('/', path.size() + 1);
-    if (dir_marker)
+    if (dir_marker > 0)
     {
       // return items relative to path
       test_name=test_name.Left(dir_marker);
