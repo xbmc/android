@@ -18,7 +18,7 @@
 #include <stdint.h>
 #include <asm/byteorder.h>
 
-void swab(const void *from, void*to, ssize_t n)
+extern "C" void swab(const void *from, void*to, ssize_t n)
 {
   ssize_t i;
 
