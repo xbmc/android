@@ -44,7 +44,7 @@ void preload()
   tryopen("/data/data/org.xbmc/lib/libfontconfig.so");
   tryopen("/data/data/org.xbmc/lib/libfribidi.so");
   tryopen("/data/data/org.xbmc/lib/libsqlite3.so");
-  tryopen("/data/data/org.xbmc/lib/libpng12.so");
+  tryopen("/data/data/org.xbmc/lib/libpng.so");
   tryopen("/data/data/org.xbmc/lib/libpcre.so");
   tryopen("/data/data/org.xbmc/lib/libsamplerate.so");
   tryopen("/data/data/org.xbmc/lib/libpython2.6.so");
