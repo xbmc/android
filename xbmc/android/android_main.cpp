@@ -33,7 +33,6 @@ void* tryopen(const char *path)
 
 void preload()
 {
-  tryopen("/data/data/org.xbmc/lib/libsqlite.so");
   tryopen("/data/data/org.xbmc/lib/libyajl.so");
   tryopen("/data/data/org.xbmc/lib/libtiff.so");
   tryopen("/data/data/org.xbmc/lib/libjpeg.so");
