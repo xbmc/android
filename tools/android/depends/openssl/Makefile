@@ -30,6 +30,19 @@ $(LIBDYLIB): $(SOURCE)
 
 .installed:
 	make -C $(SOURCE) install_sw
+	rm -f $(PREFIX)/lib/libssl.so
+	mv -f $(PREFIX)/lib/libssl.so.0.9.8 $(PREFIX)/lib/libssl.so
+	rpl -e "libcrypto.so.0.9.8" "libcrypto.so\x00\x00\x00\x00\x00\x00" $(PREFIX)/lib/libssl.so
+	rpl -e "libssl.so.0.9.8" "libssl.so\x00\x00\x00\x00\x00\x00" $(PREFIX)/lib/libssl.so
+	readelf --dynamic $(PREFIX)/lib/libssl.so | grep ibrary
+	#
+	rm -f $(PREFIX)/lib/libcrypto.so
+	mv -f $(PREFIX)/lib/libcrypto.so.0.9.8 $(PREFIX)/lib/libcrypto.so
+	rpl -e "libcrypto.so.0.9.8" "libcrypto.so\x00\x00\x00\x00\x00\x00" $(PREFIX)/lib/libcrypto.so
+	readelf --dynamic $(PREFIX)/lib/libcrypto.so | grep ibrary
+	#
+	rpl -R -e "libcrypto.so.0.9.8" "libcrypto.so\x00\x00\x00\x00\x00\x00" $(PREFIX)/lib/engines
+	#
 	touch $@
 
 clean:

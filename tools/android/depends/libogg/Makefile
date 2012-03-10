@@ -31,6 +31,10 @@ $(LIBDYLIB): $(SOURCE)
 
 .installed:
 	make -C $(SOURCE) install
+	rm -f $(PREFIX)/lib/libogg.la $(PREFIX)/lib/libogg.so $(PREFIX)/lib/libogg.so.0
+	mv -f $(PREFIX)/lib/libogg.so.0.6.0 $(PREFIX)/lib/libogg.so
+	rpl -e "libogg.so.0" "libogg.so\x00\x00" $(PREFIX)/lib/libogg.so
+	readelf --dynamic $(PREFIX)/lib/libogg.so | grep ibrary
 	touch $@
 
 clean:

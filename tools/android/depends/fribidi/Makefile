@@ -31,6 +31,10 @@ $(LIBDYLIB): $(SOURCE)
 
 .installed:
 	make -C $(SOURCE) install
+	rm -f $(PREFIX)/lib/libfribidi.la $(PREFIX)/lib/libfribidi.so $(PREFIX)/lib/libfribidi.so.0
+	mv -f $(PREFIX)/lib/libfribidi.so.0.0.0 $(PREFIX)/lib/libfribidi.so
+	rpl -e "libfribidi.so.0" "libfribidi.so\x00\x00" $(PREFIX)/lib/libfribidi.so
+	readelf --dynamic $(PREFIX)/lib/libfribidi.so | grep ibrary
 	touch $@
 
 clean:

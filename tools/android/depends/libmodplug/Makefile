@@ -31,6 +31,10 @@ $(LIBDYLIB): $(SOURCE)
 
 .installed:
 	make -C $(SOURCE) install
+	rm -f $(PREFIX)/lib/libmodplug.la $(PREFIX)/lib/libmodplug.so $(PREFIX)/lib/libmodplug.so.0
+	mv -f $(PREFIX)/lib/libmodplug.so.0.0.0 $(PREFIX)/lib/libmodplug.so
+	rpl -e "libmodplug.so.0" "libmodplug.so\x00\x00" $(PREFIX)/lib/libmodplug.so
+	readelf --dynamic $(PREFIX)/lib/libmodplug.so | grep ibrary
 	touch $@
 
 clean:

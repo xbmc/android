@@ -30,6 +30,10 @@ $(LIBDYLIB): $(SOURCE)
 
 .installed:
 	make -C $(SOURCE) install
+	rm -f $(PREFIX)/lib/libexpat.la $(PREFIX)/lib/libexpat.so $(PREFIX)/lib/libexpat.so.1
+	mv -f $(PREFIX)/lib/libexpat.so.1.5.2 $(PREFIX)/lib/libexpat.so
+	rpl -e "libexpat.so.1" "libexpat.so\x00\x00" $(PREFIX)/lib/libexpat.so
+	readelf --dynamic $(PREFIX)/lib/libexpat.so | grep ibrary
 	touch $@
 
 clean:

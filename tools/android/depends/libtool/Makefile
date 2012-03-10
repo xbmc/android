@@ -9,7 +9,8 @@ ARCHIVE=$(SOURCE)a.tar.gz
 # configuration settings
 export PREFIX=$(XBMCPREFIX)
 export PATH:=$(PREFIX)/bin:$(PATH)
-CONFIGURE=./configure --prefix=$(PREFIX)
+CONFIGURE=./configure --prefix=$(PREFIX) \
+  --disable-shared
 
 LIBDYLIB=$(SOURCE)/bin/libtool
 
@@ -31,6 +32,7 @@ $(LIBDYLIB): $(SOURCE)
 
 .installed:
 	make -C $(SOURCE) install
+	rm -rf $(PREFIX)/lib/libltdl.a $(PREFIX)/lib/libltdl.la
 	touch $@
 
 clean:

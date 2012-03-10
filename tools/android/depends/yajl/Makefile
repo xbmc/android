@@ -34,6 +34,10 @@ $(LIBDYLIB): $(SOURCE)
 
 .installed:
 	make -C $(SOURCE)/build install
+	rm -f $(PREFIX)/lib/libyajl.la $(PREFIX)/lib/libyajl.so $(PREFIX)/lib/libyajl.so.2
+	mv -f $(PREFIX)/lib/libyajl.so.2.0.1 $(PREFIX)/lib/libyajl.so
+	rpl -e "libyajl.so.2" "libyajl.so\x00\x00" $(PREFIX)/lib/libyajl.so
+	readelf --dynamic $(PREFIX)/lib/libyajl.so | grep SONAME
 	touch $@
 
 clean:

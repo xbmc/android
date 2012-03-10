@@ -34,6 +34,10 @@ $(LIBDYLIB): $(SOURCE)
 
 .installed:
 	make -C $(SOURCE) install
+	rm -f $(PREFIX)/lib/libsqlite3.la $(PREFIX)/lib/libsqlite3.so $(PREFIX)/lib/libsqlite3.so.0
+	mv -f $(PREFIX)/lib/libsqlite3.so.0.8.6 $(PREFIX)/lib/libsqlite3.so
+	rpl -e "libsqlite3.so.0" "libsqlite3.so\x00\x00" $(PREFIX)/lib/libsqlite3.so
+	readelf --dynamic $(PREFIX)/lib/libsqlite3.so | grep ibrary
 	touch $@
 
 clean:

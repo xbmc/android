@@ -31,6 +31,10 @@ $(LIBDYLIB): $(SOURCE)
 
 .installed:
 	make -C $(SOURCE) install
+	rm -f $(PREFIX)/lib/libjpeg.la $(PREFIX)/lib/libjpeg.so $(PREFIX)/lib/libjpeg.so.8
+	mv -f $(PREFIX)/lib/libjpeg.so.8.0.2 $(PREFIX)/lib/libjpeg.so
+	rpl -e "libjpeg.so.8" "libjpeg.so\x00\x00" $(PREFIX)/lib/libjpeg.so
+	readelf --dynamic $(PREFIX)/lib/libjpeg.so | grep ibrary
 	touch $@
 
 clean:

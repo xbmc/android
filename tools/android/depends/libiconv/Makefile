@@ -33,6 +33,17 @@ $(LIBDYLIB): $(SOURCE)
 
 .installed:
 	make -C $(SOURCE) install
+	rm $(PREFIX)/lib/preloadable_libiconv.so
+	rm -f $(PREFIX)/lib/libiconv.la $(PREFIX)/lib/libiconv.so $(PREFIX)/lib/libiconv.so.2
+	mv -f $(PREFIX)/lib/libiconv.so.2.5.0 $(PREFIX)/lib/libiconv.so
+	rpl -e "libiconv.so.2" "libiconv.so\x00\x00" $(PREFIX)/lib/libiconv.so
+	readelf --dynamic $(PREFIX)/lib/libiconv.so | grep ibrary
+	#
+	rm -f $(PREFIX)/lib/libcharset.la $(PREFIX)/lib/libcharset.so $(PREFIX)/lib/libcharset.so.1
+	mv -f $(PREFIX)/lib/libcharset.so.1.0.0 $(PREFIX)/lib/libcharset.so
+	rpl -e "libcharset.so.1" "libcharset.so\x00\x00" $(PREFIX)/lib/libcharset.so
+	readelf --dynamic $(PREFIX)/lib/libcharset.so | grep ibrary
+	#
 	touch $@
 
 clean:

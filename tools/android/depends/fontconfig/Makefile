@@ -35,6 +35,10 @@ $(LIBDYLIB): $(SOURCE)
 
 .installed:
 	make -C $(SOURCE) install
+	rm -f $(PREFIX)/lib/libfontconfig.la $(PREFIX)/lib/libfontconfig.so $(PREFIX)/lib/libfontconfig.so.1
+	mv -f $(PREFIX)/lib/libfontconfig.so.1.4.4 $(PREFIX)/lib/libfontconfig.so
+	rpl -e "libfontconfig.so.1" "libfontconfig.so\x00\x00" $(PREFIX)/lib/libfontconfig.so
+	readelf --dynamic $(PREFIX)/lib/libfontconfig.so | grep ibrary
 	touch $@
 
 clean:

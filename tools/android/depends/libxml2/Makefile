@@ -33,6 +33,10 @@ $(LIBDYLIB): $(SOURCE)
 
 .installed:
 	make -C $(SOURCE) install
+	rm -f $(PREFIX)/lib/libxml2.la $(PREFIX)/lib/libxml2.so $(PREFIX)/lib/libxml2.so.2
+	mv -f $(PREFIX)/lib/libxml2.so.2.7.6 $(PREFIX)/lib/libxml2.so
+	rpl -e "libxml2.so.2" "libxml2.so\x00\x00" $(PREFIX)/lib/libxml2.so
+	readelf --dynamic $(PREFIX)/lib/libxml2.so | grep ibrary
 	touch $@
 
 clean:

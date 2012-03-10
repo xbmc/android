@@ -32,6 +32,10 @@ $(LIBDYLIB): $(SOURCE)
 
 .installed:
 	make -C $(SOURCE) install
+	rm -f $(PREFIX)/lib/libsamplerate.la $(PREFIX)/lib/libsamplerate.so $(PREFIX)/lib/libsamplerate.so.0
+	mv -f $(PREFIX)/lib/libsamplerate.so.0.1.7 $(PREFIX)/lib/libsamplerate.so
+	rpl -e "libsamplerate.so.0" "libsamplerate.so\x00\x00" $(PREFIX)/lib/libsamplerate.so
+	readelf --dynamic $(PREFIX)/lib/libsamplerate.so | grep ibrary
 	touch $@
 
 clean:

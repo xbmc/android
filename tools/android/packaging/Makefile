@@ -3,11 +3,11 @@ include ../depends/android-sdk.mk
 
 include xbmc/jni/Application.mk
 
-OBJS = libgcrypt.so.11 libgpg-error.so.0 libfontconfig.so.1 libfreetype.so.6 \
-  libiconv.so.2 libfribidi.so.0 libsqlite3.so.0 libpng12.so.0 libpcre.so.0 \
-  libpcrecpp.so.0 libsamplerate.so.0 libpython2.6.so.1.0 libcrypto.so.0.9.8 \
-  libpython2.6.so.1.0 libpng12.so.0 libyajl.so.2.0.1 \
-  libtiff.so.3 libjpeg.so.8.0.2 libzip.so
+OBJS = libgcrypt.so libgpg-error.so libfontconfig.so libfreetype.so \
+  libiconv.so libfribidi.so libsqlite3.so libpng.so libpcre.so \
+  libpcrecpp.so libsamplerate.so libpython2.6.so libcrypto.so \
+  libpython2.6.so libyajl.so \
+  libtiff.so libjpeg.so libzip.so
 
 XBMCROOT = $(CURDIR)/../../../
 COPYDIRS = system addons language media
@@ -19,7 +19,7 @@ package:
 	$(foreach var,$(OBJS),$(STRIP) --strip-unneeded $(XBMCPREFIX)/lib/$(var) -o xbmc/libs/$(APP_ABI)/`echo $(var) | sed -e 's/\.so.*/\.so/g'`;)
 	$(STRIP) --strip-unneeded $(XBMCROOT)/libxbmc.so -o xbmc/libs/$(APP_ABI)/libxbmc.so
 	$(STRIP) --strip-unneeded $(XBMCROOT)/xbmc/android/libxbmcapp.so -o xbmc/libs/$(APP_ABI)/libxbmcapp.so
-        $(foreach var,$(COPYDIRS), cp -rf ../../../$(var) ./xbmc/assets/;)
+	$(foreach var,$(COPYDIRS), cp -rf ../../../$(var) ./xbmc/assets/;)
 	install -p $(NDKROOT)/toolchains/arm-linux-androideabi-4.4.3/prebuilt/gdbserver ./xbmc/libs/$(APP_ABI)/gdbserver
 	echo "set solib-search-path ./obj/local/$(APP_ABI):$(PREFIX)/lib:$(XBMCROOT):$(XBMCROOT)/xbmc/android" > ./xbmc/libs/$(APP_ABI)/gdb.setup
 	echo "directory $(NDKROOT)/platforms/android-9/arch-arm/usr/include $(NDKROOT)/sources/android/native_app_glue" \

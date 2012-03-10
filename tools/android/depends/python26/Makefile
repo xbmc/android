@@ -52,6 +52,11 @@ $(LIBDYLIB): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	make -C $(SOURCE) HOSTPYTHON=$(HOSTPYTHONDIR)/bin/python HOSTPGEN=$(HOSTPYTHONDIR)/bin/pgen CROSS_COMPILE_TARGET=yes install
 	find $(PREFIX)/lib/python2.6 -type f -name *.pyc -exec rm -f {} \;
 	find $(PREFIX)/lib/python2.6 -type f -name *.pyo -exec rm -f {} \;
+	#
+	mv -f $(PREFIX)/lib/libpython2.6.so.1.0 $(PREFIX)/lib/libpython2.6.so
+	rpl -e "libpython2.6.so.1.0" "libpython2.6.so\x00\x00\x00\x00" $(PREFIX)/lib/libpython2.6.so
+	readelf --dynamic $(PREFIX)/lib/libpython2.6.so | grep ibrary
+	#
 	touch $@
 
 clean:

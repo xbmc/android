@@ -30,6 +30,7 @@ $(APP): $(SOURCE)
 
 .installed:
 	make -C $(SOURCE) install
+	rm -rf $(PREFIX)/lib/libyasm.a
 	touch $@
 
 clean:

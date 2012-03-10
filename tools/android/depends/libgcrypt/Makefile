@@ -34,6 +34,10 @@ $(LIBDYLIB): $(SOURCE)
 
 .installed:
 	make -C $(SOURCE) install
+	rm -f $(PREFIX)/lib/libgcrypt.la $(PREFIX)/lib/libgcrypt.so $(PREFIX)/lib/libgcrypt.so.11
+	mv -f $(PREFIX)/lib/libgcrypt.so.11.4.3 $(PREFIX)/lib/libgcrypt.so
+	rpl -e "libgcrypt.so.11" "libgcrypt.so\x00\x00\x00" $(PREFIX)/lib/libgcrypt.so
+	readelf --dynamic $(PREFIX)/lib/libgcrypt.so | grep ibrary
 	touch $@
 
 clean:

@@ -32,6 +32,10 @@ $(LIBDYLIB): $(SOURCE)
 
 .installed:
 	make -C $(SOURCE) install
+	rm -f $(PREFIX)/lib/libgpg-error.la $(PREFIX)/lib/libgpg-error.so $(PREFIX)/lib/libgpg-error.so.0
+	mv -f $(PREFIX)/lib/libgpg-error.so.0.8.0 $(PREFIX)/lib/libgpg-error.so
+	rpl -e "libgpg-error.so.0" "libgpg-error.so\x00\x00" $(PREFIX)/lib/libgpg-error.so
+	readelf --dynamic $(PREFIX)/lib/libgpg-error.so | grep ibrary
 	touch $@
 
 clean:
