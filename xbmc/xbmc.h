@@ -60,7 +60,7 @@ struct XBMC_PLATFORM {
 #else
 struct XBMC_PLATFORM {
   XBMC_RUNFLAGS flags;
-, const char    *log_name;
+  const char    *log_name;
 };
 #endif
 typedef struct XBMC_PLATFORM XBMC_PLATFORM;
