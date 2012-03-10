@@ -50,7 +50,8 @@
                  ";special://frameworks/"
 
 #elif defined(TARGET_ANDROID)
-#define ENV_PATH ENV_PARTIAL_PATH
+#define ENV_PATH ENV_PARTIAL_PATH \
+                 ";/data/data/org.xbmc/lib/"
 
 #else
 #define ENV_PATH ENV_PARTIAL_PATH ENV_EXTENDED_PARTIAL_PATH
