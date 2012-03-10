@@ -32,7 +32,8 @@ typedef enum {
   XBMCRunAsApp    = XBMCRunPrimary | XBMCRunGui | XBMCRunServices
 } XBMC_RUNFLAGS;
 
-#if defined(ANDROID)
+// we need both here, one is for including into android, the other xbmc
+#if defined(ANDROID) || defined(TARGET_ANDROID)
 struct ANativeWindow;
 typedef struct ANativeWindow ANativeWindow;
 
