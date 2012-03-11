@@ -44,10 +44,7 @@ struct XBMC_PLATFORM {
   XBMC_RUNFLAGS flags;
   const char    *log_name;
   // android specific
-  int32_t       width;
-  int32_t       height;
-  int32_t       format;
-  ANativeWindow *window_type;
+  ANativeWindow *window;
   // callbacks from xbmc into android
   // these are setup before call into XBMC_Initialize
   android_printf_t android_printf;

@@ -33,7 +33,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////
 EGLNativeWindowType CWinEGLPlatformAndroid::InitWindowSystem(int width, int height, int bpp)
 {
-  return (EGLNativeWindowType)g_application.GetPlatform()->window_type;
+  return (EGLNativeWindowType)g_application.GetPlatform()->window;
 }
 
 void CWinEGLPlatformAndroid::DestroyWindowSystem(EGLNativeWindowType native_window)
@@ -42,23 +42,21 @@ void CWinEGLPlatformAndroid::DestroyWindowSystem(EGLNativeWindowType native_wind
 
 bool CWinEGLPlatformAndroid::ClampToGUIDisplayLimits(int &width, int &height)
 {
-  // clamp to the native android window size
-  width  = g_application.GetPlatform()->width;
-  height = g_application.GetPlatform()->height;
-  return true;
+  // TODO:clamp to the native android window size	  	
+  bool rtn = false;  	
+  if (width == 1920 && height == 1080)
+  {
+    width  = 1280;
+    height = 720;
+    rtn = true;
+  }
+  return rtn;
 }
 
 bool CWinEGLPlatformAndroid::ProbeDisplayResolutions(std::vector<CStdString> &resolutions)
 {
   resolutions.clear();
-
-  CStdString resolution;
-  // the only resolution we support is the native android window size
-  resolution.Format("%dx%dp60Hz",
-    g_application.GetPlatform()->width,
-    g_application.GetPlatform()->height);
-
-  resolutions.push_back(resolution);
+  resolutions.push_back("1280x720p60Hz");
   return true;
 }
 
@@ -71,5 +69,5 @@ void CWinEGLPlatformAndroid::CreateWindowCallback()
   // ANativeWindow buffers to match, using EGL_NATIVE_VISUAL_ID.
   eglGetConfigAttrib(m_display, m_config, EGL_NATIVE_VISUAL_ID, &format);
 
-  g_application.GetPlatform()->android_setBuffersGeometry(g_application.GetPlatform()->window_type, 0, 0, format);
+  g_application.GetPlatform()->android_setBuffersGeometry(g_application.GetPlatform()->window, 0, 0, format);
 }

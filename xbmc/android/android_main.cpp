@@ -9,6 +9,14 @@
 
 #include "xbmc.h"
 
+typedef struct {
+  struct android_app* app;
+  
+  XBMC_PLATFORM* platform;
+  XBMC_Run_t run;
+  XBMC_Initialize_t initialize;
+} android_context;
+
 static int android_printf(const char *format, ...)
 {
   va_list args;
@@ -130,6 +138,110 @@ void setup_env(struct android_app* state)
     setenv("HOME", getenv("XBMC_TEMP"), 0);
 }
 
+static void android_handle_cmd(struct android_app* app, int32_t cmd)
+{
+  android_context* context = (android_context*)app->userData;
+  switch (cmd)
+  {
+    case APP_CMD_INIT_WINDOW:
+      // The window is being shown, get it ready.
+      android_printf("DEBUG: APP_CMD_INIT_WINDOW");
+      if (context->app->window != NULL)
+      {
+        context->platform->window = context->app->window;
+      
+        int status = 0;
+        status = context->initialize(context->platform, NULL, NULL);
+        if (status == 0)
+        {
+          try
+          {
+            status = context->run();
+          }
+          catch(...)
+          {
+            android_printf("ERROR: Exception caught on main loop. Exiting");
+          }
+        }
+        else
+          android_printf("ERROR: XBMC_Initialize failed. Exiting");
+          
+        // TODO: Make sure we exit android_main()
+      }
+      break;
+      
+    case APP_CMD_TERM_WINDOW:
+      // The window is being hidden or closed, clean it up.
+      android_printf("DEBUG: APP_CMD_TERM_WINDOW");
+      // TODO
+      break;
+      
+    case APP_CMD_WINDOW_RESIZED:
+      // The window has been resized
+      android_printf("DEBUG: APP_CMD_WINDOW_RESIZED");
+      // TODO
+      break;
+      
+    case APP_CMD_GAINED_FOCUS:
+      android_printf("DEBUG: APP_CMD_GAINED_FOCUS");
+      // TODO
+      break;
+      
+    case APP_CMD_LOST_FOCUS:
+      android_printf("DEBUG: APP_CMD_LOST_FOCUS");
+      // TODO
+      break;
+      
+    case APP_CMD_CONFIG_CHANGED:
+      android_printf("DEBUG: APP_CMD_CONFIG_CHANGED");
+      // TODO
+      break;
+      
+    case APP_CMD_START:
+      android_printf("DEBUG: APP_CMD_START");
+      // TODO
+      break;
+      
+    case APP_CMD_RESUME:
+      android_printf("DEBUG: APP_CMD_RESUME");
+      // TODO
+      break;
+        
+    case APP_CMD_SAVE_STATE:
+      // The system has asked us to save our current state. Do so.
+      android_printf("DEBUG: APP_CMD_SAVE_STATE");
+      // TODO
+      break;
+      
+    case APP_CMD_PAUSE:
+      android_printf("DEBUG: APP_CMD_PAUSE");
+      // TODO
+      break;
+      
+    case APP_CMD_STOP:
+      android_printf("DEBUG: APP_CMD_STOP");
+      // TODO
+      break;
+      
+    case APP_CMD_DESTROY:
+      android_printf("DEBUG: APP_CMD_DESTROY");
+      // TODO
+      break;
+  }
+}
+
+static int32_t android_handle_input(struct android_app* app, AInputEvent* event)
+{
+  android_context* context = (android_context*)app->userData;
+  int32_t input = AInputEvent_getType(event);
+  
+  android_printf("DEBUG: onInputEvent of type %d", input);
+  // TODO
+  
+  // We didn't handle the event
+  return 0;
+}
+
 extern void android_main(struct android_app* state)
 {
   // make sure that the linker doesn't strip out our glue
@@ -141,15 +253,16 @@ extern void android_main(struct android_app* state)
   void* soHandle;
   soHandle = tryopen("/data/data/org.xbmc/lib/libxbmc.so");
 
+  // Setting up the context
+  android_context context;
+  memset(&context, 0, sizeof(context));
+  
   // fetch xbmc entry points
-  XBMC_Run_t XBMC_Run;
-  XBMC_Initialize_t XBMC_Initialize;
-
-  XBMC_Run = (XBMC_Run_t)dlsym(soHandle, "XBMC_Run");
-  XBMC_Initialize = (XBMC_Initialize_t)dlsym(soHandle, "XBMC_Initialize");
-  if (XBMC_Run == NULL || XBMC_Initialize == NULL)
+  context.run = (XBMC_Run_t)dlsym(soHandle, "XBMC_Run");
+  context.initialize = (XBMC_Initialize_t)dlsym(soHandle, "XBMC_Initialize");
+  if (context.run == NULL || context.initialize == NULL)
   {
-    android_printf("could not find functions. Error: %s\n", dlerror());
+    android_printf("could not find XBMC_Run and/or XBMC_Initialize functions. Error: %s", dlerror());
     exit(1);
   }
 
@@ -159,36 +272,51 @@ extern void android_main(struct android_app* state)
   platform.flags  = XBMCRunAsApp;
   platform.log_name = "XBMC";
   // android specific
-  if(state && state->window)
-  {
-    platform.width  = ANativeWindow_getWidth(state->window);
-    platform.height = ANativeWindow_getHeight(state->window);
-    platform.format = ANativeWindow_getFormat(state->window);
-  }
-  platform.window_type = state->window;
+  platform.window = state->window;
   // callbacks into android
   platform.android_printf = &android_printf;
   platform.android_setBuffersGeometry = &ANativeWindow_setBuffersGeometry;
+  
+  state->userData = &context;
+  state->onAppCmd = android_handle_cmd;
+  state->onInputEvent = android_handle_input;
+  context.app = state;
+  context.platform = &platform;
+  
+  while (1) {
+    bool stop = false;
+    // Read all pending events.
+    int ident;
+    int events;
+    struct android_poll_source* source;
 
-  int status = 0;
-  status = XBMC_Initialize(&platform, NULL, NULL);
-  if (!status)
-  {
-    try
+    // We will block forever waiting for events.
+    while ((ident = ALooper_pollAll(-1, NULL, &events, (void**)&source)) >= 0) 
     {
-      status = XBMC_Run();
+      // Process this event.
+      if (source != NULL)
+        source->process(state, source);
+
+      // If a sensor has data, process it now.
+      if (ident == LOOPER_ID_USER)
+      {
+        // TODO
+      }
+
+      // Check if we are exiting.
+      if (state->destroyRequested != 0)
+      {
+        android_printf("WARNING: We are being destroyed");
+        stop = true;
+        break;
+      }
     }
-    catch(...)
-    {
-      android_printf("ERROR: Exception caught on main loop. Exiting\n");
-    }
+    
+    if (stop)
+      break;
   }
-  else
-    android_printf("ERROR: XBMC_Initialize failed. Exiting\n");
 
-  if (status == 0)
-    android_printf("DEBUG: Exiting gracefully.\n");
-
+  android_printf("DEBUG: Exiting gracefully");
   state->activity->vm->DetachCurrentThread();
   return;
 }
