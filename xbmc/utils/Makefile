@@ -39,6 +39,7 @@ SRCS=AlarmClock.cpp \
      PCMRemap.cpp \
      PerformanceSample.cpp \
      PerformanceStats.cpp \
+     PlatformUtils.cpp \
      RecentlyAddedJob.cpp \
      RegExp.cpp \
      RingBuffer.cpp \
