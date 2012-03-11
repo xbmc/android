@@ -300,6 +300,8 @@
 #include "XHandle.h"
 #endif
 
+#include "utils/PlatformUtils.h"
+
 #ifdef HAS_LIRC
 #include "input/linux/LIRC.h"
 #endif
@@ -1067,9 +1069,9 @@ void CApplication::CreateUserDirs()
 
 void CApplication::PlatformInitialize(XBMC_PLATFORM *platform)
 {
-  m_platform = platform;
   m_RunFlags = platform->flags;
   m_sLogName = platform->log_name;
+  CPlatformUtils::SetPlatform(platform);
 }
 
 bool CApplication::Initialize()

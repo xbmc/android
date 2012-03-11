@@ -290,11 +290,8 @@ public:
   bool ToggleDPMS(bool manual);
 
   float GetDimScreenSaverLevel() const;
-  
-  XBMC_PLATFORM* GetPlatform() {return m_platform; };
 
 protected:
-  XBMC_PLATFORM *m_platform;
   XBMC_RUNFLAGS m_RunFlags;  // application options
   CStdString m_sLogName;
 

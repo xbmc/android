@@ -28,12 +28,12 @@
 #include <sys/ioctl.h>
 
 #include "WinEGLPlatformAndroid.h"
-#include "Application.h"
+#include "utils/PlatformUtils.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 EGLNativeWindowType CWinEGLPlatformAndroid::InitWindowSystem(int width, int height, int bpp)
 {
-  return (EGLNativeWindowType)g_application.GetPlatform()->window;
+  return (EGLNativeWindowType)CPlatformUtils::GetPlatform()->window;
 }
 
 void CWinEGLPlatformAndroid::DestroyWindowSystem(EGLNativeWindowType native_window)
@@ -69,5 +69,5 @@ void CWinEGLPlatformAndroid::CreateWindowCallback()
   // ANativeWindow buffers to match, using EGL_NATIVE_VISUAL_ID.
   eglGetConfigAttrib(m_display, m_config, EGL_NATIVE_VISUAL_ID, &format);
 
-  g_application.GetPlatform()->android_setBuffersGeometry(g_application.GetPlatform()->window, 0, 0, format);
+  CPlatformUtils::GetPlatform()->android_setBuffersGeometry(CPlatformUtils::GetPlatform()->window, 0, 0, format);
 }
