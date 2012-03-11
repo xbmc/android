@@ -312,6 +312,8 @@
 #include "XHandle.h"
 #endif
 
+#include "utils/PlatformUtils.h"
+
 #ifdef HAS_LIRC
 #include "input/linux/LIRC.h"
 #endif
@@ -1121,6 +1123,15 @@ void CApplication::CreateUserDirs()
   CDirectory::Create("special://masterprofile/");
   CDirectory::Create("special://temp/");
   CDirectory::Create("special://temp/temp"); // temp directory for python and dllGetTempPathA
+}
+
+void CApplication::PlatformInitialize(XBMC_PLATFORM *platform)
+{
+  if (platform)
+  {
+    m_sLogName = platform->log_name;
+    CPlatformUtils::SetPlatform(platform);
+  }
 }
 
 bool CApplication::Initialize()
