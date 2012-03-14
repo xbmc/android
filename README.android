@@ -6,6 +6,8 @@ TOC
 5. How to compile
 6. Installing XBMC in an Android system
 7. Running and debugging XBMC in an Android system
+8. Architecture
+9. Useful Commands
 
 -----------------------------------------------------------------------------
 1. Introduction
@@ -240,7 +242,7 @@ Caveats:
 
 
 --------------------------------------------------------------------
-8.0 Architecture
+8. Architecture
 --------------------------------------------------------------------
 
 !!Warning!!
@@ -299,7 +301,7 @@ will need to be fixed up to work properly.
 
 
 --------------------------------------------------------------------
-9.0 Useful Commands
+9. Useful Commands
 --------------------------------------------------------------------
 
 Below are a few helpful commands when building/debugging. These assume that pwd
