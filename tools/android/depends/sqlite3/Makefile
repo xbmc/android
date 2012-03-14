@@ -3,12 +3,14 @@ include ../android-sdk.mk
 
 # lib name, version
 LIBNAME=sqlite
-VERSION=3.6.11
-SOURCE=$(LIBNAME)-$(VERSION)
+VERSION=3071000
+SOURCE=$(LIBNAME)-autoconf-$(VERSION)
 ARCHIVE=$(SOURCE).tar.gz
+BASE_URL=http://www.sqlite.org
 
 # configuration settings
 export CXXFLAGS+=-DSQLITE_ENABLE_COLUMN_METADATA=1
+export CFLAGS+=-DSQLITE_TEMP_STORE=3
 export TCLLIBDIR=/dev/null
 CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess .; \
           ./configure --prefix=$(PREFIX) --host=$(HOST) --enable-shared \
