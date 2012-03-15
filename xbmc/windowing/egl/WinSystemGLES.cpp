@@ -65,9 +65,18 @@ bool CWinSystemGLES::DestroyWindowSystem()
 
 bool CWinSystemGLES::CreateNewWindow(const CStdString& name, bool fullScreen, RESOLUTION_INFO& res, PHANDLE_EVENT_FUNC userFunction)
 {
+  if (m_bWindowCreated && m_nWidth == res.iWidth && m_nHeight == res.iHeight && m_bFullScreen == fullScreen)
+  {
+    CLog::Log(LOGDEBUG, "CWinSystemGLES::CreateNewWindow: No need to create a new window");
+    return true;
+  }
+
   m_nWidth  = res.iWidth;
   m_nHeight = res.iHeight;
   m_bFullScreen = fullScreen;
+  
+  if (m_bWindowCreated)
+    m_eglplatform->ReleaseSurface();
 
   // temp until split gui/display res comes in
   //m_eglplatform->SetDisplayResolution(res.iScreenWidth, res.iScreenHeight,
@@ -100,12 +109,7 @@ bool CWinSystemGLES::ResizeWindow(int newWidth, int newHeight, int newLeft, int 
 
 bool CWinSystemGLES::SetFullScreen(bool fullScreen, RESOLUTION_INFO& res, bool blankOtherDisplays)
 {
-  CLog::Log(LOGDEBUG, "CWinSystemDFB::SetFullScreen");
-  m_nWidth  = res.iWidth;
-  m_nHeight = res.iHeight;
-  m_bFullScreen = fullScreen;
-
-  m_eglplatform->ReleaseSurface();
+  CLog::Log(LOGDEBUG, "CWinSystemGLES::SetFullScreen");
   CreateNewWindow("", fullScreen, res, NULL);
 
   CRenderSystemGLES::ResetRenderSystem(res.iWidth, res.iHeight, true, 0);
