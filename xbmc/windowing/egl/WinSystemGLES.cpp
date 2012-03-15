@@ -46,8 +46,8 @@ CWinSystemGLES::~CWinSystemGLES()
 
 bool CWinSystemGLES::InitWindowSystem()
 {
-  m_window = m_eglplatform->InitWindowSystem(1920, 1080, 8);
   m_display = EGL_DEFAULT_DISPLAY;
+  m_window = m_eglplatform->InitWindowSystem(m_display, 1920, 1080, 8);
 
   if (!CWinSystemBase::InitWindowSystem())
     return false;
@@ -74,7 +74,7 @@ bool CWinSystemGLES::CreateNewWindow(const CStdString& name, bool fullScreen, RE
   m_eglplatform->SetDisplayResolution(res.iWidth, res.iHeight,
     res.fRefreshRate, res.dwFlags & D3DPRESENTFLAG_INTERLACED);
 
-  if (!m_eglplatform->CreateWindow((EGLNativeDisplayType)m_display, (EGLNativeWindowType)m_window))
+  if (!m_eglplatform->CreateSurface())
     return false;
 
   m_bWindowCreated = true;
@@ -137,10 +137,6 @@ void CWinSystemGLES::UpdateResolutions()
     int  refresh, width, height;
     if (sscanf(resolutions[i].c_str(), "%dx%d%c%dHz", &width, &height, &interlacing, &refresh) == 4)
     {
-      // We only care about progressive 60, 50 or 24Hz resolutions with a height of >= 720
-      if (height < 720 || interlacing == 'i' || !(refresh == 60 || refresh == 50 ||refresh == 24))
-        continue;
-
       got_display_rez = true;
       // if this is a new setting,
       // create a new empty setting to fill in.

@@ -33,13 +33,12 @@ public:
   CWinEGLPlatformGeneric();
   virtual ~CWinEGLPlatformGeneric();
 
-  virtual EGLNativeWindowType InitWindowSystem(int width, int height, int bpp);
+  virtual EGLNativeWindowType InitWindowSystem(EGLNativeDisplayType nativeDisplay, int width, int height, int bpp);
   virtual void DestroyWindowSystem(EGLNativeWindowType native_window);
   virtual bool SetDisplayResolution(int width, int height, float refresh, bool interlace);
   virtual bool ClampToGUIDisplayLimits(int &width, int &height);
   virtual bool ProbeDisplayResolutions(std::vector<CStdString> &resolutions);
-  virtual bool CreateWindow(EGLNativeDisplayType nativeDisplay, EGLNativeWindowType nativeWindow);
-  virtual void CreateWindowCallback();
+  virtual bool CreateSurface();
   virtual bool DestroyWindow();
   virtual bool ShowWindow(bool show);
   virtual bool ReleaseSurface();
@@ -48,6 +47,10 @@ public:
   virtual bool IsExtSupported(const char* extension);
 
 protected:
+  virtual bool setConfiguration();
+  virtual void createSurfaceCallback() { }
+  virtual EGLNativeWindowType getNativeWindow();
+
   EGLNativeWindowType   m_nativeWindow;
   EGLNativeDisplayType  m_nativeDisplay;
   EGLDisplay            m_display;
@@ -55,4 +58,6 @@ protected:
   EGLConfig             m_config;
   EGLContext            m_context;
   CStdString            m_eglext;
+  int                   m_width;
+  int                   m_height;
 };

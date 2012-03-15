@@ -31,9 +31,14 @@
 #include "utils/PlatformUtils.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-EGLNativeWindowType CWinEGLPlatformAndroid::InitWindowSystem(int width, int height, int bpp)
+EGLNativeWindowType CWinEGLPlatformAndroid::InitWindowSystem(EGLNativeDisplayType nativeDisplay, int width, int height, int bpp)
 {
-  return (EGLNativeWindowType)CPlatformUtils::GetPlatform()->window;
+  if (CPlatformUtils::GetPlatform() == NULL || CPlatformUtils::GetPlatform()->window == NULL)
+    return 0;
+
+  CWinEGLPlatformGeneric::InitWindowSystem(nativeDisplay, width, height, bpp);
+  
+  return getNativeWindow();
 }
 
 void CWinEGLPlatformAndroid::DestroyWindowSystem(EGLNativeWindowType native_window)
@@ -42,25 +47,10 @@ void CWinEGLPlatformAndroid::DestroyWindowSystem(EGLNativeWindowType native_wind
 
 bool CWinEGLPlatformAndroid::ClampToGUIDisplayLimits(int &width, int &height)
 {
-  // TODO:clamp to the native android window size	  	
-  bool rtn = false;  	
-  if (width == 1920 && height == 1080)
-  {
-    width  = 1280;
-    height = 720;
-    rtn = true;
-  }
-  return rtn;
+  return false;
 }
 
-bool CWinEGLPlatformAndroid::ProbeDisplayResolutions(std::vector<CStdString> &resolutions)
-{
-  resolutions.clear();
-  resolutions.push_back("1280x720p60Hz");
-  return true;
-}
-
-void CWinEGLPlatformAndroid::CreateWindowCallback()
+void CWinEGLPlatformAndroid::createSurfaceCallback()
 {
   EGLint format;
   // EGL_NATIVE_VISUAL_ID is an attribute of the EGLConfig that is
@@ -70,4 +60,12 @@ void CWinEGLPlatformAndroid::CreateWindowCallback()
   eglGetConfigAttrib(m_display, m_config, EGL_NATIVE_VISUAL_ID, &format);
 
   CPlatformUtils::GetPlatform()->android_setBuffersGeometry(CPlatformUtils::GetPlatform()->window, 0, 0, format);
+}
+
+EGLNativeWindowType CWinEGLPlatformAndroid::getNativeWindow()
+{
+  if (CPlatformUtils::GetPlatform() == NULL || CPlatformUtils::GetPlatform()->window == NULL)
+    return 0;
+
+  return (EGLNativeWindowType)CPlatformUtils::GetPlatform()->window;
 }

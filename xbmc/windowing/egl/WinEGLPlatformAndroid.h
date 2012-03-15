@@ -27,11 +27,13 @@
 class CWinEGLPlatformAndroid : public CWinEGLPlatformGeneric
 {
 public:
-  virtual EGLNativeWindowType InitWindowSystem(int width, int height, int bpp);
+  virtual EGLNativeWindowType InitWindowSystem(EGLNativeDisplayType nativeDisplay, int width, int height, int bpp);
   virtual void DestroyWindowSystem(EGLNativeWindowType native_window);
   virtual bool ClampToGUIDisplayLimits(int &width, int &height);
-  virtual bool ProbeDisplayResolutions(std::vector<CStdString> &resolutions);
-  virtual void CreateWindowCallback();
+  
+protected:
+  virtual void createSurfaceCallback();
+  virtual EGLNativeWindowType getNativeWindow();
 };
 
 #endif
