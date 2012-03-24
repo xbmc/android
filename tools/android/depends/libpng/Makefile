@@ -32,12 +32,12 @@ $(LIBDYLIB): $(SOURCE)
 
 .installed:
 	make -C $(SOURCE) install
-	rm -f $(PREFIX)/lib/libpng.la $(PREFIX)/lib/libpng.so $(PREFIX)/lib/libpng.so.3
+	rm -f $(PREFIX)/lib/libpng.la $(PREFIX)/lib/libpng.so $(PREFIX)/lib/libxbpng.so $(PREFIX)/lib/libpng.so.3
 	rm -f $(PREFIX)/lib/libpng.so.3.38.0
 	rm -f $(PREFIX)/lib/libpng12.la $(PREFIX)/lib/libpng12.so $(PREFIX)/lib/libpng12.so.0
-	mv -f $(PREFIX)/lib/libpng12.so.0.38.0 $(PREFIX)/lib/libpng.so
-	rpl -e "libpng12.so.0" "libpng.so\x00\x00\x00\x00" $(PREFIX)/lib/libpng.so
-	readelf --dynamic $(PREFIX)/lib/libpng.so | grep ibrary
+	mv -f $(PREFIX)/lib/libpng12.so.0.38.0 $(PREFIX)/lib/libxbpng.so
+	rpl -e "libpng12.so.0" "libxbpng.so\x00\x00" $(PREFIX)/lib/libxbpng.so
+	readelf --dynamic $(PREFIX)/lib/libxbpng.so | grep ibrary
 	touch $@
 
 clean:

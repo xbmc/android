@@ -45,7 +45,7 @@ void preload()
 {
   tryopen("/data/data/org.xbmc/lib/libyajl.so");
   tryopen("/data/data/org.xbmc/lib/libtiff.so");
-  tryopen("/data/data/org.xbmc/lib/libjpeg.so");
+  tryopen("/data/data/org.xbmc/lib/libxbjpeg.so");
   tryopen("/data/data/org.xbmc/lib/libgpg-error.so");
   tryopen("/data/data/org.xbmc/lib/libgcrypt.so");
   tryopen("/data/data/org.xbmc/lib/libiconv.so");
@@ -53,7 +53,7 @@ void preload()
   tryopen("/data/data/org.xbmc/lib/libfontconfig.so");
   tryopen("/data/data/org.xbmc/lib/libfribidi.so");
   tryopen("/data/data/org.xbmc/lib/libsqlite3.so");
-  tryopen("/data/data/org.xbmc/lib/libpng.so");
+  tryopen("/data/data/org.xbmc/lib/libxbpng.so");
   tryopen("/data/data/org.xbmc/lib/libpcre.so");
   tryopen("/data/data/org.xbmc/lib/libsamplerate.so");
   tryopen("/data/data/org.xbmc/lib/libpython2.6.so");
