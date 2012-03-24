@@ -1,5 +1,6 @@
 #include <android_native_app_glue.h>
 #include <android/log.h>
+#include <android/looper.h>
 #include <jni.h>
 
 #include <unistd.h>
@@ -11,6 +12,7 @@
 
 typedef struct {
   struct android_app* app;
+  bool stop;
   
   XBMC_PLATFORM* platform;
   XBMC_Run_t run;
@@ -167,6 +169,8 @@ static void android_handle_cmd(struct android_app* app, int32_t cmd)
           android_printf("ERROR: XBMC_Initialize failed. Exiting");
           
         // TODO: Make sure we exit android_main()
+        context->stop = true;
+        ALooper_wake(ALooper_forThread());
       }
       break;
       
@@ -221,11 +225,15 @@ static void android_handle_cmd(struct android_app* app, int32_t cmd)
     case APP_CMD_STOP:
       android_printf("DEBUG: APP_CMD_STOP");
       // TODO
+      context->stop = true;
+      ALooper_wake(ALooper_forThread());
       break;
       
     case APP_CMD_DESTROY:
       android_printf("DEBUG: APP_CMD_DESTROY");
       // TODO
+      context->stop = true;
+      ALooper_wake(ALooper_forThread());
       break;
   }
 }
@@ -307,6 +315,12 @@ extern void android_main(struct android_app* state)
       if (state->destroyRequested != 0)
       {
         android_printf("WARNING: We are being destroyed");
+        stop = true;
+        break;
+      }
+      if (context.stop)
+      {
+        android_printf("INFO: We need to stop");
         stop = true;
         break;
       }
