@@ -98,39 +98,31 @@ void setup_env(struct android_app* state)
   setenv("XBMC_TEMP", cachePath, 0);
   env->ReleaseStringUTFChars(jCachePath, cachePath);
   
-  // Get the path to the external storage
-  if (state->activity->externalDataPath != NULL)
-    strcpy(cstr, state->activity->externalDataPath);
-  else
-  {
-    // We need to employ JNI to get the path because of a (known) bug in Android 2.3.x
-    jmethodID getExternalFilesDir = env->GetMethodID(activityClass, "getExternalFilesDir", "(Ljava/lang/String;)Ljava/io/File;");
-    jobject jExternalDir = env->CallObjectMethod(activity, getExternalFilesDir, (jstring)NULL);
-    
-    jstring jExternalPath = (jstring)env->CallObjectMethod(jExternalDir, getAbsolutePath);
-    const char *externalPath = env->GetStringUTFChars(jExternalPath, NULL);
-    strcpy(cstr, externalPath);
-    env->ReleaseStringUTFChars(jExternalPath, externalPath);
-  }
+  // Get the path to the external storage by employing JNI
+  // The path would actually be available from state->activity->externalDataPath (apart from a (known) bug in Android 2.3.x)
+  // but calling getExternalFilesDir() will automatically create the necessary directories for us. We don't seem to have the
+  // rights to create a directory in /mnt/sdcard/Android/data/ ourselfs.
+  jmethodID getExternalFilesDir = env->GetMethodID(activityClass, "getExternalFilesDir", "(Ljava/lang/String;)Ljava/io/File;");
+  jobject jExternalDir = env->CallObjectMethod(activity, getExternalFilesDir, (jstring)NULL);
+
+  jstring jExternalPath = (jstring)env->CallObjectMethod(jExternalDir, getAbsolutePath);
+  const char *externalPath = env->GetStringUTFChars(jExternalPath, NULL);
+  strcpy(cstr, externalPath);
+  env->ReleaseStringUTFChars(jExternalPath, externalPath);
 
   // Check if we don't have a valid path yet
   if (strlen(cstr) <= 0)
   {
-    // Get the path to the internal storage
-    if (state->activity->internalDataPath != NULL)
-      strcpy(cstr, state->activity->internalDataPath);
-    else
-    {
-      // We need to employ JNI to get the path because of a (known) bug in Android 2.3.x
-      jstring jstrName = env->NewStringUTF("org.xbmc");
-      jmethodID getDir = env->GetMethodID(activityClass, "getDir", "(Ljava/lang/String;I)Ljava/io/File;");
-      jobject jInternalDir = env->CallObjectMethod(activity, getDir, jstrName, 1 /* MODE_WORLD_READABLE */);
-    
-      jstring jInternalPath = (jstring)env->CallObjectMethod(jInternalDir, getAbsolutePath);
-      const char *internalPath = env->GetStringUTFChars(jInternalPath, NULL);
-      strcpy(cstr, internalPath);
-      env->ReleaseStringUTFChars(jInternalPath, internalPath);
-    }
+    // Get the path to the internal storage by employing JNI
+    // For more details see the comment on getting the path to the external storage
+    jstring jstrName = env->NewStringUTF("org.xbmc");
+    jmethodID getDir = env->GetMethodID(activityClass, "getDir", "(Ljava/lang/String;I)Ljava/io/File;");
+    jobject jInternalDir = env->CallObjectMethod(activity, getDir, jstrName, 1 /* MODE_WORLD_READABLE */);
+
+    jstring jInternalPath = (jstring)env->CallObjectMethod(jInternalDir, getAbsolutePath);
+    const char *internalPath = env->GetStringUTFChars(jInternalPath, NULL);
+    strcpy(cstr, internalPath);
+    env->ReleaseStringUTFChars(jInternalPath, internalPath);
   }
   
   // Check if we have a valid home path
