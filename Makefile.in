@@ -176,13 +176,17 @@ CXXFLAGS=@CXXFLAGS@
 LDFLAGS=@LDFLAGS@
 INCLUDES=$(sort @INCLUDES@)
 
-CLEAN_FILES=xbmc.bin xbmc-xrandr
+CLEAN_FILES=xbmc.bin xbmc-xrandr libxbmc.so
 
 DISTCLEAN_FILES=config.h config.log config.status tools/Linux/xbmc.sh \
         tools/Linux/xbmc-standalone.sh autom4te.cache config.h.in~ \
         system/libcpluff-@ARCH@.so
 
-all : Makefile externals xbmc.bin xbmc-xrandr skins
+ifeq (@USE_LIBXBMC@,1)
+LIBXBMC=libxbmc.so
+endif
+
+all : Makefile externals xbmc.bin xbmc-xrandr skins $(LIBXBMC)
 	@echo '-----------------------'
 	@echo 'XBMC built successfully'
 	@echo '-----------------------'
@@ -325,11 +329,20 @@ OBJSXBMC:=$(filter-out $(DYNOBJSXBMC), $(OBJSXBMC))
 
 LIBS += @PYTHON_LDFLAGS@
 
-xbmc.bin: $(OBJSXBMC) $(DYNOBJSXBMC)
+xbmc/xbmc.o: force
+
+libxbmc.so: $(OBJSXBMC) $(DYNOBJSXBMC)
 ifeq ($(findstring osx,@ARCH@), osx)
-	$(SILENT_LD) $(CXX) $(LDFLAGS) -o xbmc.bin -Wl,-all_load,-ObjC $(DYNOBJSXBMC) $(OBJSXBMC) $(LIBS) -rdynamic
+	$(SILENT_LD) $(CXX) $(LDFLAGS) -shared -o $@ -Wl,-all_load,-ObjC $(DYNOBJSXBMC) $(OBJSXBMC) $(LIBS) -rdynamic
 else
-	$(SILENT_LD) $(CXX) $(CXXFLAGS) $(LDFLAGS) -o xbmc.bin -Wl,--whole-archive $(DYNOBJSXBMC) $(OBJSXBMC) -Wl,--no-whole-archive $(LIBS) -rdynamic
+	$(SILENT_LD) $(CXX) $(CXXFLAGS) $(LDFLAGS) -shared -o $@ -Wl,--whole-archive $(DYNOBJSXBMC) $(OBJSXBMC) -Wl,--no-whole-archive $(LIBS) -rdynamic
+endif
+
+xbmc.bin: $(OBJSXBMC) $(DYNOBJSXBMC) xbmc/xbmc.o
+ifeq ($(findstring osx,@ARCH@), osx)
+	$(SILENT_LD) $(CXX) $(LDFLAGS) -o $@ -Wl,-all_load,-ObjC $(DYNOBJSXBMC) $(OBJSXBMC) $(LIBS) -rdynamic
+else
+	$(SILENT_LD) $(CXX) $(CXXFLAGS) $(LDFLAGS) -o xbmc.bin -Wl,--whole-archive $(DYNOBJSXBMC) $(OBJSXBMC) -Wl,--no-whole-archive $(LIBS) xbmc/xbmc.o -rdynamic
 endif
 
 xbmc-xrandr: xbmc-xrandr.c

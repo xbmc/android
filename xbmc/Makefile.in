@@ -32,11 +32,14 @@ SRCS=Application.cpp \
      ViewDatabase.cpp \
      XBApplicationEx.cpp \
      XBDateTime.cpp \
-     xbmc.cpp \
 
 LIB=xbmc.a
 
 DISTCLEAN_FILES=DllPaths_generated.h
+
+all: $(LIB) xbmc.o
+
+CLEAN_FILES=xbmc.o xbmc.P
 
 include @abs_top_srcdir@/Makefile.include
 -include $(patsubst %.cpp,%.P,$(patsubst %.c,%.P,$(SRCS)))
