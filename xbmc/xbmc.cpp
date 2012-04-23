@@ -76,13 +76,11 @@ int main(int argc, char* argv[])
   sigaction(SIGCHLD, &sa, NULL);
 #endif
   setlocale(LC_NUMERIC, "C");
-  g_advancedSettings.Initialize();
   
 #ifndef _WIN32
   CAppParamParser appParamParser;
   appParamParser.Parse((const char **)argv, argc);
 #endif
-  g_application.Preflight();
   if (!g_application.Create())
   {
     fprintf(stderr, "ERROR: Unable to create application. Exiting\n");

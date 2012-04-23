@@ -519,6 +519,8 @@ static void CopyUserDataIfNeeded(const CStdString &strPath, const CStdString &fi
 
 void CApplication::Preflight()
 {
+
+  g_advancedSettings.Initialize();
 #ifdef HAS_DBUS
   // call 'dbus_threads_init_default' before any other dbus calls in order to
   // avoid race conditions with other threads using dbus connections
@@ -538,6 +540,7 @@ void CApplication::Preflight()
 
 bool CApplication::Create()
 {
+  Preflight();
   g_settings.Initialize(); //Initialize default AdvancedSettings
 
 #ifdef _LINUX
