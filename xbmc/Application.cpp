@@ -707,6 +707,11 @@ bool CApplication::Create()
 
   m_lastFrameTime = XbmcThreads::SystemClockMillis();
   m_lastRenderTime = m_lastFrameTime;
+  return true;
+}
+
+bool CApplication::CreateGUI()
+{
 
   m_bSystemScreenSaverEnable = g_Windowing.IsSystemScreenSaverEnabled();
   g_Windowing.EnableSystemScreenSaver(false);
@@ -839,7 +844,7 @@ bool CApplication::Create()
             g_settings.m_ResInfo[iResolution].strMode.c_str());
   g_windowManager.Initialize();
 
-  return Initialize();
+  return true;
 }
 
 bool CApplication::InitDirectoriesLinux()
