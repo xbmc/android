@@ -2724,7 +2724,7 @@ void CApplication::UpdateLCD()
 #endif
 }
 
-void CApplication::FrameMove(bool processEvents)
+void CApplication::FrameMove(bool processEvents, bool processGUI)
 {
   MEASURE_FUNCTION;
 
@@ -2736,6 +2736,8 @@ void CApplication::FrameMove(bool processEvents)
     // never set a frametime less than 2 fps to avoid problems when debuggin and on breaks
     if( frameTime > 0.5 ) frameTime = 0.5;
 
+    if (processGUI)
+    {
     g_graphicsContext.Lock();
     // check if there are notifications to display
     CGUIDialogKaiToast *toast = (CGUIDialogKaiToast *)g_windowManager.GetWindow(WINDOW_DIALOG_KAI_TOAST);
@@ -2747,6 +2749,9 @@ void CApplication::FrameMove(bool processEvents)
       }
     }
     g_graphicsContext.Unlock();
+    CWinEvents::MessagePump();
+    m_pInertialScrollingHandler->ProcessInertialScroll(frameTime);
+    }
 
     UpdateLCD();
 
@@ -2756,19 +2761,24 @@ void CApplication::FrameMove(bool processEvents)
 #endif
 
     // process input actions
-    CWinEvents::MessagePump();
     ProcessHTTPApiButtons();
     ProcessJsonRpcButtons();
     ProcessRemote(frameTime);
     ProcessGamepad(frameTime);
     ProcessEventServer(frameTime);
     ProcessPeripherals(frameTime);
-    m_pInertialScrollingHandler->ProcessInertialScroll(frameTime);
   }
+
+  if (processGUI)
+  {
   if (!m_bStop)
     g_windowManager.Process(CTimeUtils::GetFrameTime());
   g_windowManager.FrameMove();
+  }
+
 }
+
+
 
 bool CApplication::ProcessGamepad(float frameTime)
 {

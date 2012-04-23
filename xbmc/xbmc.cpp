@@ -48,6 +48,7 @@
 int main(int argc, char* argv[])
 {
   int status = -1;
+  bool renderGUI = true;
   //this can't be set from CAdvancedSettings::Initialize() because it will overwrite
   //the loglevel set with the --debug flag
 #ifdef _DEBUG
@@ -87,11 +88,13 @@ int main(int argc, char* argv[])
     fprintf(stderr, "ERROR: Unable to create application. Exiting\n");
     return status;
   }
-  if (!g_application.CreateGUI())
+
+  if (renderGUI && !g_application.CreateGUI())
   {
     fprintf(stderr, "ERROR: Unable to create GUI. Exiting\n");
     return status;
   }
+
   if (!g_application.Initialize())
   {
     fprintf(stderr, "ERROR: Unable to Initialize. Exiting\n");
@@ -100,7 +103,7 @@ int main(int argc, char* argv[])
 
   try
   {
-    status = g_application.Run();
+    status = g_application.Run(renderGUI);
   }
   catch(...)
   {
