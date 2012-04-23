@@ -183,12 +183,12 @@ DISTCLEAN_FILES=config.h config.log config.status tools/Linux/xbmc.sh \
         system/libcpluff-@ARCH@.so
 
 
-FINAL_TARGETS=Makefile externals
 ifeq (@USE_LIBXBMC@,1)
-FINAL_TARGETS+=libxbmc.so xbmc_headless.bin
+FINAL_TARGETS=libxbmc.so xbmc_headless.bin
 else
-FINAL_TARGETS+=xbmc.bin skins xrandr
+FINAL_TARGETS=xbmc.bin skins xbmc-xrandr
 endif
+FINAL_TARGETS+=Makefile externals
 
 all : $(FINAL_TARGETS)
 	@echo '-----------------------'
@@ -333,8 +333,6 @@ OBJSXBMC:=$(filter-out $(DYNOBJSXBMC), $(OBJSXBMC))
 
 LIBS += @PYTHON_LDFLAGS@
 
-xbmc/main.o: force
-
 libxbmc.so: $(OBJSXBMC) $(DYNOBJSXBMC)
 ifeq ($(findstring osx,@ARCH@), osx)
 	$(SILENT_LD) $(CXX) $(LDFLAGS) -shared -o $@ -Wl,-all_load,-ObjC $(DYNOBJSXBMC) $(OBJSXBMC) $(LIBS) -rdynamic
@@ -342,15 +340,15 @@ else
 	$(SILENT_LD) $(CXX) $(CXXFLAGS) $(LDFLAGS) -shared -o $@ -Wl,--whole-archive $(DYNOBJSXBMC) $(OBJSXBMC) -Wl,--no-whole-archive $(LIBS) -rdynamic
 endif
 
-xbmc.bin: $(OBJSXBMC) $(DYNOBJSXBMC) xbmc/main.o
+xbmc.bin: $(OBJSXBMC) $(DYNOBJSXBMC)
 ifeq ($(findstring osx,@ARCH@), osx)
 	$(SILENT_LD) $(CXX) $(LDFLAGS) -o $@ -Wl,-all_load,-ObjC $(DYNOBJSXBMC) $(OBJSXBMC) $(LIBS) -rdynamic
 else
-	$(SILENT_LD) $(CXX) $(CXXFLAGS) $(LDFLAGS) -o xbmc.bin -Wl,--whole-archive $(DYNOBJSXBMC) $(OBJSXBMC) -Wl,--no-whole-archive $(LIBS) xbmc/main.o -rdynamic
+	$(SILENT_LD) $(CXX) $(CXXFLAGS) $(LDFLAGS) -o xbmc.bin -Wl,--whole-archive $(DYNOBJSXBMC) $(OBJSXBMC) -Wl,--no-whole-archive $(LIBS) -rdynamic
+endif
 
 xbmc_headless.bin: libxbmc.so
 	$(SILENT_LD) $(CXX) $(CXXFLAGS) $(LDFLAGS) -o xbmc_headless.bin -L. -lxbmc xbmc/xbmc_headless.cpp
-endif
 
 xbmc-xrandr: xbmc-xrandr.c
 ifneq (1,@USE_XRANDR@)
@@ -382,9 +380,14 @@ else
 install: install-binaries install-arch install-datas
 
 install-binaries: install-scripts
-	@echo "Copying XBMC binary to $(DESTDIR)$(libdir)/xbmc/xbmc.bin"
 	@install -d $(DESTDIR)$(libdir)/xbmc
+ifeq (@USE_LIBXBMC@,1)
+	@install libxbmc.so $(DESTDIR)$(libdir)/libxbmc.so
+	@install xbmc_headless.bin $(DESTDIR)$(libdir)/xbmc/xbmc_headless.bin
+else
+	@echo "Copying XBMC binary to $(DESTDIR)$(libdir)/xbmc/xbmc.bin"
 	@install xbmc.bin $(DESTDIR)$(libdir)/xbmc/xbmc.bin
+endif
 ifeq (1,@USE_XRANDR@)
 	@install xbmc-xrandr $(DESTDIR)$(libdir)/xbmc/xbmc-xrandr
 endif

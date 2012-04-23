@@ -34,13 +34,13 @@ SRCS=Application.cpp \
      XBDateTime.cpp \
      xbmc.cpp \
 
+ifneq (@USE_LIBXBMC@,1)
+SRCS += main.cpp
+endif
+
 LIB=xbmc.a
 
 DISTCLEAN_FILES=DllPaths_generated.h
-
-all: $(LIB) main.o
-
-CLEAN_FILES=main.o main.P
 
 include @abs_top_srcdir@/Makefile.include
 -include $(patsubst %.cpp,%.P,$(patsubst %.c,%.P,$(SRCS)))
