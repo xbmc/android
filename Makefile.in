@@ -348,7 +348,11 @@ else
 endif
 
 xbmc_headless.bin: libxbmc.so
+ifeq ($(findstring osx,@ARCH@), osx)
+        $(SILENT_LD) $(CXX) $(LDFLAGS) -o $@ -o xbmc_headless.bin -L. -lxbmc xbmc/xbmc_headless.cpp
+else
 	$(SILENT_LD) $(CXX) $(CXXFLAGS) $(LDFLAGS) -o xbmc_headless.bin -L. -lxbmc xbmc/xbmc_headless.cpp
+endif
 
 xbmc-xrandr: xbmc-xrandr.c
 ifneq (1,@USE_XRANDR@)
