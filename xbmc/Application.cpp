@@ -1126,6 +1126,8 @@ bool CApplication::Initialize()
   m_dpms = new DPMSSupport();
   g_guiSettings.GetSetting("powermanagement.displaysoff")->SetVisible(m_dpms->IsSupported());
 
+  if (g_windowManager.Initialized())
+  {
   g_windowManager.Add(new CGUIWindowHome);                     // window id = 0
   g_windowManager.Add(new CGUIWindowPrograms);                 // window id = 1
   g_windowManager.Add(new CGUIWindowPictures);                 // window id = 2
@@ -1248,13 +1250,10 @@ bool CApplication::Initialize()
     g_windowManager.ActivateWindow(WINDOW_LOGIN_SCREEN);
   else
   {
-#ifdef HAS_JSONRPC
-    CJSONRPC::Initialize();
-#endif
-    ADDON::CAddonMgr::Get().StartServices(false);
     g_windowManager.ActivateWindow(g_SkinInfo->GetFirstWindow());
   }
-
+  ResetScreenSaver();
+  }
   g_sysinfo.Refresh();
 
   CLog::Log(LOGINFO, "removing tempfiles");
@@ -1285,6 +1284,10 @@ bool CApplication::Initialize()
 #ifdef HAS_PYTHON
     g_pythonParser.m_bLogin = true;
 #endif
+#ifdef HAS_JSONRPC
+    CJSONRPC::Initialize();
+#endif
+    ADDON::CAddonMgr::Get().StartServices(false);
   }
 
   m_slowTimer.StartZero();
@@ -1303,7 +1306,6 @@ bool CApplication::Initialize()
   m_bInitializing = false;
 
   // reset our screensaver (starts timers etc.)
-  ResetScreenSaver();
 
   return true;
 }
