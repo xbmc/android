@@ -540,9 +540,6 @@ bool CApplication::Create()
 {
   g_settings.Initialize(); //Initialize default AdvancedSettings
 
-  m_bSystemScreenSaverEnable = g_Windowing.IsSystemScreenSaverEnabled();
-  g_Windowing.EnableSystemScreenSaver(false);
-
 #ifdef _LINUX
   tzset();   // Initialize timezone information variables
 #endif
@@ -580,6 +577,9 @@ bool CApplication::Create()
       CSpecialProtocol::TranslatePath(g_settings.m_logFolder).c_str());
     return false;
   }
+
+  // Init our DllLoaders emu env
+  init_emu_environ();
 
   g_settings.LoadProfiles(PROFILES_FILE);
 
@@ -624,13 +624,95 @@ bool CApplication::Create()
     g_settings.m_logFolder = "special://masterprofile/";
   }
 
+  // for python scripts that check the OS
+#ifdef __APPLE__
+  setenv("OS","OS X",true);
+#elif defined(_LINUX)
+  setenv("OS","Linux",true);
+#elif defined(_WIN32)
+  SetEnvironmentVariable("OS","win32");
+#endif
+
+  g_powerManager.Initialize();
+  CLog::Log(LOGNOTICE, "load settings...");
+
+  g_guiSettings.Initialize();  // Initialize default Settings - don't move
+
+  g_powerManager.SetDefaults();
+  if (!g_settings.Load())
+    FatalErrorHandler(true, true, true);
+
+  CLog::Log(LOGINFO, "creating subdirectories");
+  CLog::Log(LOGINFO, "userdata folder: %s", g_settings.GetProfileUserDataFolder().c_str());
+  CLog::Log(LOGINFO, "recording folder: %s", g_guiSettings.GetString("audiocds.recordingpath",false).c_str());
+  CLog::Log(LOGINFO, "screenshots folder: %s", g_guiSettings.GetString("debug.screenshotpath",false).c_str());
+  CDirectory::Create(g_settings.GetUserDataFolder());
+  CDirectory::Create(g_settings.GetProfileUserDataFolder());
+  g_settings.CreateProfileFolders();
+
+  update_emu_environ();//apply the GUI settings
+
+  // initialize our charset converter
+  g_charsetConverter.reset();
+
+  // Load the langinfo to have user charset <-> utf-8 conversion
+  CStdString strLanguage = g_guiSettings.GetString("locale.language");
+  strLanguage[0] = toupper(strLanguage[0]);
+
+  CStdString strLangInfoPath;
+  strLangInfoPath.Format("special://xbmc/language/%s/langinfo.xml", strLanguage.c_str());
+
+  CLog::Log(LOGINFO, "load language info file: %s", strLangInfoPath.c_str());
+  g_langInfo.Load(strLangInfoPath);
+
+  CStdString strLanguagePath;
+  strLanguagePath.Format("special://xbmc/language/%s/strings.xml", strLanguage.c_str());
+
+  CLog::Log(LOGINFO, "load language file: %s", strLanguagePath.c_str());
+  if (!g_localizeStrings.Load(strLanguagePath))
+    FatalErrorHandler(false, false, true);
+
+  // start-up Addons Framework
+  // currently bails out if either cpluff Dll is unavailable or system dir can not be scanned
+  if (!CAddonMgr::Get().Init())
+  {
+    CLog::Log(LOGFATAL, "CApplication::Create: Unable to start CAddonMgr");
+    FatalErrorHandler(true, true, true);
+  }
+
+
+  g_peripherals.Initialise();
+
+  // Create the Mouse, Keyboard, Remote, and Joystick devices
+  // Initialize after loading settings to get joystick deadzone setting
+  g_Mouse.Initialize();
+  g_Mouse.SetEnabled(g_guiSettings.GetBool("input.enablemouse"));
+
+  g_Keyboard.Initialize();
+#if defined(HAS_LIRC) || defined(HAS_IRSERVERSUITE)
+  g_RemoteControl.Initialize();
+#endif
+#ifdef HAS_SDL_JOYSTICK
+  g_Joystick.Initialize();
+#endif
+
+#if defined(__APPLE__) && !defined(__arm__)
+  // Configure and possible manually start the helper.
+  XBMCHelper::GetInstance().Configure();
+#endif
+
+  CUtil::InitRandomSeed();
+
+  g_mediaManager.Initialize();
+
+  m_lastFrameTime = XbmcThreads::SystemClockMillis();
+  m_lastRenderTime = m_lastFrameTime;
+
+  m_bSystemScreenSaverEnable = g_Windowing.IsSystemScreenSaverEnabled();
+  g_Windowing.EnableSystemScreenSaver(false);
 #ifdef HAS_XRANDR
   g_xrandr.LoadCustomModeLinesToAllOutputs();
 #endif
-
-  // Init our DllLoaders emu env
-  init_emu_environ();
-
 
 #ifdef HAS_SDL
   CLog::Log(LOGNOTICE, "Setup SDL");
@@ -680,15 +762,6 @@ bool CApplication::Create()
   #endif
 #endif
 
-  // for python scripts that check the OS
-#ifdef __APPLE__
-  setenv("OS","OS X",true);
-#elif defined(_LINUX)
-  setenv("OS","Linux",true);
-#elif defined(_WIN32)
-  SetEnvironmentVariable("OS","win32");
-#endif
-
   // Initialize core peripheral port support. Note: If these parameters
   // are 0 and NULL, respectively, then the default number and types of
   // controllers will be initialized.
@@ -697,73 +770,6 @@ bool CApplication::Create()
     CLog::Log(LOGFATAL, "CApplication::Create: Unable to init windowing system");
     return false;
   }
-
-  g_powerManager.Initialize();
-
-  CLog::Log(LOGNOTICE, "load settings...");
-
-  g_guiSettings.Initialize();  // Initialize default Settings - don't move
-  g_powerManager.SetDefaults();
-  if (!g_settings.Load())
-    FatalErrorHandler(true, true, true);
-
-  CLog::Log(LOGINFO, "creating subdirectories");
-  CLog::Log(LOGINFO, "userdata folder: %s", g_settings.GetProfileUserDataFolder().c_str());
-  CLog::Log(LOGINFO, "recording folder: %s", g_guiSettings.GetString("audiocds.recordingpath",false).c_str());
-  CLog::Log(LOGINFO, "screenshots folder: %s", g_guiSettings.GetString("debug.screenshotpath",false).c_str());
-  CDirectory::Create(g_settings.GetUserDataFolder());
-  CDirectory::Create(g_settings.GetProfileUserDataFolder());
-  g_settings.CreateProfileFolders();
-
-  update_emu_environ();//apply the GUI settings
-
-  // initialize our charset converter
-  g_charsetConverter.reset();
-
-  // Load the langinfo to have user charset <-> utf-8 conversion
-  CStdString strLanguage = g_guiSettings.GetString("locale.language");
-  strLanguage[0] = toupper(strLanguage[0]);
-
-  CStdString strLangInfoPath;
-  strLangInfoPath.Format("special://xbmc/language/%s/langinfo.xml", strLanguage.c_str());
-
-  CLog::Log(LOGINFO, "load language info file: %s", strLangInfoPath.c_str());
-  g_langInfo.Load(strLangInfoPath);
-
-  CStdString strLanguagePath;
-  strLanguagePath.Format("special://xbmc/language/%s/strings.xml", strLanguage.c_str());
-
-  CLog::Log(LOGINFO, "load language file: %s", strLanguagePath.c_str());
-  if (!g_localizeStrings.Load(strLanguagePath))
-    FatalErrorHandler(false, false, true);
-
-  // start-up Addons Framework
-  // currently bails out if either cpluff Dll is unavailable or system dir can not be scanned
-  if (!CAddonMgr::Get().Init())
-  {
-    CLog::Log(LOGFATAL, "CApplication::Create: Unable to start CAddonMgr");
-    FatalErrorHandler(true, true, true);
-  }
-
-  g_peripherals.Initialise();
-
-  // Create the Mouse, Keyboard, Remote, and Joystick devices
-  // Initialize after loading settings to get joystick deadzone setting
-  g_Mouse.Initialize();
-  g_Mouse.SetEnabled(g_guiSettings.GetBool("input.enablemouse"));
-
-  g_Keyboard.Initialize();
-#if defined(HAS_LIRC) || defined(HAS_IRSERVERSUITE)
-  g_RemoteControl.Initialize();
-#endif
-#ifdef HAS_SDL_JOYSTICK
-  g_Joystick.Initialize();
-#endif
-
-#if defined(__APPLE__) && !defined(__arm__)
-  // Configure and possible manually start the helper.
-  XBMCHelper::GetInstance().Configure();
-#endif
 
   // update the window resolution
   g_Windowing.SetWindowResolution(g_guiSettings.GetInt("window.width"), g_guiSettings.GetInt("window.height"));
@@ -832,13 +838,6 @@ bool CApplication::Create()
             g_settings.m_ResInfo[iResolution].iHeight,
             g_settings.m_ResInfo[iResolution].strMode.c_str());
   g_windowManager.Initialize();
-
-  CUtil::InitRandomSeed();
-
-  g_mediaManager.Initialize();
-
-  m_lastFrameTime = XbmcThreads::SystemClockMillis();
-  m_lastRenderTime = m_lastFrameTime;
 
   return Initialize();
 }
