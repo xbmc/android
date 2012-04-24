@@ -67,6 +67,7 @@ public:
   {
     if (m_library)
       FT_Done_FreeType(m_library);
+    delete [] m_fontBuff;
   }
 
   FT_Face GetFont(const CStdString &filename, float size, float aspect)
@@ -147,7 +148,6 @@ public:
   {
     assert(face);
     FT_Done_Face(face);
-    delete [] m_fontBuff;
   };
 
   void ReleaseStroker(FT_Stroker stroker)
