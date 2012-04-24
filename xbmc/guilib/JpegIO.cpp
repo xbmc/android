@@ -40,6 +40,7 @@ struct my_error_mgr
   jmp_buf setjmp_buffer;        // for return to caller
 };
 
+#if JPEG_LIB_VERSION < 80
 
 /*Versions of libjpeg prior to 8.0 did not have a pre-made mechanism for
   decoding directly from memory. Here we backport the functions from v8.
@@ -124,6 +125,7 @@ static void x_mem_src (j_decompress_ptr cinfo, unsigned char * inbuffer, unsigne
   src->bytes_in_buffer = (size_t) insize;
   src->next_input_byte = (JOCTET *) inbuffer;
 }
+#endif
 
 CJpegIO::CJpegIO()
 {
@@ -172,7 +174,11 @@ bool CJpegIO::Open(const CStdString &texturePath, unsigned int minx, unsigned in
   m_cinfo.err = jpeg_std_error(&jerr.pub);
   jerr.pub.error_exit = jpeg_error_exit;
   jpeg_create_decompress(&m_cinfo);
+#if JPEG_LIB_VERSION < 80
   x_mem_src(&m_cinfo, m_inputBuff, m_inputBuffSize);
+#else
+  jpeg_mem_src(&m_cinfo, m_inputBuff, m_inputBuffSize);
+#endif
 
   if (setjmp(jerr.setjmp_buffer))
   {
