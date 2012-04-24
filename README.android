@@ -315,3 +315,6 @@ is 'tools/android/packaging' and that the proper sdk/ndk paths are set.
 
 -Kill a misbehaving XBMC
   # adb shell ps | grep org.xbmc | awk '{print $2}' | xargs adb shell kill
+
+-Filter logcat messages by a specific tag (e.g. "XBMC")
+  # adb logcat -s XBMC:V
