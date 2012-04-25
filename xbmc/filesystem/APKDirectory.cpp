@@ -89,7 +89,8 @@ bool CAPKDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items
       pItem->m_dwSize    = sb.size;
       pItem->m_dateTime  = sb.mtime;    
       pItem->m_bIsFolder = dir_marker > 0 ;
-      pItem->SetPath(host + "/" + test_name);      
+      pItem->SetPath(host + "/" + test_name);
+      pItem->SetLabel(test_name.Right(test_name.size() - path.size()));
       items.Add(pItem);      
     }
   }
