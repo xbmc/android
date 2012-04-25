@@ -69,7 +69,9 @@
 #include "utils/CharsetConverter.h"
 #include "utils/URIUtils.h"
 #endif
-
+#if defined(TARGET_ANDROID)
+#include "android/android_utils.h"
+#endif
 using namespace std;
 using namespace XFILE;
 
@@ -431,6 +433,14 @@ extern "C"
   FILE* dll_popen(const char *command, const char *mode)
   {
     not_implement("msvcrt.dll fake function _popen(...) called\n"); //warning
+    return NULL;
+  }
+
+  void *dll_dlopen(const char *filename, int flag)
+  {
+#if defined(TARGET_ANDROID)
+    return lo_dlopen(filename);
+#endif
     return NULL;
   }
 

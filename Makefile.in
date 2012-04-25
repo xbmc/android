@@ -110,6 +110,11 @@ ifeq (@HAVE_XBMC_NONFREE@,1)
 DIRECTORY_ARCHIVES += lib/UnrarXLib/UnrarXLib.a
 endif
 
+ifeq (@USE_ANDROID@,1)
+        DIRECTORY_ARCHIVES += xbmc/android/android_utils.a
+endif
+
+
 BIN_DIRS = $(dir $(DIRECTORY_ARCHIVES))
 
 PAPCODECS_DIRS= \
