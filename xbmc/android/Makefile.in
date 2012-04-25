@@ -6,15 +6,22 @@ CFLAGS  += -I@abs_top_srcdir@/xbmc -I$(GLUEPATH)
 LDFLAGS += -llog -landroid
 
 SRCS     = $(GLUEPATH)/android_native_app_glue.c android_main.cpp
+UTILS    = android_utils.cpp
+UTIL_LIB = android_utils.a
 SOLIB    = libxbmcapp.so
 
 all: $(SOLIB)
 
-$(SOLIB): $(SRCS)
-	$(CXX) $(CFLAGS) $(LDFLAGS) -o $@ -shared $(SRCS)
+$(UTIL_LIB):
+	$(CXX) $(CFLAGS) $(LDFLAGS) -c -o $(@:.a=.o) $(UTILS)
+	$(AR) cr $@ $(UTILS:.cpp=.o)
+
+
+$(SOLIB): $(UTILS) $(SRCS) $(UTIL_LIB)
+	$(CXX) $(CFLAGS) $(LDFLAGS) -o $@ -shared $(SRCS) $(UTIL_LIB)
 
 install: $(SOLIB)
 	install $(SOLIB) $(PREFIX)/lib/$(SOLIB)
 
 clean:
-	-@rm -f $(SOLIB) 2>/dev/null || true
+	-@rm -f $(SOLIB) $(UTIL_LIB) *.o 2>/dev/null || true
