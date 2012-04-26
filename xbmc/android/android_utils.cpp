@@ -37,6 +37,17 @@ static int android_printf(const char *format, ...)
   return result;
 }
 
+static char *getXBFileName(const char * origName)
+{
+  if(strstr(origName,"lib") != origName)
+    return NULL;
+  char *str;
+  str = (char *)malloc(sizeof(char*) * (strlen(origName)+3));
+  strcpy (str,"libxb");
+  strcat(str,origName + 3);
+  return str;
+}
+
 static char *read_section(int fd, Elf32_Shdr *shdr)
 {
     char *result;
@@ -237,6 +248,7 @@ void *lo_dlopen(const char *library)
     struct stat st;
     void *p;
     char *full_name;
+    char *xb_name;
     char **needed;
     int i;
     int found;
@@ -294,13 +306,21 @@ void *lo_dlopen(const char *library)
         return NULL;
     }
 
-    for (i = 0; needed[i] != NULL; i++) {
-        if (lo_dlopen(needed[i]) == NULL) {
-            free_ptrarray((void **) needed);
-            free(full_name);
-            return NULL;
+    for (i = 0; needed[i] != NULL; i++)
+    {
+      xb_name = getXBFileName(needed[i]);
+      if (lo_dlopen(xb_name) == NULL)
+      {
+        if (lo_dlopen(needed[i]) == NULL)
+        {
+              free(xb_name);
+              free_ptrarray((void **) needed);
+              free(full_name);
+              return NULL;
         }
+      }
     }
+    free(xb_name);
     free_ptrarray((void **) needed);
 
     gettimeofday(&tv0, NULL);
