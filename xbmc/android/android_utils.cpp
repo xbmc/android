@@ -258,9 +258,10 @@ void *lo_dlopen(const char *library)
     static const char **library_locations;
     char libpath[] = "/data/data/org.xbmc/lib";
     char systempath[] = "/system/lib";
-    library_locations = (const char **)malloc((2) * sizeof(char *));
+    library_locations = (const char **)malloc((3) * sizeof(char *));
     library_locations[0] = libpath;
     library_locations[1] = systempath;
+    library_locations[2] = NULL;
 
     rover = loaded_libraries;
     while (rover && strcmp(rover->name, library) != 0)
@@ -311,16 +312,17 @@ void *lo_dlopen(const char *library)
       xb_name = getXBFileName(needed[i]);
       if (lo_dlopen(xb_name) == NULL)
       {
+        free(xb_name);
         if (lo_dlopen(needed[i]) == NULL)
         {
-              free(xb_name);
               free_ptrarray((void **) needed);
               free(full_name);
               return NULL;
         }
       }
+      else
+        free(xb_name);
     }
-    free(xb_name);
     free_ptrarray((void **) needed);
 
     gettimeofday(&tv0, NULL);
