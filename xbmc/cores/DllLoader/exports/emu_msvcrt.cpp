@@ -70,6 +70,7 @@
 #include "utils/URIUtils.h"
 #endif
 #if defined(TARGET_ANDROID)
+#include "utils/URIUtils.h"
 #include "android/android_utils.h"
 #endif
 using namespace std;
@@ -439,6 +440,16 @@ extern "C"
   void *dll_dlopen(const char *filename, int flag)
   {
 #if defined(TARGET_ANDROID)
+    CStdString path, file, xbPath;
+    void *handle;
+    URIUtils::Split(filename, path, file);
+    if (file.Left(3) == "lib")
+    {
+      URIUtils::AddFileToFolder(path, "libxb" + file.Mid(3), xbPath);
+      handle = lo_dlopen(xbPath.c_str());
+      if (handle)
+        return handle;
+    }
     return lo_dlopen(filename);
 #endif
     return NULL;
