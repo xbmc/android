@@ -36,6 +36,7 @@ $(LIBDYLIB): $(SOURCE)
 	rm -f $(PREFIX)/lib/libpng.so.3.38.0
 	rm -f $(PREFIX)/lib/libpng12.la $(PREFIX)/lib/libpng12.so $(PREFIX)/lib/libpng12.so.0
 	mv -f $(PREFIX)/lib/libpng12.so.0.38.0 $(PREFIX)/lib/libxbpng.so
+	ln -s $(PREFIX)/lib/libxbpng.so $(PREFIX)/lib/libpng.so
 	rpl -e "libpng12.so.0" "libxbpng.so\x00\x00" $(PREFIX)/lib/libxbpng.so
 	readelf --dynamic $(PREFIX)/lib/libxbpng.so | grep ibrary
 	touch $@

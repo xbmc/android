@@ -18,7 +18,7 @@ endif
 $(SLIB): $(SLIBS)
 ifeq ($(findstring osx,$(ARCH)), osx)
 	$(CXX) $(LDFLAGS) -Wl,-alias_list,@abs_top_srcdir@/xbmc/cores/DllLoader/exports/wrapper_mach_alias \
-	-bundle -undefined dynamic_lookup -read_only_relocs suppress -lxbpng -lxbjpeg -ltiff -lz -o $@ \
+	-bundle -undefined dynamic_lookup -read_only_relocs suppress -lpng -ljpeg -ltiff -lz -o $@ \
 	@abs_top_srcdir@/xbmc/cores/DllLoader/exports/wrapper.o CxImage/*.o jasper/*/*.o jbig/*.o raw/*.o
 else
 	$(CXX) $(CFLAGS) $(LDFLAGS) -shared -o $(SLIB) -Wl,--whole-archive $(SLIBS) \
