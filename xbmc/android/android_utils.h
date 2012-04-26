@@ -20,4 +20,4 @@
  */
 
 void *lo_dlopen(const char *library);
-int android_printf(const char *format, ...);
+static int android_printf(const char *format, ...);
