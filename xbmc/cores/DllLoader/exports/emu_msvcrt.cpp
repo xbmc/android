@@ -962,15 +962,6 @@ extern "C"
     if (XFILE::CDirectory::GetDirectory(url.Get(), vecDirsOpen[iDirSlot].items))
     {
       vecDirsOpen[iDirSlot].curr_index = 0;
-
-      // readdir will expect a path relative to what it opened excluding the path it gave.
-      for(int fileIndex = 0; fileIndex<vecDirsOpen[iDirSlot].items.Size(); ++fileIndex)
-      {
-        CStdString fullpath = vecDirsOpen[iDirSlot].items[fileIndex]->GetLabel();
-        CStdString relpath = fullpath.Right(fullpath.size() - url.GetFileName().size() - 1);
-        vecDirsOpen[iDirSlot].items[fileIndex]->SetLabel(relpath);
-      }
-
       return (DIR *)&vecDirsOpen[iDirSlot];
     }
     else
