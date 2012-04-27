@@ -13,7 +13,7 @@ TOC
 1. Introduction
 -----------------------------------------------------------------------------
 
-We currently recommend Ubuntu Hardy(8.04) or later. The setup can also be
+We currently recommend Ubuntu Hardy (8.04) or later. The setup can also be
 done with OSX or Windows (using Cygwin) but may require extra work not
 described in this document.
 
@@ -27,18 +27,22 @@ character itself should NOT be typed as part of the command.
 -----------------------------------------------------------------------------
 
 To develop XBMC for Android the Android SDK and NDK are required.
+Because the Android NDK is lacking support for wide characters (wchar_t)
+which XBMC relies on for Unicode implementation, a third-party NDK
+from Crystax is being used.
 
 --------------------------------------------------------------------
 2.1. Getting the Android SDK and NDK
 --------------------------------------------------------------------
 
 To get the Android SDK, go to http://developer.android.com/sdk and
-download the latest version for your operating system. The Android NDK
-can be downloaded from http://developer.android.com/sdk/ndk
+download the latest version for your operating system. The Crystax NDK
+can be downloaded from http://www.crystax.net/en/android/ndk
 
 [NOTICE] Compiling XBMC for Android requires at least Android NDK
          Revision 7b. Android NDK Revision 7 and earlier do not work
-         properly for our cause.
+         properly for our cause. The corresponding Crystax NDK version
+         is android-ndk-r7-crystax-5.
          
 After downloading the SDK and NDK extract the files contained in the
 archives to your harddisk.
@@ -61,8 +65,6 @@ Install at least the following packages:
     - Android SDK Tools
     - Android SDK Platform-tools
   - Android 2.3.3 (API 10)
-    - SDK Platform
-  - Android 2.2 (API 8)
     - SDK Platform
 
 --------------------------------------------------------------------
@@ -88,15 +90,15 @@ the Android NDK which you earlier extracted to <android-ndk>.
    # cd <android-ndk>
    # ls platforms
    # cd build/tools
-   # ./make-standalone-toolchain.sh --platform=android-<x> --install-dir=<android-toolchain>
+   # ./make-standalone-toolchain.sh --ndk-dir=<android-ndk> \
+     --platform=android-<x> --install-dir=<android-toolchain>/android-<x> \
+     --toolchain=arm-linux-androideabi-4.4.3
 
 The output of "ls platforms" gives you a list of available platforms
 which you can pass to the --platform option of the
 make-standalone-toolchain.sh script. Make sure that <x> is at least 9.
 The --install-dir option (and therefore the <android-toolchain> value)
 specifies the path whereto the script will copy the necessary files.
-The script will automatically create a sub-directory named "android-<x>"
-in the <android-toolchain> directory.
 
 -----------------------------------------------------------------------------
 3. Getting the source code
