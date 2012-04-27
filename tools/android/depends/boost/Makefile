@@ -17,6 +17,8 @@ $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
 	echo $(SOURCE) > .gitignore
 	cat user-config.jam-android.in > $(SOURCE)/tools/build/v2/user-config.jam
+	cd $(SOURCE); patch -p1 < ../add-arm-mem-barrier.patch
+	cd $(SOURCE); patch -p1 < ../fix-deprecated-swp.patch
 	cd $(SOURCE); ./bootstrap.sh --prefix=$(PREFIX)
 	cd $(SOURCE); ./bjam --prefix=$(PREFIX) toolset=gcc --toolset-root=$(TOOLCHAIN) --architecture=arm --disable-icu \
 	--without-date_time --without-filesystem --without-graph --without-graph_parallel --without-iostreams --without-math --without-mpi --without-program_options \
