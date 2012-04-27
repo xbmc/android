@@ -83,9 +83,6 @@ extern "C" int XBMC_Initialize(XBMC_PLATFORM *platform, int argc, const char** a
   }
 #endif
   g_application.Preflight();
-#if defined(TARGET_ANDROID)
-  platform->android_printf("Creating application. Hello from Android!");
-#endif
 
   if (!g_application.Create())
   {
