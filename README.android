@@ -43,6 +43,9 @@ can be downloaded from http://developer.android.com/sdk/ndk
 After downloading the SDK and NDK extract the files contained in the
 archives to your harddisk.
 
+Make sure you have a recent JRE and JDK installed otherwise the
+Android SDK will not work.
+
 --------------------------------------------------------------------
 2.2. Installing Android SDK packages
 --------------------------------------------------------------------
@@ -108,6 +111,10 @@ in the <android-toolchain> directory.
 -----------------------------------------------------------------------------
 
    # sudo apt-get install git-core make g++ gcc cvs rpl TODO
+   
+If you run a 64bit operating system you will also need to get ia32-libs
+
+  # sudo apt-get install ia32-libs
 
 *** For developers and anyone else who compiles frequently it is recommended to use ccache
 sudo apt-get install ccache
