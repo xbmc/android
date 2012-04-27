@@ -33,7 +33,7 @@ typedef enum {
 } XBMC_RUNFLAGS;
 
 // we need both here, one is for including into android, the other xbmc
-#if defined(ANDROID) || defined(TARGET_ANDROID)
+#if defined(ANDROID) || defined(__ANDROID__)
 struct ANativeWindow;
 typedef struct ANativeWindow ANativeWindow;
 
