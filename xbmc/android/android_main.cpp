@@ -3,16 +3,10 @@
 #include <android/looper.h>
 #include <jni.h>
 
-#include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <dlfcn.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <linux/elf.h>
-#include <fcntl.h>
-#include <errno.h>
+
 #include "xbmc.h"
 #include "android_utils.h"
 
