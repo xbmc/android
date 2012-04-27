@@ -26,6 +26,7 @@ $(SOURCE): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	rm -rf $(SOURCE)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
 	echo $(SOURCE) > .gitignore
+	cd $(SOURCE); patch -p1 < ../gcrypt-disable-tests.patch
 	cd $(SOURCE); $(CONFIGURE)
 	patch -p0 <01-gcrypt-android-select.patch
 
