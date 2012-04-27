@@ -12,7 +12,7 @@ SOLIB    = libxbmcapp.so
 
 all: $(SOLIB)
 
-$(UTIL_LIB):
+$(UTIL_LIB): $(UTILS)
 	$(CXX) $(CFLAGS) $(LDFLAGS) -c -o $(@:.a=.o) $(UTILS)
 	$(AR) cr $@ $(UTILS:.cpp=.o)
 
