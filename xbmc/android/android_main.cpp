@@ -123,7 +123,7 @@ static void android_handle_cmd(struct android_app* app, int32_t cmd)
         else
           android_printf("ERROR: XBMC_Initialize failed. Exiting");
           
-        // TODO: Make sure we exit android_main()
+        // Make sure we exit android_main()
         context->stop = true;
         ALooper_wake(ALooper_forThread());
       }
@@ -180,15 +180,11 @@ static void android_handle_cmd(struct android_app* app, int32_t cmd)
     case APP_CMD_STOP:
       android_printf("DEBUG: APP_CMD_STOP");
       // TODO
-      context->stop = true;
-      ALooper_wake(ALooper_forThread());
       break;
       
     case APP_CMD_DESTROY:
       android_printf("DEBUG: APP_CMD_DESTROY");
       // TODO
-      context->stop = true;
-      ALooper_wake(ALooper_forThread());
       break;
   }
 }
@@ -274,8 +270,8 @@ extern void android_main(struct android_app* state)
       if (context.stop)
       {
         android_printf("INFO: We need to stop");
-        stop = true;
-        break;
+        ANativeActivity_finish(state->activity);
+        context.stop = false;
       }
     }
     
