@@ -74,6 +74,13 @@ bool SoLoader::Load()
 
 void SoLoader::Unload()
 {
+#if defined(TARGET_ANDROID)
+  // Unloading a library in Android will lead to a crash when trying to load it
+  // again later on. Android assumes that all libraries are loaded once
+  // and only unloaded when the app is destroyed.
+  return;
+#endif
+  
   CLog::Log(LOGDEBUG, "Unloading: %s\n", GetName());
 
   if (m_soHandle)
