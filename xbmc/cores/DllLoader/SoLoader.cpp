@@ -24,6 +24,9 @@
 #include "utils/StdString.h"
 #include "filesystem/SpecialProtocol.h"
 #include "utils/log.h"
+#if defined(TARGET_ANDROID)
+#include "android/android_utils.h"
+#endif
 
 SoLoader::SoLoader(const char *so, bool bGlobal) : LibraryLoader(so)
 {
@@ -54,7 +57,11 @@ bool SoLoader::Load()
   else
   {
     CLog::Log(LOGDEBUG, "Loading: %s\n", strFileName.c_str());
+#if defined(TARGET_ANDROID)
+    m_soHandle = lo_dlopen(strFileName.c_str());
+#else
     m_soHandle = dlopen(strFileName.c_str(), flags);
+#endif
     if (!m_soHandle)
     {
       CLog::Log(LOGERROR, "Unable to load %s, reason: %s", strFileName.c_str(), dlerror());
