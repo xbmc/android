@@ -107,6 +107,8 @@ specifies the path whereto the script will copy the necessary files.
    # sudo apt-get install git-core
    # cd $HOME
    # git clone git://github.com/xbmc/android.git xbmc-android
+   # cd xbmc
+   # git submodule update --init addons/skin.touched
 
 -----------------------------------------------------------------------------
 4. Installing the required Ubuntu packages
