@@ -5,8 +5,8 @@ include xbmc/jni/Application.mk
 
 OBJS = libgcrypt.so libgpg-error.so libfontconfig.so libfreetype.so \
   libiconv.so libfribidi.so libsqlite3.so libxbpng.so libpcre.so \
-  libpcrecpp.so libsamplerate.so libpython2.6.so libcrypto.so \
-  libpython2.6.so libyajl.so \
+  libpcrecpp.so libsamplerate.so libpython2.6.so libxbcrypto.so \
+  libpython2.6.so libyajl.so libxbssl.so libcurl.so \
   libtiff.so libxbjpeg.so libzip.so
 
 XBMCROOT = $(CURDIR)/../../../
