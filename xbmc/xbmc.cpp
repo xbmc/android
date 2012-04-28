@@ -98,6 +98,12 @@ extern "C" int XBMC_Run()
   return g_application.Run();
 }
 
+extern "C" int XBMC_RunStep()
+{
+  g_application.RunStep();
+  return 0;
+}
+
 extern "C" void XBMC_Stop()
 {
   g_application.getApplicationMessenger().Quit();
