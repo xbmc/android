@@ -28,6 +28,8 @@
 #include "XBMCApp.h"
 #include "xbmc_log.h"
 
+#include "input/XBMC_keysym.h"
+
 template<class T, void(T::*fn)()>
 void* thread_run(void* obj)
 {
@@ -43,6 +45,7 @@ CXBMCApp::CXBMCApp()
   m_state.xbmcRun = NULL;
   m_state.xbmcStop = NULL;
   m_state.xbmcTouch = NULL;
+  m_state.xbmcKey = NULL;
 
   if (pthread_mutex_init(&m_state.mutex, NULL) != 0)
   {
@@ -60,8 +63,9 @@ CXBMCApp::CXBMCApp()
   m_state.xbmcRun = (XBMC_Run_t)dlsym(soHandle, "XBMC_Run");
   m_state.xbmcStop = (XBMC_Stop_t)dlsym(soHandle, "XBMC_Stop");
   m_state.xbmcTouch = (XBMC_Touch_t)dlsym(soHandle, "XBMC_Touch");
+  m_state.xbmcKey = (XBMC_Key_t)dlsym(soHandle, "XBMC_Key");
   if (m_state.xbmcInitialize == NULL || m_state.xbmcRun == NULL ||
-      m_state.xbmcStop == NULL || m_state.xbmcTouch == NULL)
+      m_state.xbmcStop == NULL || m_state.xbmcTouch == NULL || m_state.xbmcKey == NULL)
   {
     android_printf("CXBMCApp: could not find XBMC_* functions. Error: %s", dlerror());
     return;
@@ -228,6 +232,66 @@ bool CXBMCApp::onKeyboardEvent(AInputEvent* event)
   int32_t state = AKeyEvent_getMetaState(event);
   int32_t repeatCount = AKeyEvent_getRepeatCount(event);
 
+  // Check if we got some special key
+  uint16_t sym = 0;
+  switch (keycode)
+  {
+    case AKEYCODE_DPAD_UP:
+      sym = XBMCK_UP;
+      break;
+
+    case AKEYCODE_DPAD_DOWN:
+      sym = XBMCK_DOWN;
+      break;
+
+    case AKEYCODE_DPAD_LEFT:
+      sym = XBMCK_LEFT;
+      break;
+
+    case AKEYCODE_DPAD_RIGHT:
+      sym = XBMCK_RIGHT;
+      break;
+
+    case AKEYCODE_VOLUME_UP:
+      sym = XBMCK_VOLUME_UP;
+      break;
+
+    case AKEYCODE_VOLUME_DOWN:
+      sym = XBMCK_VOLUME_DOWN;
+      break;
+
+    case AKEYCODE_MUTE:
+      sym = XBMCK_VOLUME_MUTE;
+      break;
+
+    case AKEYCODE_MENU:
+      sym = XBMCK_HOME;
+      break;
+
+    // TODO: Handle more
+    default:
+      break;
+  }
+
+  uint16_t modifiers = 0;
+  if (state & AMETA_ALT_LEFT_ON)
+    modifiers |= XBMCKMOD_LALT;
+  if (state & AMETA_ALT_RIGHT_ON)
+    modifiers |= XBMCKMOD_RALT;
+  if (state & AMETA_SHIFT_LEFT_ON)
+    modifiers |= XBMCKMOD_LSHIFT;
+  if (state & AMETA_SHIFT_RIGHT_ON)
+    modifiers |= XBMCKMOD_RSHIFT;
+  /* TODO:
+  if (state & AMETA_SYM_ON)
+    modifiers |= 0x000?;*/
+
+  // never ever try to handle the back, home or power button
+  if (keycode == AKEYCODE_BACK ||
+      keycode == AKEYCODE_HOME ||
+      keycode == AKEYCODE_POWER)
+    return false;
+
   switch (AKeyEvent_getAction(event))
   {
     case AKEY_EVENT_ACTION_DOWN:
@@ -236,15 +300,17 @@ bool CXBMCApp::onKeyboardEvent(AInputEvent* event)
                       (state & AMETA_ALT_ON) ? "yes" : "no",
                       (state & AMETA_SHIFT_ON) ? "yes" : "no",
                       (state & AMETA_SYM_ON) ? "yes" : "no");
-      break;
+      m_state.xbmcKey((uint8_t)keycode, sym, modifiers, false);
+      return true;
 
     case AKEY_EVENT_ACTION_UP:
       android_printf("CXBMCApp: key up (code: %d; repeat: %d; flags: 0x%0X; alt: %s; shift: %s; sym: %s)",
                       keycode, repeatCount, flags,
                       (state & AMETA_ALT_ON) ? "yes" : "no",
                       (state & AMETA_SHIFT_ON) ? "yes" : "no",
-                      (state & AMETA_SYM_ON) ? "yes" : "no");
-      break;
+                     (state & AMETA_SYM_ON) ? "yes" : "no");
+      m_state.xbmcKey((uint8_t)keycode, sym, modifiers, true);
+      return true;
 
     case AKEY_EVENT_ACTION_MULTIPLE:
       android_printf("CXBMCApp: key multiple (code: %d; repeat: %d; flags: 0x%0X; alt: %s; shift: %s; sym: %s)",
@@ -296,6 +362,7 @@ bool CXBMCApp::onTouchEvent(AInputEvent* event)
       break;
   }
 
+  // TODO: We should return true if XBMC actually handled the key press
   return false;
 }
 
@@ -344,15 +411,18 @@ void CXBMCApp::run()
 void CXBMCApp::join()
 {
   android_printf("%s", __PRETTY_FUNCTION__);
+  ActivityResult tempResult;
   pthread_mutex_lock(&m_state.mutex);
-  if (m_state.result == ActivityUnknown)
+  tempResult = m_state.result;
+  pthread_mutex_unlock(&m_state.mutex);
+
+  if (tempResult == ActivityUnknown)
   {
     android_printf(" => executing XBMC_Stop");
     m_state.xbmcStop();
     android_printf(" => waiting for XBMC to finish");
     pthread_join(m_state.thread, NULL);
+    android_printf(" => XBMC finished");
   }
-  pthread_mutex_unlock(&m_state.mutex);
-  android_printf(" => XBMC finished");
 }
 

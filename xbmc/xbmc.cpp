@@ -103,9 +103,9 @@ extern "C" void XBMC_Stop()
   g_application.getApplicationMessenger().Quit();
 }
 
-extern "C" bool XBMC_Touch(uint16_t x, uint16_t y, bool up)
+extern "C" void XBMC_Touch(uint16_t x, uint16_t y, bool up)
 {
-  static XBMC_Event newEvent;
+  XBMC_Event newEvent;
   memset(&newEvent, 0, sizeof(newEvent));
 
   unsigned char type = up ? XBMC_MOUSEBUTTONUP : XBMC_MOUSEBUTTONDOWN;
@@ -116,5 +116,22 @@ extern "C" bool XBMC_Touch(uint16_t x, uint16_t y, bool up)
   newEvent.button.y = y;
 
   CLog::Log(LOGDEBUG, "XBMC_Touch(%u, %u, %d)", x, y, up);
+  CWinEventsAndroid::MessagePush(&newEvent);
+}
+
+extern "C" void XBMC_Key(uint8_t code, uint16_t key, uint16_t modifiers, bool up)
+{
+  XBMC_Event newEvent;
+  memset(&newEvent, 0, sizeof(newEvent));
+
+  unsigned char type = up ? XBMC_KEYUP : XBMC_KEYDOWN;
+  newEvent.type = type;
+  newEvent.key.type = type;
+  newEvent.key.keysym.scancode = code;
+  newEvent.key.keysym.sym = (XBMCKey)key;
+  newEvent.key.keysym.unicode = key;
+  newEvent.key.keysym.mod = (XBMCMod)modifiers;
+
+  CLog::Log(LOGDEBUG, "XBMC_Key(%u, %u, 0x%04X, %d)", code, key, modifiers, up);
   CWinEventsAndroid::MessagePush(&newEvent);
 }

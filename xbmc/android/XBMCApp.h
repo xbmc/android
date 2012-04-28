@@ -73,6 +73,7 @@ private:
     XBMC_Run_t xbmcRun;
     XBMC_Stop_t xbmcStop;
     XBMC_Touch_t xbmcTouch;
+    XBMC_Key_t xbmcKey;
   } State;
 
   State m_state;
