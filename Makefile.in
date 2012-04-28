@@ -213,12 +213,14 @@ configure: configure.in
 	@echo 'configure is outdated, regenerating...'
 	@./bootstrap
 
+XBMCTEXFLAGS=
+
 # skin textures
 ifeq (@USE_TEXTUREPACKER@,1)
 skins: tools/TexturePacker/TexturePacker force
-	 $(MAKE) -C $(CONFLUENCE_MEDIA)
+	 $(MAKE) XBMCTEXFLAGS=$(XBMCTEXFLAGS) -C $(CONFLUENCE_MEDIA)
 ifeq (@USE_SKIN_TOUCHED@,1)
-	 $(MAKE) -C $(TOUCHED_MEDIA)
+	 $(MAKE) XBMCTEXFLAGS=$(XBMCTEXFLAGS) -C $(TOUCHED_MEDIA)
 endif
 else
 skins:

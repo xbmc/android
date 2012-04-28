@@ -10,7 +10,7 @@ all: $(TARGET)
 .PHONY: force
 
 $(TARGET): $(XBMCTEX) $(IMAGES)
-	$(XBMCTEX) -input . -output $(TARGET)
+	$(XBMCTEX) $(XBMCTEXFLAGS) -input . -output $(TARGET)
 
 $(XBMCTEX): force
 	$(MAKE) -C @abs_top_srcdir@/tools/TexturePacker
