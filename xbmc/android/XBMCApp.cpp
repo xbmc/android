@@ -125,11 +125,11 @@ ActivityResult CXBMCApp::onStep()
   if (m_state.xbmcStep == NULL || m_state.xbmcStop == NULL)
     return ActivityError;
 
-  bool stop = m_state.xbmcStep();
-  if (stop)
+  bool running = m_state.xbmcStep();
+  if (!running)
   {
-    android_printf("XBMC is stopping");
-    m_state.xbmcStop(true);
+    android_printf("%s: XBMC stopped", __PRETTY_FUNCTION__);
+    m_state.initialized = false;
     return ActivityExit;
   }
 
@@ -377,10 +377,8 @@ void CXBMCApp::stop()
     return;
 
   android_printf(" => executing XBMC_Stop");
-  // first let XBMC quit
+  // quit XBMC
   m_state.xbmcStop(false);
-  // now destroy it
-  m_state.xbmcStop(true);
 
   m_state.initialized = false;
 }

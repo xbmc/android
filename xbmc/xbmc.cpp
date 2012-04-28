@@ -102,8 +102,7 @@ extern "C" int XBMC_Run()
 
 extern "C" bool XBMC_RunStep()
 {
-  g_application.RunStep();
-  return 0;
+  return g_application.RunStep();
 }
 
 extern "C" void XBMC_Stop(bool destroy)
