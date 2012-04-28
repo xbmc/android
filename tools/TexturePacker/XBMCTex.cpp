@@ -575,6 +575,7 @@ int main(int argc, char* argv[])
     else if (!stricmp(args[i], "-use_none"))
     {
       flags &= ~FLAGS_USE_DXT;
+      flags &= ~FLAGS_USE_LZO;
     }
     else if (!stricmp(args[i], "-use_dxt"))
     {
