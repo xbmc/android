@@ -200,7 +200,6 @@
 #define HAS_EGL
 #define HAS_GLES 2
 #define HAS_LINUX_NETWORK
-#define HAS_LINUX_EVENTS
 //#define HAS_LIRC
 #endif
 

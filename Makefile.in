@@ -112,6 +112,7 @@ endif
 
 ifeq (@USE_ANDROID@,1)
         DIRECTORY_ARCHIVES += xbmc/android/android_utils.a
+        DIRECTORY_ARCHIVES += xbmc/windowing/android/windowing_android.a
 endif
 
 
