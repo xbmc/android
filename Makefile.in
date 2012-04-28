@@ -213,7 +213,9 @@ configure: configure.in
 	@echo 'configure is outdated, regenerating...'
 	@./bootstrap
 
-XBMCTEXFLAGS=
+ifeq (@USE_ANDROID@,1)
+XBMCTEXFLAGS=-use_none
+endif
 
 # skin textures
 ifeq (@USE_TEXTUREPACKER@,1)
