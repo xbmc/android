@@ -3,13 +3,15 @@ include ../android-sdk.mk
 
 # lib name, version
 LIBNAME=libjpeg-turbo
-VERSION=1.1.1
+VERSION=1.2.0
 SOURCE=$(LIBNAME)-$(VERSION)
 ARCHIVE=$(LIBNAME)-$(VERSION).tar.gz
-
+BASE_URL=http://sourceforge.net/projects/libjpeg-turbo/files/$(VERSION)
 # configuration settings
 CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess .; \
           ./configure --prefix=$(PREFIX) --host=$(HOST) --with-jpeg8
+
+CFLAGS+=-O3
 
 LIBDYLIB=$(SOURCE)/.libs/lib$(LIBNAME).so
 
@@ -27,7 +29,7 @@ $(SOURCE): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(SOURCE); $(CONFIGURE)
 
 $(LIBDYLIB): $(SOURCE)
-	make -j $(JOBS) -C $(SOURCE)
+	make -j 1 -C $(SOURCE)
 
 .installed:
 	make -C $(SOURCE) install
