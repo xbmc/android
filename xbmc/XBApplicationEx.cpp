@@ -83,7 +83,7 @@ INT CXBApplicationEx::Run()
   return m_ExitCode;
 }
 
-VOID CXBApplicationEx::RunStep()
+bool CXBApplicationEx::RunStep()
 {
   BYTE processExceptionCount = 0;
   BYTE frameMoveExceptionCount = 0;
@@ -171,4 +171,6 @@ VOID CXBApplicationEx::RunStep()
     }
   }
 #endif
+
+  return !m_bStop;
 }

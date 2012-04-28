@@ -41,7 +41,9 @@
 #if defined(TARGET_DARWIN)
 #include "Util.h"
 #endif
-#include "windowing/WinEvents.h"
+
+#include "input/MouseStat.h"
+#include "input/XBMC_keysym.h"
 
 extern "C" int XBMC_Initialize(XBMC_PLATFORM *platform, int argc, const char** argv)
 {
@@ -98,15 +100,18 @@ extern "C" int XBMC_Run()
   return g_application.Run();
 }
 
-extern "C" int XBMC_RunStep()
+extern "C" bool XBMC_RunStep()
 {
   g_application.RunStep();
   return 0;
 }
 
-extern "C" void XBMC_Stop()
+extern "C" void XBMC_Stop(bool destroy)
 {
-  g_application.getApplicationMessenger().Quit();
+  if (destroy)
+    g_application.Destroy();
+  else
+    g_application.Stop(EXITCODE_QUIT);
 }
 
 extern "C" void XBMC_Touch(uint16_t x, uint16_t y, bool up)
@@ -122,7 +127,7 @@ extern "C" void XBMC_Touch(uint16_t x, uint16_t y, bool up)
   newEvent.button.y = y;
 
   CLog::Log(LOGDEBUG, "XBMC_Touch(%u, %u, %d)", x, y, up);
-  CWinEventsAndroid::MessagePush(&newEvent);
+  g_application.OnEvent(newEvent);
 }
 
 extern "C" void XBMC_Key(uint8_t code, uint16_t key, uint16_t modifiers, bool up)
@@ -139,5 +144,5 @@ extern "C" void XBMC_Key(uint8_t code, uint16_t key, uint16_t modifiers, bool up
   newEvent.key.keysym.mod = (XBMCMod)modifiers;
 
   CLog::Log(LOGDEBUG, "XBMC_Key(%u, %u, 0x%04X, %d)", code, key, modifiers, up);
-  CWinEventsAndroid::MessagePush(&newEvent);
+  g_application.OnEvent(newEvent);
 }
