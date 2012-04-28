@@ -41,6 +41,7 @@
 #if defined(TARGET_DARWIN)
 #include "Util.h"
 #endif
+#include "windowing/WinEvents.h"
 
 extern "C" int XBMC_Initialize(XBMC_PLATFORM *platform, int argc, const char** argv)
 {
@@ -74,7 +75,7 @@ extern "C" int XBMC_Initialize(XBMC_PLATFORM *platform, int argc, const char** a
 #endif
   setlocale(LC_NUMERIC, "C");
   g_advancedSettings.Initialize();
-  
+
 #ifndef TARGET_WINDOWS
   if ((platform->flags & XBMCRunPrimary) && argc > 0 && argv != NULL)
   {
@@ -95,4 +96,25 @@ extern "C" int XBMC_Initialize(XBMC_PLATFORM *platform, int argc, const char** a
 extern "C" int XBMC_Run()
 {
   return g_application.Run();
+}
+
+extern "C" void XBMC_Stop()
+{
+  g_application.getApplicationMessenger().Quit();
+}
+
+extern "C" bool XBMC_Touch(uint16_t x, uint16_t y, bool up)
+{
+  static XBMC_Event newEvent;
+  memset(&newEvent, 0, sizeof(newEvent));
+
+  unsigned char type = up ? XBMC_MOUSEBUTTONUP : XBMC_MOUSEBUTTONDOWN;
+  newEvent.type = type;
+  newEvent.button.type = type;
+  newEvent.button.button = XBMC_BUTTON_LEFT;
+  newEvent.button.x = x;
+  newEvent.button.y = y;
+
+  CLog::Log(LOGDEBUG, "XBMC_Touch(%u, %u, %d)", x, y, up);
+  CWinEventsAndroid::MessagePush(&newEvent);
 }

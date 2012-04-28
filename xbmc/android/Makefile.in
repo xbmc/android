@@ -5,7 +5,10 @@ GLUEPATH = $(NDKROOT)/sources/android/native_app_glue
 CFLAGS  += -I@abs_top_srcdir@/xbmc -I$(GLUEPATH)
 LDFLAGS += -llog -landroid
 
-SRCS     = $(GLUEPATH)/android_native_app_glue.c android_main.cpp
+SRCS     = $(GLUEPATH)/android_native_app_glue.c \
+           android_main.cpp \
+           EventLoop.cpp \
+           XBMCApp.cpp
 UTILS    = android_utils.cpp
 UTIL_LIB = android_utils.a
 SOLIB    = libxbmcapp.so
@@ -17,7 +20,7 @@ $(UTIL_LIB): $(UTILS)
 	$(AR) cr $@ $(UTILS:.cpp=.o)
 
 
-$(SOLIB): $(UTILS) $(SRCS) $(UTIL_LIB)
+$(SOLIB): $(SRCS) $(UTIL_LIB)
 	$(CXX) $(CFLAGS) $(LDFLAGS) -o $@ -shared $(SRCS) $(UTIL_LIB)
 
 install: $(SOLIB)

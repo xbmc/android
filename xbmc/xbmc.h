@@ -66,6 +66,10 @@ typedef struct XBMC_PLATFORM XBMC_PLATFORM;
 
 typedef int (*XBMC_Initialize_t)(XBMC_PLATFORM*, int, const char**);
 typedef int (*XBMC_Run_t)();
+typedef void (*XBMC_Stop_t)();
+typedef bool (*XBMC_Touch_t)(uint16_t, uint16_t, bool);
 
 extern "C" int XBMC_Initialize(XBMC_PLATFORM *platform, int argc, const char** argv);
 extern "C" int XBMC_Run();
+extern "C" void XBMC_Stop();
+extern "C" bool XBMC_Touch(uint16_t x, uint16_t y, bool up);
