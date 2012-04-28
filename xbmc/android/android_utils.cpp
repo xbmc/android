@@ -19,23 +19,15 @@
  *
  */
 
-
 #include <dlfcn.h>
 #include <sys/stat.h>
 #include <linux/elf.h>
 #include <fcntl.h>
 #include <errno.h>
+
 #include <android/log.h>
 
-
-static int android_printf(const char *format, ...)
-{
-  va_list args;
-  va_start(args, format);
-  int result = __android_log_vprint(ANDROID_LOG_VERBOSE, "XBMC", format, args);
-  va_end(args);
-  return result;
-}
+#include "xbmc_log.h"
 
 static char *getXBFileName(const char * origName)
 {
@@ -236,7 +228,7 @@ void *lo_dlopen(const char *library)
      * shouldn't matter if we dlopen() a library that already is
      * loaded, dlopen() just returns the same value then.
      */
-    typedef struct { 
+    typedef struct {
         const char *name;
         void *handle;
         void *next;
