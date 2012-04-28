@@ -94,81 +94,81 @@ VOID CXBApplicationEx::RunStep()
 #endif
 
 #ifdef HAS_PERFORMANCE_SAMPLE
-    CPerformanceSample sampleLoop("XBApplicationEx-loop");
+  CPerformanceSample sampleLoop("XBApplicationEx-loop");
 #endif
-    //-----------------------------------------
-    // Animate and render a frame
-    //-----------------------------------------
+  //-----------------------------------------
+  // Animate and render a frame
+  //-----------------------------------------
 #ifndef _DEBUG
-    try
-    {
+  try
+  {
 #endif
-      Process();
-      //reset exception count
-      processExceptionCount = 0;
-
-#ifndef _DEBUG
-
-    }
-    catch (...)
-    {
-      CLog::Log(LOGERROR, "exception in CApplication::Process()");
-      processExceptionCount++;
-      //MAX_EXCEPTION_COUNT exceptions in a row? -> bail out
-      if (processExceptionCount > MAX_EXCEPTION_COUNT)
-      {
-        CLog::Log(LOGERROR, "CApplication::Process(), too many exceptions");
-        throw;
-      }
-    }
-#endif
-    // Frame move the scene
-#ifndef _DEBUG
-    try
-    {
-#endif
-      if (!m_bStop) FrameMove(true);
-      //reset exception count
-      frameMoveExceptionCount = 0;
+    Process();
+    //reset exception count
+    processExceptionCount = 0;
 
 #ifndef _DEBUG
 
-    }
-    catch (...)
+  }
+  catch (...)
+  {
+    CLog::Log(LOGERROR, "exception in CApplication::Process()");
+    processExceptionCount++;
+    //MAX_EXCEPTION_COUNT exceptions in a row? -> bail out
+    if (processExceptionCount > MAX_EXCEPTION_COUNT)
     {
-      CLog::Log(LOGERROR, "exception in CApplication::FrameMove()");
-      frameMoveExceptionCount++;
-      //MAX_EXCEPTION_COUNT exceptions in a row? -> bail out
-      if (frameMoveExceptionCount > MAX_EXCEPTION_COUNT)
-      {
-        CLog::Log(LOGERROR, "CApplication::FrameMove(), too many exceptions");
-        throw;
-      }
+      CLog::Log(LOGERROR, "CApplication::Process(), too many exceptions");
+      throw;
     }
+  }
+#endif
+  // Frame move the scene
+#ifndef _DEBUG
+  try
+  {
+#endif
+    if (!m_bStop) FrameMove(true);
+    //reset exception count
+    frameMoveExceptionCount = 0;
+
+#ifndef _DEBUG
+
+  }
+  catch (...)
+  {
+    CLog::Log(LOGERROR, "exception in CApplication::FrameMove()");
+    frameMoveExceptionCount++;
+    //MAX_EXCEPTION_COUNT exceptions in a row? -> bail out
+    if (frameMoveExceptionCount > MAX_EXCEPTION_COUNT)
+    {
+      CLog::Log(LOGERROR, "CApplication::FrameMove(), too many exceptions");
+      throw;
+    }
+  }
 #endif
 
-    // Render the scene
+  // Render the scene
 #ifndef _DEBUG
-    try
-    {
+  try
+  {
 #endif
-      if (!m_bStop) Render();
-      //reset exception count
-      renderExceptionCount = 0;
+    if (!m_bStop) Render();
+    //reset exception count
+    renderExceptionCount = 0;
 
 #ifndef _DEBUG
 
-    }
-    catch (...)
+  }
+  catch (...)
+  {
+    CLog::Log(LOGERROR, "exception in CApplication::Render()");
+    renderExceptionCount++;
+    //MAX_EXCEPTION_COUNT exceptions in a row? -> bail out
+    if (renderExceptionCount > MAX_EXCEPTION_COUNT)
     {
-      CLog::Log(LOGERROR, "exception in CApplication::Render()");
-      renderExceptionCount++;
-      //MAX_EXCEPTION_COUNT exceptions in a row? -> bail out
-      if (renderExceptionCount > MAX_EXCEPTION_COUNT)
-      {
-        CLog::Log(LOGERROR, "CApplication::Render(), too many exceptions");
-        throw;
-      }
+      CLog::Log(LOGERROR, "CApplication::Render(), too many exceptions");
+      throw;
     }
+  }
 #endif
 }
