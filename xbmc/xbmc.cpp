@@ -116,7 +116,7 @@ extern "C" void XBMC_Touch(uint16_t x, uint16_t y, bool up)
   newEvent.button.y = y;
 
   CLog::Log(LOGDEBUG, "XBMC_Touch(%u, %u, %d)", x, y, up);
-  CWinEventsAndroid::MessagePush(&newEvent);
+  CWinEvents::MessagePush(&newEvent);
 }
 
 extern "C" void XBMC_Key(uint8_t code, uint16_t key, uint16_t modifiers, bool up)
@@ -133,5 +133,5 @@ extern "C" void XBMC_Key(uint8_t code, uint16_t key, uint16_t modifiers, bool up
   newEvent.key.keysym.mod = (XBMCMod)modifiers;
 
   CLog::Log(LOGDEBUG, "XBMC_Key(%u, %u, 0x%04X, %d)", code, key, modifiers, up);
-  CWinEventsAndroid::MessagePush(&newEvent);
+  CWinEvents::MessagePush(&newEvent);
 }
