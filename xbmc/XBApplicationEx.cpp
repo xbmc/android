@@ -72,19 +72,6 @@ INT CXBApplicationEx::Run()
 {
   CLog::Log(LOGNOTICE, "Running the application..." );
 
-  // Run xbmc
-  while (!m_bStop)
-  {
-    RunStep();
-  }
-  Destroy();
-
-  CLog::Log(LOGNOTICE, "application stopped..." );
-  return m_ExitCode;
-}
-
-VOID CXBApplicationEx::RunStep()
-{
   BYTE processExceptionCount = 0;
   BYTE frameMoveExceptionCount = 0;
   BYTE renderExceptionCount = 0;
@@ -93,6 +80,9 @@ VOID CXBApplicationEx::RunStep()
   const BYTE MAX_EXCEPTION_COUNT = 10;
 #endif
 
+  // Run xbmc
+  while (!m_bStop)
+  {
 #ifdef HAS_PERFORMANCE_SAMPLE
     CPerformanceSample sampleLoop("XBApplicationEx-loop");
 #endif
@@ -171,4 +161,9 @@ VOID CXBApplicationEx::RunStep()
       }
     }
 #endif
+  } // while (!m_bStop)
+  Destroy();
+
+  CLog::Log(LOGNOTICE, "application stopped..." );
+  return m_ExitCode;
 }
