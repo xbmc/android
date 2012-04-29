@@ -77,10 +77,30 @@ private:
     XBMC_Initialize_t xbmcInitialize;
     XBMC_Run_t xbmcRun;
     XBMC_Stop_t xbmcStop;
-    XBMC_Touch_t xbmcTouch;
     XBMC_Key_t xbmcKey;
+    XBMC_Touch_t xbmcTouch;
+    XBMC_TouchGestureCheck_t xbmcTouchGestureCheck;
+    XBMC_TouchGesture_t xbmcTouchGesture;
   } State;
 
   State m_state;
+  
+  class Touch {
+    public:
+      Touch() { reset(); }
+      
+      void reset() { x = -1.0f; y = -1.0f; time = -1; }
+      void copy(const Touch &other) { x = other.x; y = other.y; time = other.time; }
+      
+      float x;      // in pixels (With possible sub-pixels)
+      float y;      // in pixels (With possible sub-pixels)
+      int64_t time; // in nanoseconds
+  };
+  
+  Touch m_touchDown;
+  Touch m_touchMoveLast;
+  int   m_touchGesture;
+  bool  m_touchDownExecuted;
+  bool  m_touchMoving;
 };
 

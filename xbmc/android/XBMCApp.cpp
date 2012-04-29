@@ -29,6 +29,8 @@
 #include "xbmc_log.h"
 
 #include "input/XBMC_keysym.h"
+#include "guilib/Key.h"         // TODO: split this header up properly
+#include "guilib/Gestures.h"
 
 template<class T, void(T::*fn)()>
 void* thread_run(void* obj)
@@ -60,6 +62,9 @@ static KeyMap keyMap[] = {
 };
 
 CXBMCApp::CXBMCApp(ANativeActivity *nativeActivity)
+  : m_touchGesture(EVENT_RESULT_UNHANDLED),
+    m_touchDownExecuted(false),
+    m_touchMoving(false)
 {
   m_activity = nativeActivity;
   
@@ -76,8 +81,10 @@ CXBMCApp::CXBMCApp(ANativeActivity *nativeActivity)
   m_state.xbmcInitialize = NULL;
   m_state.xbmcRun = NULL;
   m_state.xbmcStop = NULL;
-  m_state.xbmcTouch = NULL;
   m_state.xbmcKey = NULL;
+  m_state.xbmcTouch = NULL;
+  m_state.xbmcTouchGesture = NULL;
+  m_state.xbmcTouchGestureCheck = NULL;
 
   if (pthread_mutex_init(&m_state.mutex, NULL) != 0)
   {
@@ -94,10 +101,13 @@ CXBMCApp::CXBMCApp(ANativeActivity *nativeActivity)
   m_state.xbmcInitialize = (XBMC_Initialize_t)dlsym(soHandle, "XBMC_Initialize");
   m_state.xbmcRun = (XBMC_Run_t)dlsym(soHandle, "XBMC_Run");
   m_state.xbmcStop = (XBMC_Stop_t)dlsym(soHandle, "XBMC_Stop");
-  m_state.xbmcTouch = (XBMC_Touch_t)dlsym(soHandle, "XBMC_Touch");
   m_state.xbmcKey = (XBMC_Key_t)dlsym(soHandle, "XBMC_Key");
+  m_state.xbmcTouch = (XBMC_Touch_t)dlsym(soHandle, "XBMC_Touch");
+  m_state.xbmcTouchGesture = (XBMC_TouchGesture_t)dlsym(soHandle, "XBMC_TouchGesture");
+  m_state.xbmcTouchGestureCheck = (XBMC_TouchGestureCheck_t)dlsym(soHandle, "XBMC_TouchGestureCheck");
   if (m_state.xbmcInitialize == NULL || m_state.xbmcRun == NULL ||
-      m_state.xbmcStop == NULL || m_state.xbmcTouch == NULL || m_state.xbmcKey == NULL)
+      m_state.xbmcStop == NULL || m_state.xbmcKey == NULL ||
+      m_state.xbmcTouch == NULL || m_state.xbmcTouchGesture == NULL || m_state.xbmcTouchGestureCheck == NULL)
   {
     android_printf("CXBMCApp: could not find XBMC_* functions. Error: %s", dlerror());
     return;
@@ -322,28 +332,95 @@ bool CXBMCApp::onTouchEvent(AInputEvent* event)
   android_printf("%s", __PRETTY_FUNCTION__);
   if (event == NULL)
     return false;
+  
+  size_t numPointers = AMotionEvent_getPointerCount(event);
+  // TODO: Handle multi-touch (zoom/pinch/rotate)
+  if (numPointers <= 0 || numPointers > 1)
+  {
+    android_printf("XBMC can't handle multi-touch (%d pointers) yet", numPointers);
+    return false;
+  }
 
   float x = AMotionEvent_getX(event, 0);
   float y = AMotionEvent_getY(event, 0);
+  int64_t time = AMotionEvent_getEventTime(event);
+  
+  if (m_touchGesture == EVENT_RESULT_UNHANDLED)
+  {
+    m_touchGesture = m_state.xbmcTouchGestureCheck(x, y);
+    android_printf(" => m_touchGesture = %d", m_touchGesture);
+  }
 
   switch (AMotionEvent_getAction(event))
   {
     case AMOTION_EVENT_ACTION_DOWN:
-      android_printf("CXBMCApp: touch down (%f, %f)", x, y);
-      m_state.xbmcTouch((uint16_t)x, (uint16_t)y, false);
+      android_printf("CXBMCApp: touch down (%f, %f, %d)", x, y, numPointers);
+      m_touchDown.x = x;
+      m_touchDown.y = y;
+      m_touchDown.time = time;
+      m_touchMoving = false;
+      
+      if (m_touchGesture <= EVENT_RESULT_HANDLED)
+      {
+        m_state.xbmcTouch((uint16_t)m_touchDown.x, (uint16_t)m_touchDown.y, false);
+        m_touchGesture = EVENT_RESULT_HANDLED;
+        m_touchDownExecuted = true;
+      }
       return true;
 
     case AMOTION_EVENT_ACTION_UP:
-      android_printf("CXBMCApp: touch up (%f, %f)", x, y);
-      m_state.xbmcTouch((uint16_t)x, (uint16_t)y, true);
+      android_printf("CXBMCApp: touch up (%f, %f, %d)", x, y, numPointers);
+      if (m_touchDown.x < 0.0f || m_touchDown.y < 0.0f)
+        break;
+      
+      if (!m_touchMoving)
+      {
+        if (!m_touchDownExecuted)
+          m_state.xbmcTouch((uint16_t)m_touchDown.x, (uint16_t)m_touchDown.y, false);
+
+        m_state.xbmcTouch((uint16_t)x, (uint16_t)y, true);
+      }
+      else
+      {
+        float velocityX = 0.0f; // number of pixels per second
+        float velocityY = 0.0f; // number of pixels per second
+        int64_t timeDiff = time - m_touchDown.time;
+        if (timeDiff > 0)
+        {
+          velocityX = ((x - m_touchDown.x) * 1000000000) / timeDiff;
+          velocityY = ((y - m_touchDown.y) * 1000000000) / timeDiff;
+        }
+        m_state.xbmcTouchGesture(ACTION_GESTURE_END, velocityX, velocityY, x, y);
+      }
+      
+      m_touchDown.reset();
+      m_touchMoveLast.reset();
+      m_touchGesture = EVENT_RESULT_UNHANDLED;
+      m_touchDownExecuted = false;
+      m_touchMoving = false;
       return true;
 
     case AMOTION_EVENT_ACTION_MOVE:
-      android_printf("CXBMCApp: touch move (%f, %f)", x, y);
-      break;
+      android_printf("CXBMCApp: touch move (%f, %f, %d)", x, y, numPointers);
+      if (m_touchDown.x < 0.0f || m_touchDown.y < 0.0f ||
+          m_touchGesture <= EVENT_RESULT_HANDLED)
+        break;
+      
+      if (!m_touchMoving)
+      {
+        m_state.xbmcTouchGesture(ACTION_GESTURE_BEGIN, m_touchDown.x, m_touchDown.y, 0.0f, 0.0f);
+        m_touchMoveLast.copy(m_touchDown);
+        m_touchDownExecuted = true;
+        m_touchMoving = true;
+      }
+      
+      m_state.xbmcTouchGesture(ACTION_GESTURE_PAN, x, y, x - m_touchMoveLast.x, y - m_touchMoveLast.y);
+      m_touchMoveLast.x = x;
+      m_touchMoveLast.y = y;
+      return true;
 
     default:
-      android_printf("CXBMCApp: touch unknown (%f, %f)", x, y);
+      android_printf("CXBMCApp: touch unknown (%f, %f, %d)", x, y, numPointers);
       break;
   }
 

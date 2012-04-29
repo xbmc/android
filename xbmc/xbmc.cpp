@@ -42,6 +42,8 @@
 #include "Util.h"
 #endif
 #include "windowing/WinEvents.h"
+#include "guilib/Key.h"
+#include "guilib/GUIWindowManager.h"
 
 extern "C" int XBMC_Initialize(XBMC_PLATFORM *platform, int argc, const char** argv)
 {
@@ -103,22 +105,6 @@ extern "C" void XBMC_Stop()
   g_application.getApplicationMessenger().Quit();
 }
 
-extern "C" void XBMC_Touch(uint16_t x, uint16_t y, bool up)
-{
-  XBMC_Event newEvent;
-  memset(&newEvent, 0, sizeof(newEvent));
-
-  unsigned char type = up ? XBMC_MOUSEBUTTONUP : XBMC_MOUSEBUTTONDOWN;
-  newEvent.type = type;
-  newEvent.button.type = type;
-  newEvent.button.button = XBMC_BUTTON_LEFT;
-  newEvent.button.x = x;
-  newEvent.button.y = y;
-
-  CLog::Log(LOGDEBUG, "XBMC_Touch(%u, %u, %d)", x, y, up);
-  CWinEvents::MessagePush(&newEvent);
-}
-
 extern "C" void XBMC_Key(uint8_t code, uint16_t key, uint16_t modifiers, bool up)
 {
   XBMC_Event newEvent;
@@ -135,3 +121,41 @@ extern "C" void XBMC_Key(uint8_t code, uint16_t key, uint16_t modifiers, bool up
   CLog::Log(LOGDEBUG, "XBMC_Key(%u, %u, 0x%04X, %d)", code, key, modifiers, up);
   CWinEvents::MessagePush(&newEvent);
 }
+
+extern "C" void XBMC_Touch(uint16_t x, uint16_t y, bool up)
+{
+  XBMC_Event newEvent;
+  memset(&newEvent, 0, sizeof(newEvent));
+
+  unsigned char type = up ? XBMC_MOUSEBUTTONUP : XBMC_MOUSEBUTTONDOWN;
+  newEvent.type = type;
+  newEvent.button.type = type;
+  newEvent.button.button = XBMC_BUTTON_LEFT;
+  newEvent.button.x = x;
+  newEvent.button.y = y;
+
+  CLog::Log(LOGDEBUG, "XBMC_Touch(%u, %u, %d)", x, y, up);
+  CWinEvents::MessagePush(&newEvent);
+}
+
+extern "C" void XBMC_TouchGesture(int32_t action, float posX, float posY, float offsetX, float offsetY)
+{
+  CLog::Log(LOGDEBUG, "XBMC_TouchGesture(%d, %f, %f, %f, %f)", action, posX, posY, offsetX, offsetY);
+  if (action == ACTION_GESTURE_BEGIN)
+    g_application.getApplicationMessenger().SendAction(CAction(action, 0, posX, posY, 0, 0), WINDOW_INVALID, false);
+  else if (action == ACTION_GESTURE_PAN)
+    g_application.getApplicationMessenger().SendAction(CAction(action, 0, posX, posY, offsetX, offsetY), WINDOW_INVALID, false);
+  else if (action == ACTION_GESTURE_END)
+    g_application.getApplicationMessenger().SendAction(CAction(action, 0, posX, posY, offsetX, offsetY), WINDOW_INVALID, false);
+}
+
+extern "C" int XBMC_TouchGestureCheck(float posX, float posY)
+{
+  CLog::Log(LOGDEBUG, "XBMC_TouchGestureCheck(%f, %f)", posX, posY);
+  CGUIMessage message(GUI_MSG_GESTURE_NOTIFY, 0, 0, posX, posY);
+  if (g_windowManager.SendMessage(message))
+    return message.GetParam1();
+  
+  return EVENT_RESULT_UNHANDLED;
+}
+
