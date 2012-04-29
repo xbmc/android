@@ -41,10 +41,12 @@ struct TVShowRegexp
 {
   bool byDate;
   CStdString regexp;
-  TVShowRegexp(bool d, const CStdString& r)
+  int defaultSeason;
+  TVShowRegexp(bool d, const CStdString& r, int s = 1)
   {
     byDate = d;
     regexp = r;
+    defaultSeason = s;
   }
 };
 
@@ -141,6 +143,7 @@ class CAdvancedSettings
     bool m_DXVACheckCompatibility;
     bool m_DXVACheckCompatibilityPresent;
     bool m_DXVAForceProcessorRenderer;
+    bool m_DXVANoDeintProcForProgressive;
     int  m_videoFpsDetect;
 
     CStdString m_videoDefaultPlayer;

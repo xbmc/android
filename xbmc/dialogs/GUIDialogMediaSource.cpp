@@ -95,7 +95,6 @@ bool CGUIDialogMediaSource::OnMessage(CGUIMessage& message)
   case GUI_MSG_WINDOW_INIT:
     {
       m_confirmed = false;
-      m_bRunScan = false;
       m_bNameChanged=false;
       UpdateButtons();
     }
@@ -149,16 +148,6 @@ bool CGUIDialogMediaSource::ShowAndAddMediaSource(const CStdString &type)
       share.m_strThumbnailImage = dialog->m_paths->Get(0)->GetThumbnailImage();
     }
     g_settings.AddShare(type, share);
-
-    if (type == "video")
-    {
-      if (dialog->m_bRunScan)
-      {
-        CGUIDialogVideoScan* scanner = (CGUIDialogVideoScan*)g_windowManager.GetWindow(WINDOW_DIALOG_VIDEO_SCAN);
-        if (scanner)
-          scanner->StartScanning(share.strPath, true);
-      }
-    }
   }
   dialog->m_paths->Clear();
   return confirmed;
@@ -338,14 +327,14 @@ void CGUIDialogMediaSource::OnOK()
   VECSOURCES *shares = g_settings.GetSourcesFromType(m_type);
   if (shares)
     shares->push_back(share);
-  if (share.strPath.Left(9).Equals("plugin://") || CDirectory::GetDirectory(share.strPath, items, "", false, true) || CGUIDialogYesNo::ShowAndGetInput(1001,1025,1003,1004))
+  if (share.strPath.Left(9).Equals("plugin://") || CDirectory::GetDirectory(share.strPath, items, "", DIR_FLAG_NO_FILE_DIRS | DIR_FLAG_ALLOW_PROMPT) || CGUIDialogYesNo::ShowAndGetInput(1001,1025,1003,1004))
   {
     m_confirmed = true;
     Close();
     if (m_type == "video" && !URIUtils::IsLiveTV(share.strPath) && 
         !share.strPath.Left(6).Equals("rss://"))
     {
-      CGUIWindowVideoBase::OnAssignContent(share.strPath, 0, m_info, m_settings);
+      CGUIWindowVideoBase::OnAssignContent(share.strPath);
     }
   }
 

@@ -534,7 +534,9 @@ void CGUIDialogAddonSettings::SaveSettings(void)
     m_addon->UpdateSetting(i->first, i->second);
 
   if (m_saveToDisk)
+  { 
     m_addon->SaveSettings();
+  } 
 }
 
 void CGUIDialogAddonSettings::FreeSections()
@@ -916,9 +918,9 @@ vector<CStdString> CGUIDialogAddonSettings::GetFileEnumValues(const CStdString &
   // fetch directory
   CFileItemList items;
   if (!mask.IsEmpty())
-    CDirectory::GetDirectory(fullPath, items, mask, false);
+    CDirectory::GetDirectory(fullPath, items, mask, XFILE::DIR_FLAG_NO_FILE_DIRS);
   else
-    CDirectory::GetDirectory(fullPath, items, "", false);
+    CDirectory::GetDirectory(fullPath, items, "", XFILE::DIR_FLAG_NO_FILE_DIRS);
 
   vector<CStdString> values;
   for (int i = 0; i < items.Size(); ++i)
@@ -1070,10 +1072,9 @@ CStdString CGUIDialogAddonSettings::GetString(const char *value, bool subSetting
 {
   if (!value)
     return "";
-  int id = atoi(value);
   CStdString prefix(subSetting ? "- " : "");
-  if (id > 0)
-    return prefix + m_addon->GetString(id);
+  if (StringUtils::IsNaturalNumber(value))
+    return prefix + m_addon->GetString(atoi(value));
   return prefix + value;
 }
 

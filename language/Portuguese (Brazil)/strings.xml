@@ -2,7 +2,7 @@
 <!--Language file translated with Team XBMC Translator[wm] -->
 <!--Translator: Fabiano Santiago (fabianosan), bugre (wm) -->
 <!--Email: fabianosan@hotmail.com, wxxx333-nospam-at-gmail.com -->
-<!--Updated on 15/02/2012 by wcampos -->
+<!--Updated on 28/02/2012 by wcampos -->
 <!--Updated on 28/08/2011 by fabianosan -->
 <!--Updated on 15/11/2010 by bugre -->
 <!--Based on English 4a0e4931310c8957d73ffec0cf6fdfa9292bb8d4 (08.02.2012)-->
@@ -810,7 +810,7 @@
   <string id="1257">Gostaria de conectar ao sistema auto detectado?</string>
 
   <string id="1260">Anunciar estes serviços para outros sistemas via Zeroconf</string>
-  <string id="1270">Permitir ao XBMC receber contéudo AirPlay</string>
+  <string id="1270">Permitir ao XBMC receber conteúdo AirPlay</string>
   <string id="1271">Nome Equipamento</string>
   <string id="1272">- Usar senha para proteção</string>
 
@@ -1349,10 +1349,10 @@
   <string id="14082">Exibir informações EXIF de imagens</string>
   <string id="14083">Usar janela maximizada ao invés de tela cheia</string>
   <string id="14084">Enfileirar músicas ao selecionar</string>
-  <string id="14085">Tocar CDs de áudio automaticamente</string>
-  <string id="14086">Tocar</string>
+  <string id="14085"></string>
+  <string id="14086">Reproduzir</string>
   <string id="14087">DVDs</string>
-  <string id="14088">Tocar DVDs automaticamente</string>
+  <string id="14088">Reproduzir DVDs automaticamente</string>
   <string id="14089">Fonte para uso em legendas de texto</string>
   <string id="14090">Internacional</string>
   <string id="14091">Conjunto de caracteres</string>
@@ -1360,6 +1360,10 @@
   <string id="14093">Segurança</string>
   <string id="14094">Disp. de Entrada</string>
   <string id="14095">Econ. de energia</string>
+  <string id="14096">Ripar</string>
+  <string id="14097">Ação ao Inserir Áudio CD</string>
+  <string id="14098">Reproduzir</string>
+  <string id="14099">Ejetar o disco quando ripar CD tiver sido concluído</string>
 
   <string id="15015">Remove</string>
   <string id="15016">Jogos</string>

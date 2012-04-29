@@ -521,7 +521,7 @@ void CCoreAudioMixMap::Rebuild(AudioChannelLayout& inLayout, AudioChannelLayout&
     if (!ret)
     {
       m_isValid = true;
-      CLog::Log(LOGDEBUG, "CCoreAudioMixMap::Rebuild: Unable to locate pre-defined mixing matrix. Trying to build one explicitly...");
+      CLog::Log(LOGDEBUG, "CCoreAudioMixMap::Rebuild: Using pre-defined mixing matrix.");
       return; // Nothing else to do...a map already exists
     }
     
@@ -540,6 +540,7 @@ bool CCoreAudioMixMap::BuildExplicit(AudioChannelLayout& inLayout, AudioChannelL
   // Initialize map
   // map[in][out] = mix-level of input_channel[in] into output_channel[out]
   m_pMap = (Float32*)calloc(sizeof(Float32), inLayout.mNumberChannelDescriptions * outLayout.mNumberChannelDescriptions);
+  int mappedChannels = 0;
   
   // Initialize array of output channel locations
   int outPos[MAX_AUDIO_CHANNEL_LABEL + 1];
@@ -570,6 +571,7 @@ bool CCoreAudioMixMap::BuildExplicit(AudioChannelLayout& inLayout, AudioChannelL
       // map[in][out] = map[in * outCount + out]
       CLog::Log(LOGDEBUG, "CCoreAudioMixMap::BuildExplicit:\tin[%d] -> out[%d] @ %0.02f", channel, outIndex, 1.0f);
       m_pMap[channel * outLayout.mNumberChannelDescriptions + outIndex] = 1.0f;
+      mappedChannels++;
     }
     else // The input channel does not exist in the output layout. Decide where to route it...
     {
@@ -603,12 +605,19 @@ bool CCoreAudioMixMap::BuildExplicit(AudioChannelLayout& inLayout, AudioChannelL
             int outIndex = outPos[patch->label];
             CLog::Log(LOGDEBUG, "CCoreAudioMixMap::BuildExplicit:\tin[%d] -> out[%d] @ %0.02f", channel, outIndex, patch->coeff);
             m_pMap[channel * outLayout.mNumberChannelDescriptions + outIndex] = patch->coeff;
+            mappedChannels++;
           }
           break;
         }
       }
     }
-  }    
+  }
+  if (!mappedChannels)
+  {
+    CLog::Log(LOGINFO, "CCoreAudioMixMap::BuildExplicit: No valid patches found.");
+    return false;
+  }
+
   CLog::Log(LOGINFO, "CCoreAudioMixMap::BuildExplicit: Completed explicit channel map.");
   return true;
 }
@@ -799,8 +808,18 @@ bool CCoreAudioRenderer::Initialize(IAudioCallback* pCallback, const CStdString&
     
     // Setup the callback function that the AudioUnit will use to request data	
     ICoreAudioSource* pSource = this;
-    if (m_AUCompressor.IsInitialized()) // A mixer+compressor are in-use
-      pSource = &m_AUCompressor;
+    if (m_init_state.bIsMusic)
+    {
+      // A mixer is in-use
+      if (m_MixerUnit.IsInitialized())
+        pSource = &m_MixerUnit;
+    }
+    else
+    {
+      // A mixer+compressor are in-use
+      if (m_AUCompressor.IsInitialized())
+        pSource = &m_AUCompressor;
+    }
     if (!m_AUOutput.SetInputSource(pSource))
       return false;      
     
@@ -1249,7 +1268,43 @@ bool CCoreAudioRenderer::InitializePCM(UInt32 channels, UInt32 samplesPerSecond,
     CCoreAudioChannelLayout deviceLayout;
     if (!m_AudioDevice.GetPreferredChannelLayout(deviceLayout))
       return false;
+        
+    // Detect devices with no Speaker Configuration
+    bool undefinedLayout = true;
+    for (UInt32 c = 0; c < deviceLayout.GetChannelCount(); c++)
+    {
+      // If this is a known channel, then we can't have an undefined layout
+      if (deviceLayout.GetChannelLabel(c) != kAudioChannelLabel_Unknown)
+      {
+        undefinedLayout = false;
+        break;
+      }
+    }
+    if (undefinedLayout)
+    {
+      AudioChannelLayoutTag newLayoutTag = kAudioChannelLayoutTag_UseChannelBitmap;
+      if (g_sysinfo.IsAppleTV()) // AppleTV is only Stereo
+        newLayoutTag = kAudioChannelLayoutTag_Stereo;
+      else  // AppleTV users cannot do this...
+      {
+        CLog::Log(LOGERROR, "CCoreAudioRenderer::InitializePCM: The selected device (%s) does not have a speaker layout configured. Using the default layout.", m_AudioDevice.GetName());
+        CLog::Log(LOGERROR, "CCoreAudioRenderer::InitializePCM: \tPlease go to Applications -> Utilities -> Audio MIDI Setup, and select 'Configure Speakers...'");
 
+        // Pick a default layout based on the number of channels
+        newLayoutTag = GetDefaultLayout(deviceLayout.GetChannelCount());
+        if (newLayoutTag == kAudioChannelLayoutTag_UseChannelBitmap) // Undefined, give up...
+        {
+          CLog::Log(LOGERROR, "CCoreAudioRenderer::InitializePCM: Unable to find a suitable default layout for this device.");
+          return false;
+        }
+      }
+      if (!deviceLayout.SetLayout(newLayoutTag))
+      {
+        CLog::Log(LOGERROR, "CCoreAudioRenderer::InitializePCM: Unable to set channel layout from tag.");
+        return false;        
+      }
+    }
+    
     CStdString strOutLayout;
     CLog::Log(LOGDEBUG, "CCoreAudioRenderer::InitializePCM: Output Device Layout: %s", CCoreAudioChannelLayout::ChannelLayoutToString(*(AudioChannelLayout*)deviceLayout, strOutLayout));  
 
@@ -1266,7 +1321,7 @@ bool CCoreAudioRenderer::InitializePCM(UInt32 channels, UInt32 samplesPerSecond,
     //    if (CCoreAudioChannelLayout::GetChannelCountForLayout(guiLayout) < CCoreAudioChannelLayout::GetChannelCountForLayout(deviceLayout))
     //      deviceLayout.CopyLayout(guiLayout);
     
-    // TODO: Skip matrix mixer if input/output are compatible
+    // TODO: Skip matrix mixer if input/output are compatible -> Add a IsPurePassthrough() method to the CCoreAudioMixMap class
 
     AudioChannelLayout* layoutCandidates[] = {(AudioChannelLayout*)deviceLayout, (AudioChannelLayout*)userLayout, NULL};
 
@@ -1336,20 +1391,23 @@ bool CCoreAudioRenderer::InitializePCM(UInt32 channels, UInt32 samplesPerSecond,
       CLog::Log(LOGDEBUG, "CCoreAudioRenderer::InitializePCM: "
         "Mixer Output Format: %d channels, %0.1f kHz, %d bits, %d bytes per frame",
         (int)fmt.mChannelsPerFrame, fmt.mSampleRate / 1000.0f, (int)fmt.mBitsPerChannel, (int)fmt.mBytesPerFrame);
-      
-      // Set-up the compander
-      if (!m_AUCompressor.Open() ||
-          !m_AUCompressor.SetOutputFormat(&fmt) ||
-          !m_AUCompressor.SetInputFormat(&fmt) ||
-          !m_AUCompressor.SetInputSource(&m_MixerUnit) || // The compressor gets its data from the mixer
-          !m_AUCompressor.Initialize())
-        return false;
-      
-      // Configure compander parameters
-      // TODO: Uncomment when limiter params are pushed for other platforms
-      m_AUCompressor.SetAttackTime(g_advancedSettings.m_limiterHold);
-      m_AUCompressor.SetReleaseTime(g_advancedSettings.m_limiterRelease);
-      
+
+      // only enable the compressor if not playing music
+      if (!m_init_state.bIsMusic)
+      {
+        // Set-up the compander
+        if (!m_AUCompressor.Open() ||
+            !m_AUCompressor.SetOutputFormat(&fmt) ||
+            !m_AUCompressor.SetInputFormat(&fmt)  ||
+            !m_AUCompressor.SetInputSource(&m_MixerUnit) || // The compressor gets its data from the mixer
+            !m_AUCompressor.Initialize())
+          return false;
+        
+        // Configure compander parameters
+        m_AUCompressor.SetAttackTime(g_advancedSettings.m_limiterHold);
+        m_AUCompressor.SetReleaseTime(g_advancedSettings.m_limiterRelease);
+      }
+
       // Copy format for the Output AU
       outputFormat = fmt;
     }
@@ -1560,6 +1618,33 @@ void CCoreAudioRenderer::OnResetDevice()
     }
   }
 }
+
+AudioChannelLayoutTag CCoreAudioRenderer::GetDefaultLayout(UInt32 channelCount)
+{
+  switch(channelCount)
+  {
+    case 1:    
+      return kAudioChannelLayoutTag_Mono; // 1.0 
+    case 2:    
+      return kAudioChannelLayoutTag_Stereo; // 2.0
+    case 3:    
+      return kAudioChannelLayoutTag_DVD_4; // 2.1
+    case 4:    
+      return kAudioChannelLayoutTag_DVD_10; // 3.1
+    case 5:    
+      return kAudioChannelLayoutTag_DVD_6; // 4.1
+    case 6:    
+      return kAudioChannelLayoutTag_MPEG_5_1_A; // 5.1
+    case 7:
+      return kAudioChannelLayoutTag_AudioUnit_7_0; // 7.0
+    case 8:    
+      return kAudioChannelLayoutTag_MPEG_7_1_A; // 7.1
+    case 0:    
+    default:
+      return kAudioChannelLayoutTag_UseChannelBitmap; // Basically 'Undefined'
+  }
+}
+
 #endif
 #endif
 

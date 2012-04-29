@@ -25,6 +25,7 @@
 #include <arpa/inet.h>
 #include "DllLibPlist.h"
 #include "utils/log.h"
+#include "utils/URIUtils.h"
 #include "utils/StringUtils.h"
 #include "threads/SingleLock.h"
 #include "filesystem/File.h"
@@ -699,8 +700,11 @@ int CAirPlayServer::CTCPClient::ProcessRequest( CStdString& responseHeader,
       {
         int oldVolume = g_application.GetVolume();
         volume *= 100;
-        g_application.SetVolume(volume);
-        g_application.getApplicationMessenger().ShowVolumeBar(oldVolume < volume);
+        if(oldVolume != (int)volume)
+        {
+          g_application.SetVolume(volume);          
+          g_application.getApplicationMessenger().ShowVolumeBar(oldVolume < volume);
+        }
       }
   }
 
@@ -790,7 +794,11 @@ int CAirPlayServer::CTCPClient::ProcessRequest( CStdString& responseHeader,
 
     if (status != AIRPLAY_STATUS_NEED_AUTH)
     {
-      CFileItem fileToPlay(location + "|User-Agent=AppleCoreMedia/1.0.0.8F455 (Apple†TV; U; CPU OS 4_3 like Mac OS X; de_de)", false);
+      CStdString userAgent="AppleCoreMedia/1.0.0.8F455 (AppleTV; U; CPU OS 4_3 like Mac OS X; de_de)";
+      CURL::Encode(userAgent);
+      location += "|User-Agent=" + userAgent;
+
+      CFileItem fileToPlay(location, false);
       fileToPlay.SetProperty("StartPercent", position*100.0f);
       g_application.getApplicationMessenger().MediaPlay(fileToPlay);
       ComposeReverseEvent(reverseHeader, reverseBody, sessionId, EVENT_PLAYING);
@@ -832,7 +840,7 @@ int CAirPlayServer::CTCPClient::ProcessRequest( CStdString& responseHeader,
       
       if (found && g_application.m_pPlayer)
       {
-        __int64 position = (__int64) (atof(found + strlen("position=")) * 1000.0);
+        int64_t position = (int64_t) (atof(found + strlen("position=")) * 1000.0);
         g_application.m_pPlayer->SeekTime(position);
         CLog::Log(LOGDEBUG, "AIRPLAY: got POST request %s with pos %"PRId64, uri.c_str(), position);
       }
@@ -873,7 +881,17 @@ int CAirPlayServer::CTCPClient::ProcessRequest( CStdString& responseHeader,
     else if (m_httpParser->getContentLength() > 0)
     {
       XFILE::CFile tmpFile;
-      if (tmpFile.OpenForWrite("special://temp/airplay_photo.jpg", true))
+      CStdString tmpFileName = "special://temp/airplay_photo.jpg";
+
+      if( m_httpParser->getContentLength() > 3 &&
+          m_httpParser->getBody()[1] == 'P' &&
+          m_httpParser->getBody()[2] == 'N' &&
+          m_httpParser->getBody()[3] == 'G')
+      {
+        tmpFileName = "special://temp/airplay_photo.png";
+      }
+
+      if (tmpFile.OpenForWrite(tmpFileName, true))
       {
         int writtenBytes=0;
         writtenBytes = tmpFile.Write(m_httpParser->getBody(), m_httpParser->getContentLength());
@@ -881,7 +899,7 @@ int CAirPlayServer::CTCPClient::ProcessRequest( CStdString& responseHeader,
 
         if (writtenBytes > 0 && (unsigned int)writtenBytes == m_httpParser->getContentLength())
         {
-          g_application.getApplicationMessenger().PictureShow("special://temp/airplay_photo.jpg");
+          g_application.getApplicationMessenger().PictureShow(tmpFileName);
         }
         else
         {
