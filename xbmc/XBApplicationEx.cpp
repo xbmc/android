@@ -93,9 +93,6 @@ bool CXBApplicationEx::RunStep()
   const BYTE MAX_EXCEPTION_COUNT = 10;
 #endif
 
-  if (m_bStop)
-    return false;
-
 #ifdef HAS_PERFORMANCE_SAMPLE
   CPerformanceSample sampleLoop("XBApplicationEx-loop");
 #endif
