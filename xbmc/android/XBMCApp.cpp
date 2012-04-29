@@ -37,6 +37,22 @@ void* thread_run(void* obj)
   return NULL;
 }
 
+typedef struct {
+  int32_t nativeKey;
+  int16_t xbmcKey;
+} KeyMap;
+
+static KeyMap keyMap[] = {
+  { AKEYCODE_DPAD_UP      , XBMCK_UP },
+  { AKEYCODE_DPAD_DOWN    , XBMCK_DOWN },
+  { AKEYCODE_DPAD_LEFT    , XBMCK_LEFT },
+  { AKEYCODE_DPAD_RIGHT   , XBMCK_RIGHT },
+  { AKEYCODE_VOLUME_UP    , XBMCK_VOLUME_UP },
+  { AKEYCODE_VOLUME_DOWN  , XBMCK_VOLUME_DOWN },
+  { AKEYCODE_MUTE         , XBMCK_VOLUME_MUTE },
+  { AKEYCODE_MENU         , XBMCK_BACKSPACE }
+};
+
 CXBMCApp::CXBMCApp(ANativeActivity *nativeActivity)
 {
   m_activity = nativeActivity;
@@ -226,46 +242,22 @@ bool CXBMCApp::onKeyboardEvent(AInputEvent* event)
   int32_t flags = AKeyEvent_getFlags(event);
   int32_t state = AKeyEvent_getMetaState(event);
   int32_t repeatCount = AKeyEvent_getRepeatCount(event);
+  
+  // never ever try to handle the back, home or power button
+  if (keycode == AKEYCODE_BACK ||
+    keycode == AKEYCODE_HOME ||
+    keycode == AKEYCODE_POWER)
+    return false;
 
   // Check if we got some special key
   uint16_t sym = 0;
-  switch (keycode)
+  for (unsigned int index = 0; index < sizeof(keyMap) / sizeof(KeyMap); index++)
   {
-    case AKEYCODE_DPAD_UP:
-      sym = XBMCK_UP;
+    if (keycode == keyMap[index].nativeKey)
+    {
+      sym = keyMap[index].xbmcKey;
       break;
-
-    case AKEYCODE_DPAD_DOWN:
-      sym = XBMCK_DOWN;
-      break;
-
-    case AKEYCODE_DPAD_LEFT:
-      sym = XBMCK_LEFT;
-      break;
-
-    case AKEYCODE_DPAD_RIGHT:
-      sym = XBMCK_RIGHT;
-      break;
-
-    case AKEYCODE_VOLUME_UP:
-      sym = XBMCK_VOLUME_UP;
-      break;
-
-    case AKEYCODE_VOLUME_DOWN:
-      sym = XBMCK_VOLUME_DOWN;
-      break;
-
-    case AKEYCODE_MUTE:
-      sym = XBMCK_VOLUME_MUTE;
-      break;
-
-    case AKEYCODE_MENU:
-      sym = XBMCK_HOME;
-      break;
-
-    // TODO: Handle more
-    default:
-      break;
+    }
   }
 
   uint16_t modifiers = 0;
@@ -280,12 +272,6 @@ bool CXBMCApp::onKeyboardEvent(AInputEvent* event)
   /* TODO:
   if (state & AMETA_SYM_ON)
     modifiers |= 0x000?;*/
-
-  // never ever try to handle the back, home or power button
-  if (keycode == AKEYCODE_BACK ||
-      keycode == AKEYCODE_HOME ||
-      keycode == AKEYCODE_POWER)
-    return false;
 
   switch (AKeyEvent_getAction(event))
   {
@@ -341,12 +327,12 @@ bool CXBMCApp::onTouchEvent(AInputEvent* event)
     case AMOTION_EVENT_ACTION_DOWN:
       android_printf("CXBMCApp: touch down (%f, %f)", x, y);
       m_state.xbmcTouch((uint16_t)x, (uint16_t)y, false);
-      break;
+      return true;
 
     case AMOTION_EVENT_ACTION_UP:
       android_printf("CXBMCApp: touch up (%f, %f)", x, y);
       m_state.xbmcTouch((uint16_t)x, (uint16_t)y, true);
-      break;
+      return true;
 
     case AMOTION_EVENT_ACTION_MOVE:
       android_printf("CXBMCApp: touch move (%f, %f)", x, y);
@@ -357,7 +343,6 @@ bool CXBMCApp::onTouchEvent(AInputEvent* event)
       break;
   }
 
-  // TODO: We should return true if XBMC actually handled the key press
   return false;
 }
 
@@ -430,4 +415,3 @@ void CXBMCApp::join()
   else
     pthread_mutex_unlock(&m_state.mutex);
 }
-
