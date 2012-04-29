@@ -37,9 +37,19 @@ void* thread_run(void* obj)
   return NULL;
 }
 
-CXBMCApp::CXBMCApp()
+CXBMCApp::CXBMCApp(ANativeActivity *nativeActivity)
 {
+  m_activity = nativeActivity;
+  
+  if (m_activity == NULL)
+  {
+    android_printf("CXBMCApp: invalid ANativeActivity instance");
+    exit(1);
+    return;
+  }
+  
   m_state.result = ActivityUnknown;
+  m_state.stopping = false;
   m_state.platform = NULL;
   m_state.xbmcInitialize = NULL;
   m_state.xbmcRun = NULL;
@@ -115,21 +125,6 @@ void CXBMCApp::onDeactivate()
 {
   android_printf("%s", __PRETTY_FUNCTION__);
   // TODO
-}
-
-ActivityResult CXBMCApp::onStep()
-{
-  ActivityResult ret = ActivityOK;
-  pthread_mutex_lock(&m_state.mutex);
-  if (m_state.result != ActivityUnknown)
-  {
-    android_printf("%s: XBMC thread finished with %d", __PRETTY_FUNCTION__, (int)m_state.result);
-    ret = m_state.result;
-  }
-  pthread_mutex_unlock(&m_state.mutex);
-
-  // TODO
-  return ret;
 }
 
 void CXBMCApp::onStart()
@@ -403,26 +398,36 @@ void CXBMCApp::run()
     return;
   }
 
+  bool finishActivity = false;
   pthread_mutex_lock(&m_state.mutex);
   m_state.result = ActivityExit;
+  finishActivity = !m_state.stopping;
   pthread_mutex_unlock(&m_state.mutex);
+  
+  if (finishActivity)
+  {
+    android_printf(" => calling ANativeActivity_finish()");
+    ANativeActivity_finish(m_activity);
+  }
 }
 
 void CXBMCApp::join()
 {
   android_printf("%s", __PRETTY_FUNCTION__);
-  ActivityResult tempResult;
-  pthread_mutex_lock(&m_state.mutex);
-  tempResult = m_state.result;
-  pthread_mutex_unlock(&m_state.mutex);
 
-  if (tempResult == ActivityUnknown)
+  pthread_mutex_lock(&m_state.mutex);
+  if (m_state.result == ActivityUnknown)
   {
+    m_state.stopping = true;
+    pthread_mutex_unlock(&m_state.mutex);
+    
     android_printf(" => executing XBMC_Stop");
     m_state.xbmcStop();
     android_printf(" => waiting for XBMC to finish");
     pthread_join(m_state.thread, NULL);
     android_printf(" => XBMC finished");
   }
+  else
+    pthread_mutex_unlock(&m_state.mutex);
 }
 

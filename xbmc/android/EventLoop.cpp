@@ -22,7 +22,7 @@
 #include "xbmc_log.h"
 
 CEventLoop::CEventLoop(android_app* application)
-  : m_enabled(false), m_quit(false),
+  : m_enabled(false),
     m_application(application),
     m_activityHandler(NULL), m_inputHandler(NULL)
 {
@@ -47,7 +47,7 @@ void CEventLoop::run(IActivityHandler &activityHandler, IInputHandler &inputHand
   while (1)
   {
     // We will block forever waiting for events.
-    while ((ident = ALooper_pollAll(m_enabled ? 0 : -1, NULL, &events, (void**)&source)) >= 0)
+    while ((ident = ALooper_pollAll(-1, NULL, &events, (void**)&source)) >= 0)
     {
       // Process this event.
       if (source != NULL)
@@ -60,16 +60,6 @@ void CEventLoop::run(IActivityHandler &activityHandler, IInputHandler &inputHand
         return;
       }
     }
-
-    if (m_enabled && !m_quit)
-    {
-      if (m_activityHandler->onStep() != ActivityOK)
-      {
-        android_printf("CEventLoop: manually finishing activity");
-        m_quit = true;
-        ANativeActivity_finish(m_application->activity);
-      }
-    }
   }
 }
 
@@ -78,12 +68,10 @@ void CEventLoop::activate()
   if (m_enabled || m_application->window == NULL)
     return;
 
-  m_quit = false;
   m_enabled = true;
   if (m_activityHandler->onActivate() != ActivityOK)
   {
     android_printf("CEventLoop: IActivityHandler::onActivate() failed");
-    m_quit = true;
     ANativeActivity_finish(m_application->activity);
   }
 }

@@ -37,7 +37,6 @@ class IActivityHandler
 public:
   virtual ActivityResult onActivate() = 0;
   virtual void onDeactivate() = 0;
-  virtual ActivityResult onStep() = 0;
 
   virtual void onStart() {}
   virtual void onResume() {}

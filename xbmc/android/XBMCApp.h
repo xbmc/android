@@ -21,6 +21,8 @@
 
 #include <pthread.h>
 
+#include <android/native_activity.h>
+
 #include "IActivityHandler.h"
 #include "IInputHandler.h"
 
@@ -29,16 +31,16 @@
 class CXBMCApp : public IActivityHandler, public IInputHandler
 {
 public:
-  CXBMCApp();
+  CXBMCApp(ANativeActivity *nativeActivity);
   virtual ~CXBMCApp();
 
-  bool isValid() { return m_state.platform != NULL &&
+  bool isValid() { return m_activity != NULL &&
+                          m_state.platform != NULL &&
                           m_state.xbmcInitialize != NULL &&
                           m_state.xbmcRun != NULL; }
 
   ActivityResult onActivate();
   void onDeactivate();
-  ActivityResult onStep();
 
   void onStart();
   void onResume();
@@ -62,11 +64,14 @@ public:
 private:
   void run();
   void join();
+  
+  ANativeActivity *m_activity;
 
   typedef struct {
     pthread_t thread;
     pthread_mutex_t mutex;
     ActivityResult result;
+    bool stopping;
 
     XBMC_PLATFORM* platform;
     XBMC_Initialize_t xbmcInitialize;

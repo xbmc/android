@@ -114,7 +114,7 @@ extern void android_main(struct android_app* state)
   setup_env(state);
 
   CEventLoop eventLoop(state);
-  CXBMCApp xbmcApp;
+  CXBMCApp xbmcApp(state->activity);
   if (xbmcApp.isValid())
     eventLoop.run(xbmcApp, xbmcApp);
   else
