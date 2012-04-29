@@ -122,5 +122,10 @@ extern void android_main(struct android_app* state)
 
   android_printf("android_main: Exiting");
   state->activity->vm->DetachCurrentThread();
-  return;
+  // We need to call exit() so that all loaded libraries are properly unloaded
+  // otherwise on the next start of the Activity android will simple re-use
+  // those loaded libs in the state they were in when we quit XBMC last time
+  // which will lead to crashes because of global/static classes that haven't
+  // been properly uninitialized
+  exit(0);
 }
