@@ -39,13 +39,20 @@ void* thread_run(void* obj)
 
 CXBMCApp::CXBMCApp()
 {
-  m_state.initialized = false;
+  m_state.result = ActivityUnknown;
   m_state.platform = NULL;
   m_state.xbmcInitialize = NULL;
-  m_state.xbmcStep = NULL;
+  m_state.xbmcRun = NULL;
   m_state.xbmcStop = NULL;
   m_state.xbmcTouch = NULL;
   m_state.xbmcKey = NULL;
+
+  if (pthread_mutex_init(&m_state.mutex, NULL) != 0)
+  {
+    android_printf("CXBMCApp: pthread_mutex_init() failed");
+    exit(1);
+    return;
+  }
 
   void* soHandle = lo_dlopen("/data/data/org.xbmc/lib/libxbmc.so");
   if (soHandle == NULL)
@@ -53,11 +60,11 @@ CXBMCApp::CXBMCApp()
 
   // fetch xbmc entry points
   m_state.xbmcInitialize = (XBMC_Initialize_t)dlsym(soHandle, "XBMC_Initialize");
-  m_state.xbmcStep = (XBMC_RunStep_t)dlsym(soHandle, "XBMC_RunStep");
+  m_state.xbmcRun = (XBMC_Run_t)dlsym(soHandle, "XBMC_Run");
   m_state.xbmcStop = (XBMC_Stop_t)dlsym(soHandle, "XBMC_Stop");
   m_state.xbmcTouch = (XBMC_Touch_t)dlsym(soHandle, "XBMC_Touch");
   m_state.xbmcKey = (XBMC_Key_t)dlsym(soHandle, "XBMC_Key");
-  if (m_state.xbmcInitialize == NULL || m_state.xbmcStep == NULL ||
+  if (m_state.xbmcInitialize == NULL || m_state.xbmcRun == NULL ||
       m_state.xbmcStop == NULL || m_state.xbmcTouch == NULL || m_state.xbmcKey == NULL)
   {
     android_printf("CXBMCApp: could not find XBMC_* functions. Error: %s", dlerror());
@@ -82,7 +89,9 @@ CXBMCApp::CXBMCApp()
 
 CXBMCApp::~CXBMCApp()
 {
-  stop();
+  join();
+
+  pthread_mutex_destroy(&m_state.mutex);
 }
 
 ActivityResult CXBMCApp::onActivate()
@@ -94,23 +103,11 @@ ActivityResult CXBMCApp::onActivate()
     return ActivityError;
   }
 
-  if (m_state.xbmcInitialize == NULL || m_state.xbmcStep == NULL)
-  {
-    android_printf(" => invalid XBMC_Initialize or XBMC_RunStep instance");
-    return ActivityError;
-  }
-
-  if (m_state.initialized)
-    return ActivityOK;
-
-  int status = m_state.xbmcInitialize(m_state.platform, 0, NULL);
-  if (status != 0)
-  {
-    android_printf("XBMC_Initialize failed");
-    return ActivityError;
-  }
-
-  m_state.initialized = true;
+  pthread_attr_t attr;
+  pthread_attr_init(&attr);
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+  pthread_create(&m_state.thread, &attr, thread_run<CXBMCApp, &CXBMCApp::run>, this);
+  pthread_attr_destroy(&attr);
   return ActivityOK;
 }
 
@@ -122,18 +119,17 @@ void CXBMCApp::onDeactivate()
 
 ActivityResult CXBMCApp::onStep()
 {
-  if (m_state.xbmcStep == NULL || m_state.xbmcStop == NULL)
-    return ActivityError;
-
-  bool stop = m_state.xbmcStep();
-  if (stop)
+  ActivityResult ret = ActivityOK;
+  pthread_mutex_lock(&m_state.mutex);
+  if (m_state.result != ActivityUnknown)
   {
-    android_printf("XBMC is stopping");
-    m_state.xbmcStop(true);
-    return ActivityExit;
+    android_printf("%s: XBMC thread finished with %d", __PRETTY_FUNCTION__, (int)m_state.result);
+    ret = m_state.result;
   }
+  pthread_mutex_unlock(&m_state.mutex);
 
-  return ActivityOK;
+  // TODO
+  return ret;
 }
 
 void CXBMCApp::onStart()
@@ -163,7 +159,7 @@ void CXBMCApp::onStop()
 void CXBMCApp::onDestroy()
 {
   android_printf("%s", __PRETTY_FUNCTION__);
-  stop();
+  join();
 
   // TODO
 }
@@ -370,18 +366,63 @@ bool CXBMCApp::onTouchEvent(AInputEvent* event)
   return false;
 }
 
-void CXBMCApp::stop()
+void CXBMCApp::run()
 {
   android_printf("%s", __PRETTY_FUNCTION__);
-  if (!m_state.initialized)
+  if (m_state.xbmcInitialize == NULL || m_state.xbmcRun == NULL)
+  {
+    android_printf(" => invalid XBMC_Initialize or XBMC_Run instance");
+    pthread_mutex_lock(&m_state.mutex);
+    m_state.result = ActivityError;
+    pthread_mutex_unlock(&m_state.mutex);
     return;
+  }
 
-  android_printf(" => executing XBMC_Stop");
-  // first let XBMC quit
-  m_state.xbmcStop(false);
-  // now destroy it
-  m_state.xbmcStop(true);
+  int status = m_state.xbmcInitialize(m_state.platform, 0, NULL);
+  if (status != 0)
+  {
+    android_printf("XBMC_Initialize failed");
+    pthread_mutex_lock(&m_state.mutex);
+    m_state.result = ActivityError;
+    pthread_mutex_unlock(&m_state.mutex);
+    return;
+  }
 
-  m_state.initialized = false;
+  android_printf(" => running XBMC_Run...");
+  try
+  {
+    status = m_state.xbmcRun();
+    android_printf(" => XBMC_Run finished with %d", status);
+  }
+  catch(...)
+  {
+    android_printf("ERROR: Exception caught on main loop. Exiting");
+    pthread_mutex_lock(&m_state.mutex);
+    m_state.result = ActivityError;
+    pthread_mutex_unlock(&m_state.mutex);
+    return;
+  }
+
+  pthread_mutex_lock(&m_state.mutex);
+  m_state.result = ActivityExit;
+  pthread_mutex_unlock(&m_state.mutex);
+}
+
+void CXBMCApp::join()
+{
+  android_printf("%s", __PRETTY_FUNCTION__);
+  ActivityResult tempResult;
+  pthread_mutex_lock(&m_state.mutex);
+  tempResult = m_state.result;
+  pthread_mutex_unlock(&m_state.mutex);
+
+  if (tempResult == ActivityUnknown)
+  {
+    android_printf(" => executing XBMC_Stop");
+    m_state.xbmcStop();
+    android_printf(" => waiting for XBMC to finish");
+    pthread_join(m_state.thread, NULL);
+    android_printf(" => XBMC finished");
+  }
 }
 

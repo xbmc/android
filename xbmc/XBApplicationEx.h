@@ -51,7 +51,7 @@ public:
   // Functions to create, run, and clean up the application
   virtual bool Create();
   INT Run();
-  bool RunStep();
+  VOID RunStep();
   VOID Destroy();
 
 private:

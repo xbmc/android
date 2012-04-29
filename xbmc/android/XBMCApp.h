@@ -19,6 +19,8 @@
  *
  */
 
+#include <pthread.h>
+
 #include "IActivityHandler.h"
 #include "IInputHandler.h"
 
@@ -32,7 +34,7 @@ public:
 
   bool isValid() { return m_state.platform != NULL &&
                           m_state.xbmcInitialize != NULL &&
-                          m_state.xbmcStep != NULL; }
+                          m_state.xbmcRun != NULL; }
 
   ActivityResult onActivate();
   void onDeactivate();
@@ -58,15 +60,17 @@ public:
   bool onTouchEvent(AInputEvent* event);
 
 private:
-  void stop();
+  void run();
+  void join();
 
   typedef struct {
-    bool initialized;
+    pthread_t thread;
+    pthread_mutex_t mutex;
+    ActivityResult result;
 
     XBMC_PLATFORM* platform;
-
     XBMC_Initialize_t xbmcInitialize;
-    XBMC_RunStep_t xbmcStep;
+    XBMC_Run_t xbmcRun;
     XBMC_Stop_t xbmcStop;
     XBMC_Touch_t xbmcTouch;
     XBMC_Key_t xbmcKey;
