@@ -43,6 +43,12 @@ typedef struct {
 } KeyMap;
 
 static KeyMap keyMap[] = {
+  // first list all keys that we don't handle
+  { AKEYCODE_HOME         , XBMCK_LAST },
+  { AKEYCODE_POWER        , XBMCK_LAST },
+
+  // now list all the keys with special functionality
+  { AKEYCODE_BACK         , XBMCK_BACKSPACE },
   { AKEYCODE_DPAD_UP      , XBMCK_UP },
   { AKEYCODE_DPAD_DOWN    , XBMCK_DOWN },
   { AKEYCODE_DPAD_LEFT    , XBMCK_LEFT },
@@ -50,7 +56,7 @@ static KeyMap keyMap[] = {
   { AKEYCODE_VOLUME_UP    , XBMCK_VOLUME_UP },
   { AKEYCODE_VOLUME_DOWN  , XBMCK_VOLUME_DOWN },
   { AKEYCODE_MUTE         , XBMCK_VOLUME_MUTE },
-  { AKEYCODE_MENU         , XBMCK_BACKSPACE }
+  { AKEYCODE_MENU         , XBMCK_MENU }
 };
 
 CXBMCApp::CXBMCApp(ANativeActivity *nativeActivity)
@@ -242,15 +248,9 @@ bool CXBMCApp::onKeyboardEvent(AInputEvent* event)
   int32_t flags = AKeyEvent_getFlags(event);
   int32_t state = AKeyEvent_getMetaState(event);
   int32_t repeatCount = AKeyEvent_getRepeatCount(event);
-  
-  // never ever try to handle the back, home or power button
-  if (keycode == AKEYCODE_BACK ||
-    keycode == AKEYCODE_HOME ||
-    keycode == AKEYCODE_POWER)
-    return false;
 
   // Check if we got some special key
-  uint16_t sym = 0;
+  uint16_t sym = XBMCK_UNKNOWN;
   for (unsigned int index = 0; index < sizeof(keyMap) / sizeof(KeyMap); index++)
   {
     if (keycode == keyMap[index].nativeKey)
@@ -259,6 +259,10 @@ bool CXBMCApp::onKeyboardEvent(AInputEvent* event)
       break;
     }
   }
+  
+  // check if this is a key we don't want to handle
+  if (sym == XBMCK_LAST)
+    return false;
 
   uint16_t modifiers = 0;
   if (state & AMETA_ALT_LEFT_ON)
