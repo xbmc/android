@@ -57,14 +57,10 @@
 #ifdef HAS_FILESYSTEM_VTP
 #include "VTPFile.h"
 #endif
-<<<<<<< HEAD
 #if defined(TARGET_ANDROID)
 #include "FileAPK.h"
 #endif
-#include "FileZip.h"
-=======
 #include "ZipFile.h"
->>>>>>> upstream/master
 #ifdef HAS_FILESYSTEM_RAR
 #include "RarFile.h"
 #endif
@@ -113,14 +109,10 @@ IFile* CFileFactory::CreateLoader(const CURL& url)
   CStdString strProtocol = url.GetProtocol();
   strProtocol.MakeLower();
 
-<<<<<<< HEAD
 #if defined(TARGET_ANDROID)
   if (strProtocol == "apk") return new CFileAPK();
 #endif
-  if (strProtocol == "zip") return new CFileZip();
-=======
   if (strProtocol == "zip") return new CZipFile();
->>>>>>> upstream/master
 #ifdef HAS_FILESYSTEM_RAR
   else if (strProtocol == "rar") return new CRarFile();
 #endif
@@ -133,13 +125,8 @@ IFile* CFileFactory::CreateLoader(const CURL& url)
 #if defined(HAS_FILESYSTEM_CDDA) && defined(HAS_DVD_DRIVE)
   else if (strProtocol == "cdda") return new CFileCDDA();
 #endif
-<<<<<<< HEAD
 #if defined(HAS_FILESYSTEM) && defined(HAVE_CDIO_ISO9660_H)
-  else if (strProtocol == "iso9660") return new CFileISO();
-=======
-#ifdef HAS_FILESYSTEM
   else if (strProtocol == "iso9660") return new CISOFile();
->>>>>>> upstream/master
 #endif
   else if(strProtocol == "udf") return new CUDFFile();
 

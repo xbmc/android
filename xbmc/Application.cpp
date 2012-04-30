@@ -584,7 +584,7 @@ bool CApplication::Create()
   CopyUserDataIfNeeded("special://masterprofile/", "Lircmap.xml");
   CopyUserDataIfNeeded("special://masterprofile/", "LCD.xml");
 
-  if (!CLog::Init(CSpecialProtocol::TranslatePath(g_settings.m_logFolder).c_str()))
+  if (!CLog::Init(CSpecialProtocol::TranslatePath(g_settings.m_logFolder).c_str(), "XBMC"))
   {
     fprintf(stderr,"Could not init logging classes. Permission errors on ~/.xbmc (%s)\n",
       CSpecialProtocol::TranslatePath(g_settings.m_logFolder).c_str());

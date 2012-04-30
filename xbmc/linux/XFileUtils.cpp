@@ -592,7 +592,7 @@ BOOL GetDiskFreeSpaceEx(
 #if defined(__ANDROID__)
   struct statfs fsInfo;
   // is 64-bit on android
-  if (statfs(_P(lpDirectoryName), &fsInfo) != 0)
+  if (statfs(CSpecialProtocol::TranslatePath(lpDirectoryName), &fsInfo) != 0)
     return false;
 #else
   struct statfs64 fsInfo;

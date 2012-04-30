@@ -415,7 +415,7 @@ std::vector<CStdString> CNetworkLinux::GetNameServers(void)
 {
    std::vector<CStdString> result;
 
-#if defined(TARGET_DARWIN)
+#if defined(TARGET_DARWIN) || defined(__ANDROID__)
   //only finds the primary dns (0 :)
   FILE* pipe = popen("echo \"show State:/Network/Global/DNS\" | scutil | grep \"0 :\" | tail -n1", "r");
   if (pipe)
