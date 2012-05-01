@@ -302,7 +302,7 @@ void *lo_dlopen(const char *library)
     for (i = 0; needed[i] != NULL; i++)
     {
       xb_name = getXBFileName(needed[i]);
-      if (lo_dlopen(xb_name) == NULL)
+      if (xb_name == NULL || lo_dlopen(xb_name) == NULL)
       {
         free(xb_name);
         if (lo_dlopen(needed[i]) == NULL)
