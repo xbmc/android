@@ -63,7 +63,7 @@ namespace MathUtils
       sar i, 1
     }
 #else
-#if defined(__powerpc__) || defined(__ppc__) || defined(__ARM_ARCH_5__)
+#if defined(__powerpc__) || defined(__ppc__) || defined(TARGET_ANDROID)
     i = floor(x + round_to_nearest);
 #elif defined(__arm__)
     // From 'ARM®v7-M Architecture Reference Manual' page A7-569:
@@ -140,7 +140,7 @@ namespace MathUtils
       sar i, 1
     }
 #else
-#if defined(__powerpc__) || defined(__ppc__) || defined(__ARM_ARCH_5__)
+#if defined(__powerpc__) || defined(__ppc__) || defined(TARGET_ANDROID)
     return (int)x;
 #elif defined(__arm__)
     __asm__ __volatile__ (
