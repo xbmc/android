@@ -378,7 +378,7 @@ bool CXBMCApp::onTouchEvent(AInputEvent* event)
         if (!m_touchDownExecuted)
           m_state.xbmcTouch((uint16_t)m_touchDown.x, (uint16_t)m_touchDown.y, false);
 
-        m_state.xbmcTouch((uint16_t)x, (uint16_t)y, true);
+        m_state.xbmcTouch((uint16_t)m_touchDown.x, (uint16_t)m_touchDown.y, true);
       }
       else
       {
