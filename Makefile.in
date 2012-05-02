@@ -219,7 +219,7 @@ configure: configure.in
 	@./bootstrap
 
 ifeq (@USE_ANDROID@,1)
-XBMCTEXFLAGS=-use_none
+XBMCTEXFLAGS="-use_none -use_lzo"
 endif
 
 # skin textures
