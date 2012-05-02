@@ -21,6 +21,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <dlfcn.h>
+#include <math.h>
 
 #include <android/native_window.h>
 #include "android_utils.h"
@@ -29,8 +30,7 @@
 #include "xbmc_log.h"
 
 #include "input/XBMC_keysym.h"
-#include "guilib/Key.h"         // TODO: split this header up properly
-#include "guilib/Gestures.h"
+#include "guilib/guilib_defines.h"
 
 template<class T, void(T::*fn)()>
 void* thread_run(void* obj)
@@ -62,9 +62,7 @@ static KeyMap keyMap[] = {
 };
 
 CXBMCApp::CXBMCApp(ANativeActivity *nativeActivity)
-  : m_touchGesture(EVENT_RESULT_UNHANDLED),
-    m_touchDownExecuted(false),
-    m_touchMoving(false)
+  : m_touchGestureState(TouchGestureUnknown)
 {
   m_activity = nativeActivity;
   
@@ -84,7 +82,6 @@ CXBMCApp::CXBMCApp(ANativeActivity *nativeActivity)
   m_state.xbmcKey = NULL;
   m_state.xbmcTouch = NULL;
   m_state.xbmcTouchGesture = NULL;
-  m_state.xbmcTouchGestureCheck = NULL;
 
   if (pthread_mutex_init(&m_state.mutex, NULL) != 0)
   {
@@ -104,10 +101,9 @@ CXBMCApp::CXBMCApp(ANativeActivity *nativeActivity)
   m_state.xbmcKey = (XBMC_Key_t)dlsym(soHandle, "XBMC_Key");
   m_state.xbmcTouch = (XBMC_Touch_t)dlsym(soHandle, "XBMC_Touch");
   m_state.xbmcTouchGesture = (XBMC_TouchGesture_t)dlsym(soHandle, "XBMC_TouchGesture");
-  m_state.xbmcTouchGestureCheck = (XBMC_TouchGestureCheck_t)dlsym(soHandle, "XBMC_TouchGestureCheck");
   if (m_state.xbmcInitialize == NULL || m_state.xbmcRun == NULL ||
       m_state.xbmcStop == NULL || m_state.xbmcKey == NULL ||
-      m_state.xbmcTouch == NULL || m_state.xbmcTouchGesture == NULL || m_state.xbmcTouchGestureCheck == NULL)
+      m_state.xbmcTouch == NULL || m_state.xbmcTouchGesture == NULL)
   {
     android_printf("CXBMCApp: could not find XBMC_* functions. Error: %s", dlerror());
     return;
@@ -332,99 +328,215 @@ bool CXBMCApp::onTouchEvent(AInputEvent* event)
   android_printf("%s", __PRETTY_FUNCTION__);
   if (event == NULL)
     return false;
-  
+
   size_t numPointers = AMotionEvent_getPointerCount(event);
-  // TODO: Handle multi-touch (zoom/pinch/rotate)
-  if (numPointers <= 0 || numPointers > 1)
-  {
-    android_printf("XBMC can't handle multi-touch (%d pointers) yet", numPointers);
+  if (numPointers <= 0)
     return false;
-  }
 
-  float x = AMotionEvent_getX(event, 0);
-  float y = AMotionEvent_getY(event, 0);
+  int32_t eventAction = AMotionEvent_getAction(event);
+  int8_t touchAction = eventAction & AMOTION_EVENT_ACTION_MASK;
+  size_t touchPointer = eventAction >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
+
+  float x = AMotionEvent_getX(event, touchPointer);
+  float y = AMotionEvent_getY(event, touchPointer);
   int64_t time = AMotionEvent_getEventTime(event);
-  
-  if (m_touchGesture == EVENT_RESULT_UNHANDLED)
-  {
-    m_touchGesture = m_state.xbmcTouchGestureCheck(x, y);
-    android_printf(" => m_touchGesture = %d", m_touchGesture);
-  }
 
-  switch (AMotionEvent_getAction(event))
+  switch (touchAction)
   {
-    case AMOTION_EVENT_ACTION_DOWN:
-      android_printf("CXBMCApp: touch down (%f, %f, %d)", x, y, numPointers);
-      m_touchDown.x = x;
-      m_touchDown.y = y;
-      m_touchDown.time = time;
-      m_touchMoving = false;
-      
-      if (m_touchGesture <= EVENT_RESULT_HANDLED)
+    case AMOTION_EVENT_ACTION_CANCEL:
+      android_printf(" => touch cancel (%f, %f)", x, y);
+      if (m_touchGestureState == TouchGesturePan ||
+          m_touchGestureState >= TouchGestureMultiTouchStart)
       {
-        m_state.xbmcTouch((uint16_t)m_touchDown.x, (uint16_t)m_touchDown.y, false);
-        m_touchGesture = EVENT_RESULT_HANDLED;
-        m_touchDownExecuted = true;
+        // TODO: can we actually cancel these gestures?
+      }
+
+      m_touchGestureState = TouchGestureUnknown;
+      for (unsigned int pointer = 0; pointer < TOUCH_MAX_POINTERS; pointer++)
+        m_touchPointers[pointer].reset();
+      // TODO: Should we return true?
+      break;
+
+    case AMOTION_EVENT_ACTION_DOWN:
+    case AMOTION_EVENT_ACTION_POINTER_DOWN:
+      android_printf(" => touch down (%f, %f)", x, y);
+      m_touchPointers[touchPointer].down.x = x;
+      m_touchPointers[touchPointer].down.y = y;
+      m_touchPointers[touchPointer].down.time = time;
+      m_touchPointers[touchPointer].moving = false;
+
+      // If this is the down event of the primary pointer
+      // we start by assuming that it's a single touch
+      if (touchAction == AMOTION_EVENT_ACTION_DOWN)
+      {
+        m_touchGestureState = TouchGestureSingleTouch;
+      }
+      // Otherwise it's the down event of another pointer
+      else if (numPointers > 1)
+      {
+        // If we so far assumed single touch or still have the primary
+        // pointer of a previous multi touch pressed down, we can update to multi touch
+        if (m_touchGestureState == TouchGestureSingleTouch ||
+            m_touchGestureState == TouchGestureMultiTouchDone)
+        {
+          m_touchGestureState = TouchGestureMultiTouchStart;
+        }
+        // Otherwise we should ignore this pointer
+        else
+        {
+          android_printf(" => ignore this pointer");
+          m_touchPointers[touchPointer].reset();
+          break;
+        }
       }
       return true;
 
     case AMOTION_EVENT_ACTION_UP:
-      android_printf("CXBMCApp: touch up (%f, %f, %d)", x, y, numPointers);
-      if (m_touchDown.x < 0.0f || m_touchDown.y < 0.0f)
+    case AMOTION_EVENT_ACTION_POINTER_UP:
+      android_printf(" => touch up (%f, %f)", x, y);
+      if (!m_touchPointers[touchPointer].valid() ||
+          m_touchGestureState == TouchGestureUnknown)
+      {
+        android_printf(" => abort touch up");
         break;
-      
-      if (!m_touchMoving)
-      {
-        if (!m_touchDownExecuted)
-          m_state.xbmcTouch((uint16_t)m_touchDown.x, (uint16_t)m_touchDown.y, false);
-
-        m_state.xbmcTouch((uint16_t)m_touchDown.x, (uint16_t)m_touchDown.y, true);
       }
-      else
+
+      // Just a single tap with a pointer
+      if (m_touchGestureState == TouchGestureSingleTouch)
       {
+        android_printf(" => a single tap");
+        m_state.xbmcTouch((uint16_t)m_touchPointers[touchPointer].down.x,
+                          (uint16_t)m_touchPointers[touchPointer].down.y, false, true);
+        m_state.xbmcTouch((uint16_t)m_touchPointers[touchPointer].down.x,
+                          (uint16_t)m_touchPointers[touchPointer].down.y, true, true);
+      }
+      // A pan gesture started with a single pointer (ignoring any other pointers)
+      else if (m_touchGestureState == TouchGesturePan)
+      {
+        android_printf(" => a pan gesture ending");
         float velocityX = 0.0f; // number of pixels per second
         float velocityY = 0.0f; // number of pixels per second
-        int64_t timeDiff = time - m_touchDown.time;
+        int64_t timeDiff = time - m_touchPointers[touchPointer].down.time;
         if (timeDiff > 0)
         {
-          velocityX = ((x - m_touchDown.x) * 1000000000) / timeDiff;
-          velocityY = ((y - m_touchDown.y) * 1000000000) / timeDiff;
+          velocityX = ((x - m_touchPointers[touchPointer].down.x) * 1000000000) / timeDiff;
+          velocityY = ((y - m_touchPointers[touchPointer].down.y) * 1000000000) / timeDiff;
         }
         m_state.xbmcTouchGesture(ACTION_GESTURE_END, velocityX, velocityY, x, y);
       }
+      // A single tap with multiple pointers
+      else if (m_touchGestureState == TouchGestureMultiTouchStart)
+      {
+        android_printf(" => a single tap with multiple pointers");
+        // we send a right-click for this and always use the coordinates
+        // of the primary pointer
+        m_state.xbmcTouch((uint16_t)m_touchPointers[0].down.x,
+                          (uint16_t)m_touchPointers[0].down.y, false, false);
+        m_state.xbmcTouch((uint16_t)m_touchPointers[0].down.x,
+                          (uint16_t)m_touchPointers[0].down.y, true, false);
+      }
+      else if (m_touchGestureState == TouchGestureMultiTouch)
+      {
+        android_printf(" => a multi touch gesture ending");
+      }
+
+      // If we were in multi touch mode and lifted the only secondary pointer
+      // we can go into the TouchGestureMultiTouchDone state which will allow
+      // the user to go back into multi touch mode without lifting the primary finger
+      if ((m_touchGestureState == TouchGestureMultiTouchStart || m_touchGestureState == TouchGestureMultiTouch) &&
+          numPointers == 2 && touchAction == AMOTION_EVENT_ACTION_POINTER_UP)
+      {
+        m_touchGestureState = TouchGestureMultiTouchDone;
+      }
+      // Otherwise abort
+      else
+      {
+        m_touchGestureState == TouchGestureUnknown;
+      }
       
-      m_touchDown.reset();
-      m_touchMoveLast.reset();
-      m_touchGesture = EVENT_RESULT_UNHANDLED;
-      m_touchDownExecuted = false;
-      m_touchMoving = false;
+      m_touchPointers[touchPointer].reset();
       return true;
 
     case AMOTION_EVENT_ACTION_MOVE:
-      android_printf("CXBMCApp: touch move (%f, %f, %d)", x, y, numPointers);
-      if (m_touchDown.x < 0.0f || m_touchDown.y < 0.0f ||
-          m_touchGesture <= EVENT_RESULT_HANDLED)
-        break;
-      
-      if (!m_touchMoving)
+      android_printf(" => touch move (%f, %f)", x, y);
+      if (!m_touchPointers[touchPointer].valid() ||
+          m_touchGestureState == TouchGestureUnknown ||
+          m_touchGestureState == TouchGestureMultiTouchDone)
       {
-        m_state.xbmcTouchGesture(ACTION_GESTURE_BEGIN, m_touchDown.x, m_touchDown.y, 0.0f, 0.0f);
-        m_touchMoveLast.copy(m_touchDown);
-        m_touchDownExecuted = true;
-        m_touchMoving = true;
+        android_printf(" => abort touch move");
+        break;
       }
-      
-      m_state.xbmcTouchGesture(ACTION_GESTURE_PAN, x, y, x - m_touchMoveLast.x, y - m_touchMoveLast.y);
-      m_touchMoveLast.x = x;
-      m_touchMoveLast.y = y;
+
+      m_touchPointers[touchPointer].moving = true;
+      if (m_touchGestureState == TouchGestureSingleTouch)
+      {
+        android_printf(" => a pan gesture starts", m_touchGestureState, TouchGestureMultiTouchStart);
+        m_state.xbmcTouchGesture(ACTION_GESTURE_BEGIN, 
+                                 m_touchPointers[touchPointer].down.x,
+                                 m_touchPointers[touchPointer].down.y,
+                                 0.0f, 0.0f);
+        m_touchPointers[touchPointer].last.copy(m_touchPointers[touchPointer].down);
+        m_touchGestureState = TouchGesturePan;
+      }
+      else if (m_touchGestureState == TouchGestureMultiTouchStart)
+      {
+        m_touchGestureState = TouchGestureMultiTouch;
+      }
+
+      // Let's see if we have a pan gesture (i.e. the primary and only pointer moving)
+      if (m_touchGestureState == TouchGesturePan)
+      {
+        android_printf(" => a pan gesture");
+        m_state.xbmcTouchGesture(ACTION_GESTURE_PAN, x, y,
+                                 x - m_touchPointers[touchPointer].last.x,
+                                 y - m_touchPointers[touchPointer].last.y);
+        m_touchPointers[touchPointer].last.x = x;
+        m_touchPointers[touchPointer].last.y = y;
+      }
+      else if (m_touchGestureState == TouchGestureMultiTouch)
+      {
+        android_printf(" => a multi touch gesture");
+        handleMultiTouchGesture(x, y, touchPointer);
+      }
+      else
+        break;
+
       return true;
 
     default:
-      android_printf("CXBMCApp: touch unknown (%f, %f, %d)", x, y, numPointers);
+      android_printf(" => touch unknown (%f, %f)", x, y);
       break;
   }
 
   return false;
+}
+
+void CXBMCApp::handleMultiTouchGesture(float x, float y, size_t pointer)
+{
+  m_touchPointers[pointer].last.x = x;
+  m_touchPointers[pointer].last.y = y;
+
+  Pointer& primaryPointer = m_touchPointers[0];
+  Pointer& secondaryPointer = m_touchPointers[1];
+
+  // calculate zoom/pinch
+  float baseDiffX = primaryPointer.down.x - secondaryPointer.down.x;
+  float baseDiffY = primaryPointer.down.y - secondaryPointer.down.y;
+  float baseDiffLength = sqrt(pow(baseDiffX, 2) + pow(baseDiffY, 2));
+  if (baseDiffLength != 0.0f)
+  {
+    float curDiffX = primaryPointer.last.x - secondaryPointer.last.x;
+    float curDiffY = primaryPointer.last.y - secondaryPointer.last.y;
+    float curDiffLength = sqrt(pow(curDiffX, 2) + pow(curDiffY, 2));
+    
+    float centerX = (primaryPointer.down.x + secondaryPointer.down.x) / 2;
+    float centerY = (primaryPointer.down.y + secondaryPointer.down.y) / 2;
+    
+    float zoom = curDiffLength / baseDiffLength;
+    
+    m_state.xbmcTouchGesture(ACTION_GESTURE_ZOOM, centerX, centerY, zoom, 0);
+  }
+  
 }
 
 void CXBMCApp::run()

@@ -28,6 +28,8 @@
 
 #include "xbmc.h"
 
+#define TOUCH_MAX_POINTERS  2
+
 class CXBMCApp : public IActivityHandler, public IInputHandler
 {
 public:
@@ -79,7 +81,6 @@ private:
     XBMC_Stop_t xbmcStop;
     XBMC_Key_t xbmcKey;
     XBMC_Touch_t xbmcTouch;
-    XBMC_TouchGestureCheck_t xbmcTouchGestureCheck;
     XBMC_TouchGesture_t xbmcTouchGesture;
   } State;
 
@@ -89,6 +90,7 @@ private:
     public:
       Touch() { reset(); }
       
+      bool valid() { return x >= 0.0f && y >= 0.0f && time >= 0; }
       void reset() { x = -1.0f; y = -1.0f; time = -1; }
       void copy(const Touch &other) { x = other.x; y = other.y; time = other.time; }
       
@@ -97,10 +99,36 @@ private:
       int64_t time; // in nanoseconds
   };
   
-  Touch m_touchDown;
-  Touch m_touchMoveLast;
-  int   m_touchGesture;
-  bool  m_touchDownExecuted;
-  bool  m_touchMoving;
+  class Pointer {
+    public:
+      Pointer() { reset(); }
+      
+      bool valid() { return down.valid(); }
+      void reset() { down.reset(); last.reset(); moving = false; }
+      
+      Touch down;
+      Touch last;
+      bool moving;
+  };
+  
+  Pointer m_touchPointers[TOUCH_MAX_POINTERS];
+  
+  typedef enum {
+    TouchGestureUnknown = 0,
+    // only primary pointer active but stationary so far
+    TouchGestureSingleTouch,
+    // primary pointer moving
+    TouchGesturePan,
+    // at least two pointers active but stationary so far
+    TouchGestureMultiTouchStart,
+    // at least two pointers active and moving
+    TouchGestureMultiTouch,
+    // all but primary pointer have been lifted
+    TouchGestureMultiTouchDone
+  } TouchGestureState;
+  
+  TouchGestureState m_touchGestureState;
+  
+  void handleMultiTouchGesture(float x, float y, size_t pointer);
 };
 
