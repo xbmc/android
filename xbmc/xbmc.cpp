@@ -122,19 +122,18 @@ extern "C" void XBMC_Key(uint8_t code, uint16_t key, uint16_t modifiers, bool up
   CWinEvents::MessagePush(&newEvent);
 }
 
-extern "C" void XBMC_Touch(uint16_t x, uint16_t y, bool up, bool left)
+extern "C" void XBMC_Touch(uint8_t type, uint8_t button, uint16_t x, uint16_t y)
 {
   XBMC_Event newEvent;
   memset(&newEvent, 0, sizeof(newEvent));
 
-  unsigned char type = up ? XBMC_MOUSEBUTTONUP : XBMC_MOUSEBUTTONDOWN;
   newEvent.type = type;
   newEvent.button.type = type;
-  newEvent.button.button = left ? XBMC_BUTTON_LEFT : XBMC_BUTTON_RIGHT;
+  newEvent.button.button = button;
   newEvent.button.x = x;
   newEvent.button.y = y;
 
-  CLog::Log(LOGDEBUG, "XBMC_Touch(%u, %u, %d, %d)", x, y, up, left);
+  CLog::Log(LOGDEBUG, "XBMC_Touch(%u, %u, %u, %u)", type, button, x, y);
   CWinEvents::MessagePush(&newEvent);
 }
 

@@ -29,8 +29,10 @@
 #include "XBMCApp.h"
 #include "xbmc_log.h"
 
+#include "input/MouseStat.h"
 #include "input/XBMC_keysym.h"
 #include "guilib/guilib_defines.h"
+#include "windowing/XBMC_events.h"
 
 template<class T, void(T::*fn)()>
 void* thread_run(void* obj)
@@ -370,6 +372,9 @@ bool CXBMCApp::onTouchEvent(AInputEvent* event)
       if (touchAction == AMOTION_EVENT_ACTION_DOWN)
       {
         m_touchGestureState = TouchGestureSingleTouch;
+        
+        // Send a mouse motion event for getting the current guiitem selected
+        m_state.xbmcTouch(XBMC_MOUSEMOTION, 0, (uint16_t)x, (uint16_t)y);
       }
       // Otherwise it's the down event of another pointer
       else if (numPointers > 1)
@@ -405,10 +410,12 @@ bool CXBMCApp::onTouchEvent(AInputEvent* event)
       if (m_touchGestureState == TouchGestureSingleTouch)
       {
         android_printf(" => a single tap");
-        m_state.xbmcTouch((uint16_t)m_touchPointers[touchPointer].down.x,
-                          (uint16_t)m_touchPointers[touchPointer].down.y, false, true);
-        m_state.xbmcTouch((uint16_t)m_touchPointers[touchPointer].down.x,
-                          (uint16_t)m_touchPointers[touchPointer].down.y, true, true);
+        m_state.xbmcTouch(XBMC_MOUSEBUTTONDOWN, XBMC_BUTTON_LEFT,
+                          (uint16_t)m_touchPointers[touchPointer].down.x,
+                          (uint16_t)m_touchPointers[touchPointer].down.y);
+        m_state.xbmcTouch(XBMC_MOUSEBUTTONUP, XBMC_BUTTON_LEFT,
+                          (uint16_t)m_touchPointers[touchPointer].down.x,
+                          (uint16_t)m_touchPointers[touchPointer].down.y);
       }
       // A pan gesture started with a single pointer (ignoring any other pointers)
       else if (m_touchGestureState == TouchGesturePan)
@@ -430,14 +437,23 @@ bool CXBMCApp::onTouchEvent(AInputEvent* event)
         android_printf(" => a single tap with multiple pointers");
         // we send a right-click for this and always use the coordinates
         // of the primary pointer
-        m_state.xbmcTouch((uint16_t)m_touchPointers[0].down.x,
-                          (uint16_t)m_touchPointers[0].down.y, false, false);
-        m_state.xbmcTouch((uint16_t)m_touchPointers[0].down.x,
-                          (uint16_t)m_touchPointers[0].down.y, true, false);
+        m_state.xbmcTouch(XBMC_MOUSEBUTTONDOWN, XBMC_BUTTON_RIGHT,
+                          (uint16_t)m_touchPointers[0].down.x,
+                          (uint16_t)m_touchPointers[0].down.y);
+        m_state.xbmcTouch(XBMC_MOUSEBUTTONUP, XBMC_BUTTON_RIGHT,
+                          (uint16_t)m_touchPointers[0].down.x,
+                          (uint16_t)m_touchPointers[0].down.y);
       }
       else if (m_touchGestureState == TouchGestureMultiTouch)
       {
         android_printf(" => a multi touch gesture ending");
+      }
+      
+      if (touchAction == AMOTION_EVENT_ACTION_UP)
+      {
+        // Send a mouse motion event pointing off the screen
+        // to deselect the selected gui item
+        m_state.xbmcTouch(XBMC_MOUSEMOTION, 0, -1, -1);
       }
 
       // If we were in multi touch mode and lifted the only secondary pointer
