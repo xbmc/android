@@ -29,6 +29,7 @@
 #include "xbmc_log.h"
 #include "EventLoop.h"
 #include "XBMCApp.h"
+#include "unzip.h"
 
 /*static int android_printf(const char *format, ...)
 {
@@ -43,23 +44,20 @@ void setup_env(struct android_app* state)
 {
   JavaVM* vm  = state->activity->vm;
   JNIEnv* env = state->activity->env;
+  const char* temp;
 
   vm->AttachCurrentThread(&env, NULL);
   jobject activity = state->activity->clazz;
   jclass activityClass = env->GetObjectClass(activity);
 
-  char cstr[1024];
+  char apkPath[1024];
   jmethodID getPackageResourcePath = env->GetMethodID(activityClass, "getPackageResourcePath", "()Ljava/lang/String;");
   jstring jApkPath = (jstring)env->CallObjectMethod(activity, getPackageResourcePath);
-  const char* apkPath = env->GetStringUTFChars(jApkPath, NULL);
-  strcpy(cstr, apkPath);
-  env->ReleaseStringUTFChars(jApkPath, apkPath);
-  strcat(cstr, "/assets");
-  setenv("XBMC_BIN_HOME", cstr, 0);
-  setenv("XBMC_HOME"    , cstr, 0);
+  temp = env->GetStringUTFChars(jApkPath, NULL);
+  strcpy(apkPath, temp);
+  env->ReleaseStringUTFChars(jApkPath, temp);
 
-  memset(cstr, 0, 1024);
-
+  char cacheDir[1024];
   // Get the path to the temp/cache directory
   jmethodID getCacheDir = env->GetMethodID(activityClass, "getCacheDir", "()Ljava/io/File;");
   jobject jCacheDir = env->CallObjectMethod(activity, getCacheDir);
@@ -68,24 +66,35 @@ void setup_env(struct android_app* state)
   jmethodID getAbsolutePath = env->GetMethodID(fileClass, "getAbsolutePath", "()Ljava/lang/String;");
 
   jstring jCachePath = (jstring)env->CallObjectMethod(jCacheDir, getAbsolutePath);
-  const char* cachePath = env->GetStringUTFChars(jCachePath, NULL);
-  setenv("XBMC_TEMP", cachePath, 0);
-  env->ReleaseStringUTFChars(jCachePath, cachePath);
+  temp = env->GetStringUTFChars(jCachePath, NULL);
+  strcpy(cacheDir, temp);
+  env->ReleaseStringUTFChars(jCachePath, temp);
+
+  setenv("XBMC_TEMP", cacheDir, 0);
+  strcat(cacheDir, "/apk");
+
+  //cache assets from the apk
+  extract_to_cache(apkPath, cacheDir);
+
+  strcat(cacheDir, "/assets");
+  setenv("XBMC_BIN_HOME", cacheDir, 0);
+  setenv("XBMC_HOME"    , cacheDir, 0);
 
   // Get the path to the external storage by employing JNI
   // The path would actually be available from state->activity->externalDataPath (apart from a (known) bug in Android 2.3.x)
   // but calling getExternalFilesDir() will automatically create the necessary directories for us. We don't seem to have the
   // rights to create a directory in /mnt/sdcard/Android/data/ ourselfs.
+  char storagePath[1024];
   jmethodID getExternalFilesDir = env->GetMethodID(activityClass, "getExternalFilesDir", "(Ljava/lang/String;)Ljava/io/File;");
   jobject jExternalDir = env->CallObjectMethod(activity, getExternalFilesDir, (jstring)NULL);
 
   jstring jExternalPath = (jstring)env->CallObjectMethod(jExternalDir, getAbsolutePath);
-  const char *externalPath = env->GetStringUTFChars(jExternalPath, NULL);
-  strcpy(cstr, externalPath);
-  env->ReleaseStringUTFChars(jExternalPath, externalPath);
+  temp = env->GetStringUTFChars(jExternalPath, NULL);
+  strcpy(storagePath, temp);
+  env->ReleaseStringUTFChars(jExternalPath, temp);
 
   // Check if we don't have a valid path yet
-  if (strlen(cstr) <= 0)
+  if (strlen(storagePath) <= 0)
   {
     // Get the path to the internal storage by employing JNI
     // For more details see the comment on getting the path to the external storage
@@ -94,14 +103,14 @@ void setup_env(struct android_app* state)
     jobject jInternalDir = env->CallObjectMethod(activity, getDir, jstrName, 1 /* MODE_WORLD_READABLE */);
 
     jstring jInternalPath = (jstring)env->CallObjectMethod(jInternalDir, getAbsolutePath);
-    const char *internalPath = env->GetStringUTFChars(jInternalPath, NULL);
-    strcpy(cstr, internalPath);
-    env->ReleaseStringUTFChars(jInternalPath, internalPath);
+    temp = env->GetStringUTFChars(jInternalPath, NULL);
+    strcpy(storagePath, temp);
+    env->ReleaseStringUTFChars(jInternalPath, temp);
   }
 
   // Check if we have a valid home path
-  if (strlen(cstr) > 0)
-    setenv("HOME", cstr, 0);
+  if (strlen(storagePath) > 0)
+    setenv("HOME", storagePath, 0);
   else
     setenv("HOME", getenv("XBMC_TEMP"), 0);
 }
@@ -112,7 +121,6 @@ extern void android_main(struct android_app* state)
   app_dummy();
 
   setup_env(state);
-
   CEventLoop eventLoop(state);
   CXBMCApp xbmcApp(state->activity);
   if (xbmcApp.isValid())

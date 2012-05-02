@@ -250,12 +250,14 @@ void *lo_dlopen(const char *library)
     static const char **library_locations;
     char libpath[] = "/data/data/org.xbmc/lib";
     char systempath[] = "/system/lib";
+    char cachepath[] = "/data/data/org.xbmc/cache/apk/assets/system/players/dvdplayer";
     char ffmpegpath[] = "/data/data/org.xbmc/cache/temp/assets/system/players/dvdplayer";
-    library_locations = (const char **)malloc((4) * sizeof(char *));
+    library_locations = (const char **)malloc((5) * sizeof(char *));
     library_locations[0] = libpath;
     library_locations[1] = systempath;
-    library_locations[2] = ffmpegpath;
-    library_locations[3] = NULL;
+    library_locations[2] = cachepath;
+    library_locations[3] = ffmpegpath;
+    library_locations[4] = NULL;
 
     rover = loaded_libraries;
     while (rover && strcmp(rover->name, library) != 0)
