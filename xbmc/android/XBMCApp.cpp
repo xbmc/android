@@ -341,6 +341,7 @@ bool CXBMCApp::onTouchEvent(AInputEvent* event)
 
   float x = AMotionEvent_getX(event, touchPointer);
   float y = AMotionEvent_getY(event, touchPointer);
+  float size = AMotionEvent_getTouchMinor(event, touchPointer);
   int64_t time = AMotionEvent_getEventTime(event);
 
   switch (touchAction)
@@ -366,6 +367,7 @@ bool CXBMCApp::onTouchEvent(AInputEvent* event)
       m_touchPointers[touchPointer].down.y = y;
       m_touchPointers[touchPointer].down.time = time;
       m_touchPointers[touchPointer].moving = false;
+      m_touchPointers[touchPointer].size = size;
 
       // If this is the down event of the primary pointer
       // we start by assuming that it's a single touch
@@ -482,8 +484,23 @@ bool CXBMCApp::onTouchEvent(AInputEvent* event)
         android_printf(" => abort touch move");
         break;
       }
-
-      m_touchPointers[touchPointer].moving = true;
+      
+      // Check if the touch has moved far enough to count as movement
+      if (!m_touchPointers[touchPointer].moving)
+      {
+        float distanceX = m_touchPointers[touchPointer].down.x - x;
+        float distanceY = m_touchPointers[touchPointer].down.y - y;
+        float distance = sqrt(pow(distanceX, 2) + pow(distanceY, 2));
+        
+        if (distance > m_touchPointers[touchPointer].size)
+          m_touchPointers[touchPointer].moving = true;
+        else
+        {
+          android_printf(" => touch of size %f has only moved %f so far => abort touch move", m_touchPointers[touchPointer].size, distance);
+          break;
+        }
+      }
+      
       if (m_touchGestureState == TouchGestureSingleTouch)
       {
         android_printf(" => a pan gesture starts", m_touchGestureState, TouchGestureMultiTouchStart);

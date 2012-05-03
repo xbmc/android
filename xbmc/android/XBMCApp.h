@@ -104,11 +104,12 @@ private:
       Pointer() { reset(); }
       
       bool valid() { return down.valid(); }
-      void reset() { down.reset(); last.reset(); moving = false; }
+      void reset() { down.reset(); last.reset(); moving = false; size = 0.0f; }
       
       Touch down;
       Touch last;
       bool moving;
+      float size;
   };
   
   Pointer m_touchPointers[TOUCH_MAX_POINTERS];
