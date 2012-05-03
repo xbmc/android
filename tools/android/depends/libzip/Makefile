@@ -10,7 +10,7 @@ ARCHIVE=$(SOURCE).tar.gz
 
 # configuration settings
 CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess .; \
-        ./configure --prefix=$(PREFIX) --host=$(HOST)
+        ./configure --prefix=$(PREFIX) --host=$(HOST) --disable-shared
 
 LIBDYLIB=$(SOURCE)/.libs/$(LIBNAME).dylib
 
@@ -30,10 +30,7 @@ $(LIBDYLIB): $(SOURCE)
 
 .installed:
 	make -C $(SOURCE) install
-	rm -f $(PREFIX)/lib/libzip.la $(PREFIX)/lib/libzip.so $(PREFIX)/lib/libzip.so.2
-	mv -f $(PREFIX)/lib/libzip.so.2.1.0 $(PREFIX)/lib/libzip.so
-	rpl -e "libzip.so.2" "libzip.so\x00\x00" $(PREFIX)/lib/libzip.so
-	readelf --dynamic $(PREFIX)/lib/libzip.so | grep ibrary
+	rm -f $(PREFIX)/lib/libzip.la $(PREFIX)/lib/libzip*.so*
 	touch $@
 
 clean:
