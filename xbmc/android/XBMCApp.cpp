@@ -21,7 +21,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <dlfcn.h>
-#include <math.h>
 
 #include <android/native_window.h>
 #include "android_utils.h"
@@ -362,7 +361,7 @@ bool CXBMCApp::onTouchEvent(AInputEvent* event)
 
     case AMOTION_EVENT_ACTION_DOWN:
     case AMOTION_EVENT_ACTION_POINTER_DOWN:
-      android_printf(" => touch down (%f, %f)", x, y);
+      android_printf(" => touch down (%f, %f, %d)", x, y, touchPointer);
       m_touchPointers[touchPointer].down.x = x;
       m_touchPointers[touchPointer].down.y = y;
       m_touchPointers[touchPointer].down.time = time;
@@ -400,7 +399,7 @@ bool CXBMCApp::onTouchEvent(AInputEvent* event)
 
     case AMOTION_EVENT_ACTION_UP:
     case AMOTION_EVENT_ACTION_POINTER_UP:
-      android_printf(" => touch up (%f, %f)", x, y);
+      android_printf(" => touch up (%f, %f, %d)", x, y, touchPointer);
       if (!m_touchPointers[touchPointer].valid() ||
           m_touchGestureState == TouchGestureUnknown)
       {
@@ -485,25 +484,18 @@ bool CXBMCApp::onTouchEvent(AInputEvent* event)
         break;
       }
       
-      // Check if the touch has moved far enough to count as movement
-      if (!m_touchPointers[touchPointer].moving)
-      {
-        float distanceX = m_touchPointers[touchPointer].down.x - x;
-        float distanceY = m_touchPointers[touchPointer].down.y - y;
-        float distance = sqrt(pow(distanceX, 2) + pow(distanceY, 2));
-        
-        if (distance > m_touchPointers[touchPointer].size)
-          m_touchPointers[touchPointer].moving = true;
-        else
-        {
-          android_printf(" => touch of size %f has only moved %f so far => abort touch move", m_touchPointers[touchPointer].size, distance);
-          break;
-        }
-      }
-      
       if (m_touchGestureState == TouchGestureSingleTouch)
       {
-        android_printf(" => a pan gesture starts", m_touchGestureState, TouchGestureMultiTouchStart);
+        updateTouches(event);
+        
+        // Check if the touch has moved far enough to count as movement
+        if (!m_touchPointers[touchPointer].moving)
+        {
+          android_printf(" => touch of size %f has not moved far enough => abort touch move", m_touchPointers[touchPointer].size);
+          break;
+        }
+        
+        android_printf(" => a pan gesture starts");
         m_state.xbmcTouchGesture(ACTION_GESTURE_BEGIN, 
                                  m_touchPointers[touchPointer].down.x,
                                  m_touchPointers[touchPointer].down.y,
@@ -513,7 +505,12 @@ bool CXBMCApp::onTouchEvent(AInputEvent* event)
       }
       else if (m_touchGestureState == TouchGestureMultiTouchStart)
       {
+        android_printf(" => switching from TouchGestureMultiTouchStart to TouchGestureMultiTouch");
         m_touchGestureState = TouchGestureMultiTouch;
+        
+        updateTouches(event);
+        for (unsigned int pointer = 0; pointer < TOUCH_MAX_POINTERS; pointer++)
+          m_touchPointers[pointer].last.copy(m_touchPointers[pointer].current);
       }
 
       // Let's see if we have a pan gesture (i.e. the primary and only pointer moving)
@@ -529,7 +526,7 @@ bool CXBMCApp::onTouchEvent(AInputEvent* event)
       else if (m_touchGestureState == TouchGestureMultiTouch)
       {
         android_printf(" => a multi touch gesture");
-        handleMultiTouchGesture(x, y, touchPointer);
+        handleMultiTouchGesture(event);
       }
       else
         break;
@@ -544,32 +541,59 @@ bool CXBMCApp::onTouchEvent(AInputEvent* event)
   return false;
 }
 
-void CXBMCApp::handleMultiTouchGesture(float x, float y, size_t pointer)
+void CXBMCApp::handleMultiTouchGesture(AInputEvent *event)
 {
-  m_touchPointers[pointer].last.x = x;
-  m_touchPointers[pointer].last.y = y;
+  android_printf("%s", __PRETTY_FUNCTION__);
+  // don't overwrite the last position as we need
+  // it for rotating
+  updateTouches(event, false);
 
   Pointer& primaryPointer = m_touchPointers[0];
   Pointer& secondaryPointer = m_touchPointers[1];
 
   // calculate zoom/pinch
-  float baseDiffX = primaryPointer.down.x - secondaryPointer.down.x;
-  float baseDiffY = primaryPointer.down.y - secondaryPointer.down.y;
-  float baseDiffLength = sqrt(pow(baseDiffX, 2) + pow(baseDiffY, 2));
+  CVector primary = primaryPointer.down;
+  CVector secondary = secondaryPointer.down;
+  CVector diagonal = primary - secondary;
+  float baseDiffLength = diagonal.length();
   if (baseDiffLength != 0.0f)
   {
-    float curDiffX = primaryPointer.last.x - secondaryPointer.last.x;
-    float curDiffY = primaryPointer.last.y - secondaryPointer.last.y;
-    float curDiffLength = sqrt(pow(curDiffX, 2) + pow(curDiffY, 2));
-    
-    float centerX = (primaryPointer.down.x + secondaryPointer.down.x) / 2;
-    float centerY = (primaryPointer.down.y + secondaryPointer.down.y) / 2;
-    
+    CVector primaryNow = primaryPointer.current;
+    CVector secondaryNow = secondaryPointer.current;
+    CVector diagonalNow = primaryNow - secondaryNow;
+    float curDiffLength = diagonalNow.length();
+
+    float centerX = (primary.x + secondary.x) / 2;
+    float centerY = (primary.y + secondary.y) / 2;
+
     float zoom = curDiffLength / baseDiffLength;
-    
+
     m_state.xbmcTouchGesture(ACTION_GESTURE_ZOOM, centerX, centerY, zoom, 0);
   }
-  
+}
+
+void CXBMCApp::updateTouches(AInputEvent *event, bool saveLast /* = true */)
+{
+  for (unsigned int pointer = 0; pointer < TOUCH_MAX_POINTERS; pointer++)
+  {
+    if (saveLast)
+      m_touchPointers[pointer].last.copy(m_touchPointers[pointer].current);
+    
+    m_touchPointers[pointer].current.x = AMotionEvent_getX(event, pointer);
+    m_touchPointers[pointer].current.y = AMotionEvent_getY(event, pointer);
+    m_touchPointers[pointer].current.time = AMotionEvent_getEventTime(event);
+    
+    // Calculate whether the pointer has moved at all
+    if (!m_touchPointers[pointer].moving)
+    {
+      CVector down = m_touchPointers[pointer].down;
+      CVector current = m_touchPointers[pointer].current;
+      CVector distance = down - current;
+      
+      if (distance.length() > m_touchPointers[pointer].size)
+        m_touchPointers[pointer].moving = true;
+    }
+  }
 }
 
 void CXBMCApp::run()
