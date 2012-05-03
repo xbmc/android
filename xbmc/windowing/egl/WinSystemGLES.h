@@ -45,6 +45,7 @@ public:
   virtual bool  IsExtSupported(const char* extension);
 
   virtual void  ShowOSMouse(bool show);
+  virtual bool  HasCursor();
 
   virtual void  NotifyAppActiveChange(bool bActivated);
 

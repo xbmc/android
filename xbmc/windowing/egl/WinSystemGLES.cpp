@@ -218,6 +218,15 @@ void CWinSystemGLES::ShowOSMouse(bool show)
 {
 }
 
+bool CWinSystemGLES::HasCursor()
+{
+#ifdef TARGET_ANDROID
+  return false;
+#else
+  return true;
+#endif
+}
+
 void CWinSystemGLES::NotifyAppActiveChange(bool bActivated)
 {
 }
