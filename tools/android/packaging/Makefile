@@ -27,7 +27,7 @@ debug: prepare
 prepare:
 	rm -rf xbmc/assets xbmc/lib tmp
 	mkdir -p xbmc/assets xbmc/res xbmc/lib/$(APP_ABI) images
-	$(foreach var,$(OBJS),$(STRIP) --strip-unneeded $(XBMCPREFIX)/lib/$(var) -o xbmc/lib/$(APP_ABI)/`echo $(var) | sed -e 's/\.so.*/\.so/g'`;)
+	$(foreach var,$(OBJS),$(STRIP) --strip-unneeded $(PREFIX)/lib/$(var) -o xbmc/lib/$(APP_ABI)/`echo $(var) | sed -e 's/\.so.*/\.so/g'`;)
 	$(STRIP) --strip-unneeded $(XBMCROOT)/libxbmc.so -o xbmc/lib/$(APP_ABI)/libxbmc.so
 	$(STRIP) --strip-unneeded $(XBMCROOT)/xbmc/android/libxbmcapp.so -o xbmc/lib/$(APP_ABI)/libxbmcapp.so
 	$(foreach var,$(COPYDIRS), cp -rfp ../../../$(var) ./xbmc/assets/;)
