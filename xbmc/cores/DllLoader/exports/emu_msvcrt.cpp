@@ -70,8 +70,7 @@
 #include "utils/URIUtils.h"
 #endif
 #if defined(TARGET_ANDROID)
-#include "utils/URIUtils.h"
-#include "android/xb_dlopen.h"
+#include "android/loader/xb_dlopen.h"
 #else
 #include <dlfcn.h>
 #endif

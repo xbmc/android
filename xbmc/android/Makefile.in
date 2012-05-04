@@ -1,32 +1,28 @@
 include @abs_top_srcdir@/tools/android/depends/Makefile.include
 include @abs_top_srcdir@/tools/android/depends/android-sdk.mk
 
-GLUEPATH = $(NDKROOT)/sources/android/native_app_glue
-CFLAGS  += -I@abs_top_srcdir@/xbmc -I$(GLUEPATH) -I$(PREFIX)/lib/libzip/include
-LDFLAGS += -llog -landroid -Wl,--no-undefined
+LOADER_TARGET   = loader
+LOADER_LIB      = $(LOADER_TARGET)/xb_dlopen.a
+ACTIVITY_TARGET = activity
+ACTIVITY_LIB    = $(ACTIVITY)/libxbmcapp.so
 
-SRCS     = $(GLUEPATH)/android_native_app_glue.c \
-           android_main.cpp \
-           EventLoop.cpp \
-           XBMCApp.cpp \
-           unzip.cpp
+all: $(LOADER_TARGET) $(ACTIVITY_TARGET)
 
-UTILS    = xb_dlopen.cpp
-UTIL_LIB = xb_dlopen.a
-SOLIB    = libxbmcapp.so
+$(LOADER_TARGET): $(LOADER_LIB)
 
-all: $(SOLIB)
-
-$(UTIL_LIB): $(UTILS)
-	$(CXX) $(CFLAGS) $(LDFLAGS) -c -o $(@:.a=.o) $(UTILS)
-	$(AR) cr $@ $(UTILS:.cpp=.o)
+$(LOADER_LIB):
+	$(MAKE) -C $(LOADER_TARGET)
 
 
-$(SOLIB): $(SRCS) $(UTIL_LIB)
-	$(CXX) $(INCLUDES) $(CFLAGS) $(LDFLAGS) -lz -Wl,--whole-archive -lzip -Wl,--no-whole-archive -o $@ -shared $(SRCS) $(UTIL_LIB)
+$(ACTIVITY_TARGET): $(LOADER_TARGET) $(ACTIVITY_LIB)
 
-install: $(SOLIB)
-	install $(SOLIB) $(PREFIX)/lib/$(SOLIB)
+$(ACTIVITY_LIB):
+	$(MAKE) -C $(ACTIVITY_TARGET)
+
+install: $(ACTIVITY_TARGET)
+	-@$(MAKE) -C $(ACTIVITY_TARGET) install
 
 clean:
-	-@rm -f $(SOLIB) $(UTIL_LIB) *.o 2>/dev/null || true
+	-@rm -f *.o 2>/dev/null || true
+	-@$(MAKE) -C $(LOADER_TARGET) clean
+	-@$(MAKE) -C $(ACTIVITY_TARGET) clean

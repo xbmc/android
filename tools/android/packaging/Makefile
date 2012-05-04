@@ -9,7 +9,7 @@ OBJS = libgcrypt.so libgpg-error.so libfontconfig.so libfreetype.so \
   libpython2.6.so libyajl.so libxbssl.so libcurl.so \
   libtiff.so libxbjpeg.so librtmp.so
 
-XBMCROOT = $(CURDIR)/../../../
+XBMCROOT = $(CURDIR)/../../..
 COPYDIRS = system addons language media
 all: debug
 
@@ -29,13 +29,13 @@ prepare:
 	mkdir -p xbmc/assets xbmc/res xbmc/lib/$(APP_ABI) images
 	$(foreach var,$(OBJS),$(STRIP) --strip-unneeded $(PREFIX)/lib/$(var) -o xbmc/lib/$(APP_ABI)/`echo $(var) | sed -e 's/\.so.*/\.so/g'`;)
 	$(STRIP) --strip-unneeded $(XBMCROOT)/libxbmc.so -o xbmc/lib/$(APP_ABI)/libxbmc.so
-	$(STRIP) --strip-unneeded $(XBMCROOT)/xbmc/android/libxbmcapp.so -o xbmc/lib/$(APP_ABI)/libxbmcapp.so
+	$(STRIP) --strip-unneeded $(XBMCROOT)/xbmc/android/activity/libxbmcapp.so -o xbmc/lib/$(APP_ABI)/libxbmcapp.so
 	$(foreach var,$(COPYDIRS), cp -rfp ../../../$(var) ./xbmc/assets/;)
 	$(STRIP) --strip-unneeded xbmc/assets/system/*.so
 	$(STRIP) --strip-unneeded xbmc/assets/system/players/*/*.so
 	find xbmc/assets/addons/skin.*/media/* -not -iname "Textures.xbt" -delete
 	rm -rf xbmc/assets/addons/skin.confluence
 	install -p $(NDKROOT)/toolchains/arm-linux-androideabi-4.4.3/prebuilt/gdbserver ./xbmc/lib/$(APP_ABI)/gdbserver
-	echo "set solib-search-path ./obj/local/$(APP_ABI):$(PREFIX)/lib:$(XBMCROOT):$(XBMCROOT)/xbmc/android" > ./xbmc/lib/$(APP_ABI)/gdb.setup
+	echo "set solib-search-path ./obj/local/$(APP_ABI):$(PREFIX)/lib:$(XBMCROOT):$(XBMCROOT)/xbmc/android/activity" > ./xbmc/lib/$(APP_ABI)/gdb.setup
 	echo "directory $(NDKROOT)/platforms/$(APP_PLATFORM)/arch-arm/usr/include $(NDKROOT)/sources/android/native_app_glue" \
-	     "$(NDKROOT)/sources/cxx-stl/gnu-libstdc++ $(XBMCROOT) $(XBMCROOT)/xbmc/android $(PREFIX)/include jni" >> ./xbmc/lib/$(APP_ABI)/gdb.setup
+	     "$(NDKROOT)/sources/cxx-stl/gnu-libstdc++ $(XBMCROOT) $(XBMCROOT)/xbmc/android/activity $(PREFIX)/include jni" >> ./xbmc/lib/$(APP_ABI)/gdb.setup

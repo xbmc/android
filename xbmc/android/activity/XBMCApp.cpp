@@ -23,7 +23,7 @@
 #include <dlfcn.h>
 
 #include <android/native_window.h>
-#include "xb_dlopen.h"
+#include "loader/xb_dlopen.h"
 
 #include "XBMCApp.h"
 #include "xbmc_log.h"

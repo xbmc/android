@@ -116,8 +116,8 @@ DIRECTORY_ARCHIVES += lib/UnrarXLib/UnrarXLib.a
 endif
 
 ifeq (@USE_ANDROID@,1)
-        DIRECTORY_ARCHIVES += xbmc/android/xb_dlopen.a
-        DIRECTORY_ARCHIVES += xbmc/windowing/android/windowing_android.a
+DIRECTORY_ARCHIVES += xbmc/android/loader/xb_dlopen.a
+DIRECTORY_ARCHIVES += xbmc/windowing/android/windowing_android.a
 endif
 
 

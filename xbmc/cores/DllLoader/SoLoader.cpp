@@ -25,7 +25,7 @@
 #include "filesystem/SpecialProtocol.h"
 #include "utils/log.h"
 #if defined(TARGET_ANDROID)
-#include "android/xb_dlopen.h"
+#include "android/loader/xb_dlopen.h"
 #endif
 
 SoLoader::SoLoader(const char *so, bool bGlobal) : LibraryLoader(so)

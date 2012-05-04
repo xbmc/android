@@ -1906,6 +1906,8 @@ OUTPUT_FILES="Makefile \
     addons/skin.confluence/media/Makefile \
     xbmc/Makefile \
     xbmc/android/Makefile \
+    xbmc/android/activity/Makefile \
+    xbmc/android/loader/Makefile \
     xbmc/cdrip/Makefile \
     xbmc/cores/Makefile \
     xbmc/cores/VideoRenderers/Makefile \
