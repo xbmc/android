@@ -12,6 +12,9 @@ CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automak
           ./configure --prefix=$(PREFIX) --host=$(HOST)
 # ac_cv_sys_symbol_underscore=no \
 
+ifeq ($(PLATFORM),x86)
+CONFIGURE+=--disable-asm
+endif
 
 LIBDYLIB=$(PLATFORM)/$(LIBNAME)/.libs/$(LIBNAME).so
 

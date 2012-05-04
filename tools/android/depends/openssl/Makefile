@@ -8,7 +8,7 @@ SOURCE=$(LIBNAME)-$(VERSION)
 ARCHIVE=$(SOURCE).tar.gz
 
 # configuration settings
-CONFIGURE=CC=arm-linux-androideabi-gcc MACHINE=arm ./config shared zlib shared --openssldir=$(PREFIX)
+CONFIGURE=MACHINE=$(HOST) ./config shared zlib shared --openssldir=$(PREFIX)
 
 LIBDYLIB=$(PLATFORM)/src/.libs/lib$(LIBNAME).so
 

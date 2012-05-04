@@ -1,4 +1,0 @@
-using gcc : : arm-linux-androideabi-g++ :
-  <cflags>"-fvisibility-inlines-hidden -DBOOST_AC_USE_PTHREADS -DBOOST_SP_USE_PTHREADS"
-  <cxxflags>"-fvisibility-inlines-hidden -DBOOST_AC_USE_PTHREADS -DBOOST_SP_USE_PTHREADS"
-;
