@@ -9,26 +9,26 @@ ARCHIVE=$(SOURCE).tgz
 
 # configuration settings
 
-LIBDYLIB=$(SOURCE)/$(LIBNAME)/.libs/$(LIBNAME).so
+LIBDYLIB=$(PLATFORM)/$(LIBNAME)/.libs/$(LIBNAME).so
 
-CLEAN_FILES=$(ARCHIVE) $(SOURCE)
+CLEAN_FILES=$(ARCHIVE) $(PLATFORM)
 
 all: $(LIBDYLIB) .installed
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
 
-$(SOURCE): $(TARBALLS_LOCATION)/$(ARCHIVE)
-	rm -rf $(SOURCE)
+$(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
+	rm -rf $(PLATFORM)/*; mkdir $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
-	echo $(SOURCE) > .gitignore
-	cd $(SOURCE)/librtmp; patch -p0 < ../../prefix.patch
+	echo $(PLATFORM) > .gitignore
+	cd $(PLATFORM)/librtmp; patch -p0 < ../../prefix.patch
 
-$(LIBDYLIB): $(SOURCE)
-	make -j $(JOBS) -C $(SOURCE)/librtmp CROSS_COMPILE=$(CROSSTOOLS) PREFIX=$(PREFIX)
+$(LIBDYLIB): $(PLATFORM)
+	make -j $(JOBS) -C $(PLATFORM)/librtmp CROSS_COMPILE=$(CROSSTOOLS) PREFIX=$(PREFIX)
 
 .installed:
-	make -C $(SOURCE)/librtmp install
+	make -C $(PLATFORM)/librtmp install PREFIX=$(PREFIX)
 	rm -f $(PREFIX)/lib/librtmp.la $(PREFIX)/lib/librtmp.so
 	mv -f $(PREFIX)/lib/librtmp.so.0 $(PREFIX)/lib/librtmp.so
 	rpl -e "librtmp.so.0" "librtmp.so\x00\x00" $(PREFIX)/lib/librtmp.so
@@ -36,9 +36,9 @@ $(LIBDYLIB): $(SOURCE)
 	touch $@
 
 clean:
-	make -C $(SOURCE) clean
+	make -C $(PLATFORM) clean
 	rm -f .installed
 
 distclean::
-	rm -rf $(SOURCE) .installed
+	rm -rf $(PLATFORM) .installed
 

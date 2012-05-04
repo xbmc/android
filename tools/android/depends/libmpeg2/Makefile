@@ -11,26 +11,26 @@ ARCHIVE=$(SOURCE).tar.gz
 CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess .auto/ ; \
           ./configure --prefix=$(PREFIX) --host=$(HOST) --disable-sdl
 
-LIBDYLIB=$(SOURCE)/.libs/$(LIBNAME).so
+LIBDYLIB=$(PLATFORM)/.libs/$(LIBNAME).so
 
-CLEAN_FILES=$(ARCHIVE) $(SOURCE)
+CLEAN_FILES=$(ARCHIVE) $(PLATFORM)
 
 all: $(LIBDYLIB) .installed
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
 
-$(SOURCE): $(TARBALLS_LOCATION)/$(ARCHIVE)
-	rm -rf $(SOURCE)
+$(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
+	rm -rf $(PLATFORM)/*; mkdir $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
-	echo $(SOURCE) > .gitignore
-	cd $(SOURCE); $(CONFIGURE)
+	echo $(PLATFORM) > .gitignore
+	cd $(PLATFORM); $(CONFIGURE)
 
-$(LIBDYLIB): $(SOURCE)
-	make -j $(JOBS) -C $(SOURCE)
+$(LIBDYLIB): $(PLATFORM)
+	make -j $(JOBS) -C $(PLATFORM)
 
 .installed:
-	make -C $(SOURCE) install
+	make -C $(PLATFORM) install
 	rm -f $(PREFIX)/lib/libmpeg2.la $(PREFIX)/lib/libmpeg2.so $(PREFIX)/lib/libmpeg2.so.0
 	mv -f $(PREFIX)/lib/libmpeg2.so.0.1.0 $(PREFIX)/lib/libmpeg2.so
 	rpl -e "libmpeg2.so.0" "libmpeg2.so\x00\x00" $(PREFIX)/lib/libmpeg2.so
@@ -44,9 +44,9 @@ $(LIBDYLIB): $(SOURCE)
 	touch $@
 
 clean:
-	make -C $(SOURCE) clean
+	make -C $(PLATFORM) clean
 	rm -f .installed
 
 distclean::
-	rm -rf $(SOURCE) .installed
+	rm -rf $(PLATFORM) .installed
 

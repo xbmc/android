@@ -30,4 +30,4 @@ clean:
 distclean::
 	for d in $(BUILDTOOLS); do $(MAKE) -C $$d distclean; done
 	for d in $(SUBDIRS); do $(MAKE) -C $$d distclean; done
-	rm -rf $(XBMCPREFIX)/*
+	rm -rf $(PREFIX)/*

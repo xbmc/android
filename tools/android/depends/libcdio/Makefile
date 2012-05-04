@@ -13,33 +13,33 @@ CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automak
           ./configure --prefix=$(PREFIX) --host=$(HOST)  --without-cd-drive --without-cd-info --without-cd-paranoia \
           --without-cdda-player --without-cd-read --without-iso-info --without-iso-read 
 
-LIBDYLIB=$(SOURCE)/.libs/$(LIBNAME).so
+LIBDYLIB=$(PLATFORM)/.libs/$(LIBNAME).so
 
-CLEAN_FILES=$(ARCHIVE) $(SOURCE)
+CLEAN_FILES=$(ARCHIVE) $(PLATFORM)
 
 all: $(LIBDYLIB) .installed
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
 
-$(SOURCE): $(TARBALLS_LOCATION)/$(ARCHIVE)
-	rm -rf $(SOURCE)
+$(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
+	rm -rf $(PLATFORM)/*; mkdir $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
-	echo $(SOURCE) > .gitignore
-	cd $(SOURCE); $(CONFIGURE)
+	echo $(PLATFORM) > .gitignore
+	cd $(PLATFORM); $(CONFIGURE)
 
-$(LIBDYLIB): $(SOURCE)
-	make -j $(JOBS) -C $(SOURCE)
+$(LIBDYLIB): $(PLATFORM)
+	make -j $(JOBS) -C $(PLATFORM)
 
 .installed:
-	make -C $(SOURCE) install
-	cp $(SOURCE)/include/cdio/cdtext.h $(PREFIX)/include/cdio/
+	make -C $(PLATFORM) install
+	cp $(PLATFORM)/include/cdio/cdtext.h $(PREFIX)/include/cdio/
 	touch $@
 
 clean:
-	make -C $(SOURCE) clean
+	make -C $(PLATFORM) clean
 	rm -f .installed
 
 distclean::
-	rm -rf $(SOURCE) .installed
+	rm -rf $(PLATFORM) .installed
 

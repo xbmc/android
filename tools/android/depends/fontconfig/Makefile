@@ -12,29 +12,29 @@ CONFIGURE=./configure --prefix=$(PREFIX) --host=$(HOST) \
   --with-freetype-config=$(PREFIX)/bin/freetype-config \
   --disable-libxml2 --disable-docs --with-arch=arm
 
-LIBDYLIB=$(SOURCE)/.libs/lib$(LIBNAME).so
+LIBDYLIB=$(PLATFORM)/.libs/lib$(LIBNAME).so
 
-CLEAN_FILES=$(ARCHIVE) $(SOURCE)
+CLEAN_FILES=$(ARCHIVE) $(PLATFORM)
 
 all: $(LIBDYLIB) .installed
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
 
-$(SOURCE): $(TARBALLS_LOCATION)/$(ARCHIVE)
-	rm -rf $(SOURCE)
+$(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
+	rm -rf $(PLATFORM)/*; mkdir $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
-	echo $(SOURCE) > .gitignore
-	cd $(SOURCE); patch -p1 < ../01-fontconfig-cross-compile-fix.patch
-	cd $(SOURCE); patch -p1 < ../lconv.patch 
-	cd $(SOURCE); autoreconf -vif
-	cd $(SOURCE); $(CONFIGURE)
+	echo $(PLATFORM) > .gitignore
+	cd $(PLATFORM); patch -p1 < ../01-fontconfig-cross-compile-fix.patch
+	cd $(PLATFORM); patch -p1 < ../lconv.patch 
+	cd $(PLATFORM); autoreconf -vif
+	cd $(PLATFORM); $(CONFIGURE)
 
-$(LIBDYLIB): $(SOURCE)
-	make -j $(JOBS) -C $(SOURCE)
+$(LIBDYLIB): $(PLATFORM)
+	make -j $(JOBS) -C $(PLATFORM)
 
 .installed:
-	make -C $(SOURCE) install
+	make -C $(PLATFORM) install
 	rm -f $(PREFIX)/lib/libfontconfig.la $(PREFIX)/lib/libfontconfig.so $(PREFIX)/lib/libfontconfig.so.1
 	mv -f $(PREFIX)/lib/libfontconfig.so.1.4.4 $(PREFIX)/lib/libfontconfig.so
 	rpl -e "libfontconfig.so.1" "libfontconfig.so\x00\x00" $(PREFIX)/lib/libfontconfig.so
@@ -42,9 +42,9 @@ $(LIBDYLIB): $(SOURCE)
 	touch $@
 
 clean:
-	make -C $(SOURCE) clean
+	make -C $(PLATFORM) clean
 	rm -f .installed
 
 distclean::
-	rm -rf $(SOURCE) .installed
+	rm -rf $(PLATFORM) .installed
 

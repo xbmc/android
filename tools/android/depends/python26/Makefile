@@ -7,7 +7,7 @@ VERSION=2.6.5
 SOURCE=$(LIBNAME)-$(VERSION)
 ARCHIVE=$(SOURCE).tar.bz2
 CWD=$(shell pwd)
-HOSTPYTHONDIR=$(CWD)/$(SOURCE)/hostpython
+HOSTPYTHONDIR=$(CWD)/$(PLATFORM)/hostpython
 
 # configuration settings
 CONFIGURE=./configure --prefix=$(PREFIX) --host=$(HOST) --build=x86_64-linux-gnu \
@@ -20,7 +20,7 @@ CONFIGURE_NATIVE= CFLAGS="" CXXFLAGS="" LDFLAGS="" CPPFLAGS="" \
   LD="ld" \
   ./configure --prefix=$(HOSTPYTHONDIR) --disable-shared --disable-toolbox-glue --disable-framework
 
-LIBDYLIB=$(SOURCE)/libpython2.6.so
+LIBDYLIB=$(PLATFORM)/libpython2.6.so
 
 all: $(LIBDYLIB) .installed
 
@@ -28,28 +28,28 @@ $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
 
 $(LIBDYLIB): $(TARBALLS_LOCATION)/$(ARCHIVE)
-	rm -rf $(SOURCE)
+	rm -rf $(PLATFORM)/*; mkdir $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
-	echo $(SOURCE) > .gitignore
-	cd $(SOURCE); patch -Np1 -i ../Python-2.6-ctypes.patch
-	cd $(SOURCE); mkdir -p $(HOSTPYTHONDIR)
-	cd $(SOURCE); $(CONFIGURE_NATIVE)
-	cd $(SOURCE); make -j4 libpython2.6.a
-	cd $(SOURCE); ranlib libpython2.6.a
-	cd $(SOURCE); make -j4 python Parser/pgen
-	cd $(SOURCE); make install
-	cd $(SOURCE); cp Parser/pgen $(HOSTPYTHONDIR)/bin
-	cd $(SOURCE); make distclean
-	cd $(SOURCE); patch -Np1 -i ../Python-2.6.5-xcompile.patch
-	cd $(SOURCE); autoreconf
-	cd $(SOURCE); $(CONFIGURE)
-	cd $(SOURCE); rm pyconfig.h
-	cd $(SOURCE); rm Modules/config.c
-	cd $(SOURCE); patch -Np1 -i ../Python-2.6.2-android.patch
-	make -j 4 -C $(SOURCE) HOSTPYTHON=$(HOSTPYTHONDIR)/bin/python HOSTPGEN=$(HOSTPYTHONDIR)/bin/pgen CROSS_COMPILE_TARGET=yes
+	echo $(PLATFORM) > .gitignore
+	cd $(PLATFORM); patch -Np1 -i ../Python-2.6-ctypes.patch
+	cd $(PLATFORM); mkdir -p $(HOSTPYTHONDIR)
+	cd $(PLATFORM); $(CONFIGURE_NATIVE)
+	cd $(PLATFORM); make -j4 libpython2.6.a
+	cd $(PLATFORM); ranlib libpython2.6.a
+	cd $(PLATFORM); make -j4 python Parser/pgen
+	cd $(PLATFORM); make install
+	cd $(PLATFORM); cp Parser/pgen $(HOSTPYTHONDIR)/bin
+	cd $(PLATFORM); make distclean
+	cd $(PLATFORM); patch -Np1 -i ../Python-2.6.5-xcompile.patch
+	cd $(PLATFORM); autoreconf
+	cd $(PLATFORM); $(CONFIGURE)
+	cd $(PLATFORM); rm pyconfig.h
+	cd $(PLATFORM); rm Modules/config.c
+	cd $(PLATFORM); patch -Np1 -i ../Python-2.6.2-android.patch
+	make -j 4 -C $(PLATFORM) HOSTPYTHON=$(HOSTPYTHONDIR)/bin/python HOSTPGEN=$(HOSTPYTHONDIR)/bin/pgen CROSS_COMPILE_TARGET=yes
 
 .installed:
-	make -C $(SOURCE) HOSTPYTHON=$(HOSTPYTHONDIR)/bin/python HOSTPGEN=$(HOSTPYTHONDIR)/bin/pgen CROSS_COMPILE_TARGET=yes install
+	make -C $(PLATFORM) HOSTPYTHON=$(HOSTPYTHONDIR)/bin/python HOSTPGEN=$(HOSTPYTHONDIR)/bin/pgen CROSS_COMPILE_TARGET=yes install
 	find $(PREFIX)/lib/python2.6 -type f -name *.pyc -exec rm -f {} \;
 	find $(PREFIX)/lib/python2.6 -type f -name *.pyo -exec rm -f {} \;
 	#
@@ -60,7 +60,7 @@ $(LIBDYLIB): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	touch $@
 
 clean:
-	rm -rf $(SOURCE) .installed
+	rm -rf $(PLATFORM) .installed
 
 distclean::
-	rm -rf $(SOURCE) .installed
+	rm -rf $(PLATFORM) .installed

@@ -10,33 +10,33 @@ ARCHIVE=$(SOURCE).tar.gz
 # configuration settings
 CONFIGURE=./configure --prefix=$(PREFIX) --host=$(HOST) --build=$(BUILD) --without-cxx-binding
 
-LIBDYLIB=$(SOURCE)/$(LIBNAME)/.libs/$(LIBNAME).so
+LIBDYLIB=$(PLATFORM)/$(LIBNAME)/.libs/$(LIBNAME).so
 
-CLEAN_FILES=$(ARCHIVE) $(SOURCE)
+CLEAN_FILES=$(ARCHIVE) $(PLATFORM)
 
 all: $(LIBDYLIB) .installed
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) http://ftp.gnu.org/gnu/ncurses/$(ARCHIVE)
 
-$(SOURCE): $(TARBALLS_LOCATION)/$(ARCHIVE)
-	rm -rf $(SOURCE)
+$(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
+	rm -rf $(PLATFORM)/*; mkdir $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
-	echo $(SOURCE) > .gitignore
-	cd $(SOURCE); $(CONFIGURE)
+	echo $(PLATFORM) > .gitignore
+	cd $(PLATFORM); $(CONFIGURE)
 	patch -Np0 -i 01-ncurses-locale.patch
 
-$(LIBDYLIB): $(SOURCE)
-	make -j $(JOBS) -C $(SOURCE)
+$(LIBDYLIB): $(PLATFORM)
+	make -j $(JOBS) -C $(PLATFORM)
 
 .installed:
-	make -C $(SOURCE) install
+	make -C $(PLATFORM) install
 	touch $@
 
 clean:
-	make -C $(SOURCE) clean
+	make -C $(PLATFORM) clean
 	rm -f .installed
 
 distclean::
-	rm -rf $(SOURCE) .installed
+	rm -rf $(PLATFORM) .installed
 

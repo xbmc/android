@@ -13,28 +13,28 @@ CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automak
 # ac_cv_sys_symbol_underscore=no \
 
 
-LIBDYLIB=$(SOURCE)/$(LIBNAME)/.libs/$(LIBNAME).so
+LIBDYLIB=$(PLATFORM)/$(LIBNAME)/.libs/$(LIBNAME).so
 
-CLEAN_FILES=$(ARCHIVE) $(SOURCE)
+CLEAN_FILES=$(ARCHIVE) $(PLATFORM)
 
 all: $(LIBDYLIB) .installed
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
 
-$(SOURCE): $(TARBALLS_LOCATION)/$(ARCHIVE)
-	rm -rf $(SOURCE)
+$(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
+	rm -rf $(PLATFORM)/*; mkdir $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
-	echo $(SOURCE) > .gitignore
-	cd $(SOURCE); patch -p1 < ../gcrypt-disable-tests.patch
-	cd $(SOURCE); $(CONFIGURE)
-	patch -p0 <01-gcrypt-android-select.patch
+	echo $(PLATFORM) > .gitignore
+	cd $(PLATFORM); patch -p1 < ../gcrypt-disable-tests.patch
+	cd $(PLATFORM); $(CONFIGURE)
+	cd $(PLATFORM); patch -p1 < ../01-gcrypt-android-select.patch
 
-$(LIBDYLIB): $(SOURCE)
-	make -j $(JOBS) -C $(SOURCE)
+$(LIBDYLIB): $(PLATFORM)
+	make -j $(JOBS) -C $(PLATFORM)
 
 .installed:
-	make -C $(SOURCE) install
+	make -C $(PLATFORM) install
 	rm -f $(PREFIX)/lib/libgcrypt.la $(PREFIX)/lib/libgcrypt.so $(PREFIX)/lib/libgcrypt.so.11
 	mv -f $(PREFIX)/lib/libgcrypt.so.11.4.3 $(PREFIX)/lib/libgcrypt.so
 	rpl -e "libgcrypt.so.11" "libgcrypt.so\x00\x00\x00" $(PREFIX)/lib/libgcrypt.so
@@ -42,8 +42,8 @@ $(LIBDYLIB): $(SOURCE)
 	touch $@
 
 clean:
-	make -C $(SOURCE) clean
+	make -C $(PLATFORM) clean
 	rm -f .installed
 
 distclean::
-	rm -rf $(SOURCE) .installed
+	rm -rf $(PLATFORM) .installed

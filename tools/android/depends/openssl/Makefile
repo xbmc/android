@@ -10,26 +10,26 @@ ARCHIVE=$(SOURCE).tar.gz
 # configuration settings
 CONFIGURE=CC=arm-linux-androideabi-gcc MACHINE=arm ./config shared zlib shared --openssldir=$(PREFIX)
 
-LIBDYLIB=$(SOURCE)/src/.libs/lib$(LIBNAME).so
+LIBDYLIB=$(PLATFORM)/src/.libs/lib$(LIBNAME).so
 
-CLEAN_FILES=$(ARCHIVE) $(SOURCE)
+CLEAN_FILES=$(ARCHIVE) $(PLATFORM)
 
 all: $(LIBDYLIB) .installed
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
 
-$(SOURCE): $(TARBALLS_LOCATION)/$(ARCHIVE)
-	rm -rf $(SOURCE)
+$(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
+	rm -rf $(PLATFORM)/*; mkdir $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
-	echo $(SOURCE) > .gitignore
-	cd $(SOURCE); $(CONFIGURE)
+	echo $(PLATFORM) > .gitignore
+	cd $(PLATFORM); $(CONFIGURE)
 
-$(LIBDYLIB): $(SOURCE)
-	make -j1 -C $(SOURCE)
+$(LIBDYLIB): $(PLATFORM)
+	make -j1 -C $(PLATFORM)
 
 .installed:
-	make -C $(SOURCE) install_sw
+	make -C $(PLATFORM) install_sw
 	rm -f $(PREFIX)/lib/libssl.so $(PREFIX)/lib/libxbssl.so
 	mv -f $(PREFIX)/lib/libssl.so.0.9.8 $(PREFIX)/lib/libxbssl.so
 	ln -s $(PREFIX)/lib/libxbssl.so $(PREFIX)/lib/libssl.so
@@ -48,9 +48,9 @@ $(LIBDYLIB): $(SOURCE)
 	touch $@
 
 clean:
-	make -C $(SOURCE) clean
+	make -C $(PLATFORM) clean
 	rm -f .installed
 
 distclean::
-	rm -rf $(SOURCE) .installed
+	rm -rf $(PLATFORM) .installed
 

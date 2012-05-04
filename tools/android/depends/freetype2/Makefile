@@ -13,26 +13,26 @@ export LIBTOOL=builds/unix/libtool
 CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess builds/unix; \
           ./configure --prefix=$(PREFIX) --host=$(HOST)
 
-LIBDYLIB=$(SOURCE)/objs/.libs/lib$(LIBNAME).so
+LIBDYLIB=$(PLATFORM)/objs/.libs/lib$(LIBNAME).so
 
-CLEAN_FILES=$(ARCHIVE) $(SOURCE)
+CLEAN_FILES=$(ARCHIVE) $(PLATFORM)
 
 all: $(LIBDYLIB) .installed
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
 
-$(SOURCE): $(TARBALLS_LOCATION)/$(ARCHIVE)
-	rm -rf $(SOURCE)
+$(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
+	rm -rf $(PLATFORM)/*; mkdir $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
-	echo $(SOURCE) > .gitignore
-	cd $(SOURCE); $(CONFIGURE)
+	echo $(PLATFORM) > .gitignore
+	cd $(PLATFORM); $(CONFIGURE)
 
-$(LIBDYLIB): $(SOURCE)
-	make -C $(SOURCE)
+$(LIBDYLIB): $(PLATFORM)
+	make -C $(PLATFORM)
 
 .installed:
-	make -C $(SOURCE) install
+	make -C $(PLATFORM) install
 	rm -f $(PREFIX)/lib/libfreetype.la $(PREFIX)/lib/libfreetype.so $(PREFIX)/lib/libfreetype.so.6
 	mv -f $(PREFIX)/lib/libfreetype.so.6.3.20 $(PREFIX)/lib/libfreetype.so
 	rpl -e "libfreetype.so.6" "libfreetype.so\x00\x00" $(PREFIX)/lib/libfreetype.so
@@ -40,9 +40,9 @@ $(LIBDYLIB): $(SOURCE)
 	touch $@
 
 clean:
-	make -C $(SOURCE) clean
+	make -C $(PLATFORM) clean
 	rm -f .installed
 
 distclean::
-	rm -rf $(SOURCE) .installed
+	rm -rf $(PLATFORM) .installed
 
