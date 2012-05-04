@@ -3,14 +3,14 @@
 SCRIPT_PATH=$(cd `dirname $0` && pwd)
 
 #Edit these
-NDKROOT=/opt/android/aml/android-ndk-r7-crystax-5.beta2
-SDKROOT=/opt/android/aml/android-sdk-linux
-TARBALLS_LOCATION=/opt/xbmc-tarballs
-TOOLCHAIN=/opt/android/aml/android-ndk-r7-crystax-5.beta2-toolchain
-XBMCPREFIX=/opt/xbmc-deps
-HOST=arm-linux-androideabi
-PLATFORM=armeabi-v7a
-PLATFORM_FLAGS="-march=armv7-a -mtune=cortex-a9 -mfloat-abi=softfp -mfpu=neon -D__ARM_ARCH_7__ -D__ARM_ARCH_7A__ -DANDROID -Os"
+NDKROOT=
+SDKROOT=
+TARBALLS_LOCATION=
+TOOLCHAIN=
+XBMCPREFIX=
+HOST=
+PLATFORM=
+PLATFORM_FLAGS=
 
 #
 #
