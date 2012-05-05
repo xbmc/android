@@ -2147,6 +2147,7 @@ XB_CONFIG_MODULE([lib/ffmpeg], [
       --disable-ffserver \
       --disable-ffmpeg \
       --disable-crystalhd \
+      `if test "$use_optimizations" != "no"; then echo --enable-optimizations; else echo --disable-optimizations; fi` \
       --enable-shared \
       --disable-doc \
       --enable-postproc \
