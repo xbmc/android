@@ -107,7 +107,7 @@ specifies the path whereto the script will copy the necessary files.
    # sudo apt-get install git-core
    # cd $HOME
    # git clone git://github.com/xbmc/android.git xbmc-android
-   # cd xbmc
+   # cd xbmc-android
    # git submodule update --init addons/skin.touched
 
 -----------------------------------------------------------------------------
@@ -143,14 +143,20 @@ on with the Android toolchain and creating an Android Application Package
 Open the script setup-sdk.sh in your preferred text editor and complete
 the following variable definitions:
   
-  - NDKROOT:    Path to the root directory of the Android NDK (<android-ndk>)
-  - SDKROOT:    Path to the root directory of the Android SDK (<android-sdk>)
-  - TARBALLS:   Path to a directory where the tarballs containing the 
-                sources of the dependencies are stored after downloading
-  - TOOLCHAIN:  Path to the Android toolchain used for compiling the
-                dependencies (<android-toolchain>/android-<x>)
-  - XBMCPREFIX: Path to the directory where the built binaries and libraries
-                will be stored (e.g. $HOME/xbmc-android/tools/android/build)
+  - NDKROOT:        Path to the root directory of the Android NDK (<android-ndk>)
+  - SDKROOT:        Path to the root directory of the Android SDK (<android-sdk>)
+  - TARBALLS:       Path to a directory where the tarballs containing the 
+                    sources of the dependencies are stored after downloading
+  - TOOLCHAIN:      Path to the Android toolchain used for compiling the
+                    dependencies (<android-toolchain>/android-<x>)
+  - XBMCPREFIX:     Path to the directory where the built binaries and libraries
+                    will be stored (e.g. $HOME/xbmc-android/tools/android/build)
+  - HOST:           Name/Identification of the host architecture
+                    e.g. arm-linux-androideabi or i686-android-linux
+  - PLATFORM:       Name/Identification of the platform
+                    e.g. armeabi (for ARMv5) or armeabi-v7a (for ARMv7-a)
+  - PLATFORM_FLAGS: Platform-specific compiler flags
+                    e.g. "-march=armv7-a -mtune=cortex-a9 -mfloat-abi=softfp -mfpu=neon -D__ARM_ARCH_7__ -D__ARM_ARCH_7A__ -DANDROID -Os"
                 
    # ./setup-sdk.sh
    # make
@@ -329,3 +335,7 @@ is 'tools/android/packaging' and that the proper sdk/ndk paths are set.
 
 -Filter logcat messages by a specific tag (e.g. "XBMC")
   # adb logcat -s XBMC:V
+  
+-Create a (new) debug key to sign debug APKs
+  # keytool -genkey -v -store -alias androiddebugkey -dname "CN=Android Debug,O=Android,C=US" -keypass android -storepass android -keyalg RSA -keysize 2048 -validity 10000
+  
