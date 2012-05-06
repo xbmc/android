@@ -15,7 +15,7 @@ CONFIGURE=./configure --prefix=$(PREFIX) --host=$(HOST) \
   --enable-neon --enable-gles --enable-debug \
   --disable-sdl --disable-x11 --disable-xrandr --disable-samba --disable-dvdcss \
   --disable-mysql --disable-optical-drive --disable-webserver --disable-joystick \
-  --with-platform=android
+  --with-platform=android --disable-optimizations
 
 
 all: $(SOURCE)/libxbmc.so
