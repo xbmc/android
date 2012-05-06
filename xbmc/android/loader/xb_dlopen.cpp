@@ -112,6 +112,16 @@ string finddep(const string &filename, const string &extrapath)
   return "";
 }
 
+void *findinlibs(const string &search, const loaded &libs)
+{
+  for(loaded::const_iterator i = libs.begin(); i!=libs.end(); ++i)
+  {
+    if (i->filename == getfilename(search))
+      return i->handle;
+  }
+  return NULL;
+}
+
 void needs(string filename, strings *results)
 {
   Elf32_Ehdr header;
@@ -193,60 +203,46 @@ void *xb_dlopen(const char * path)
   solib lib;
   void *handle;
   static loaded libs;
-  int found = 0;
 
-  for(loaded::iterator i = libs.begin(); i!=libs.end(); ++i)
-  {
-    if (i->filename == getfilename(path))
-      return i->handle;
-  }
+  handle = (findinlibs(getfilename(path), libs));
+  if (handle)
+    return handle;
 
   needs(path, &results);
   for (strings::iterator j = results.begin(); j != results.end(); ++j)
   {
-    found = 0;
+
+    if (findinlibs(*j, libs) != NULL)
+      continue;
+
     deppath = finddep(*j, getdirname(path));
-    if (deppath.length())
+/*
+    if (getdirname(deppath) == "/system/lib")
     {
-      for(loaded::iterator i = libs.begin(); i!=libs.end(); ++i)
-      {
-        if (i->filename == getfilename(deppath))
-        {
-          found = 1;
-          break;
-        }
-      }
-      if (found)
-        continue;
-      android_printf("loading dep: %s\n\n",j->c_str());
-      handle = xb_dlopen(deppath.c_str());
-      if (handle == NULL)
-        return NULL;
-    }
-    else
-    {
-      android_printf("dlopening: %s\n", path);
-      handle = dlopen(path, RTLD_LOCAL);
-      lib.filename = getfilename(path);
-      lib.handle = handle;
+      // Anything that exists here is preloaded before we launch
+      android_printf("skipping system dep: %s\n",j->c_str());
+      lib.filename = getfilename(*j);
+      lib.handle = NULL;
       libs.push_back(lib);
-      return handle;
+      continue;
     }
+*/
+    // Recurse for each needed lib
+    android_printf("loading dep: %s\n",deppath.c_str());
+    xb_dlopen(deppath.c_str());
   }
-  android_printf("dlopening: %s\n", path);
+
   handle = dlopen(path, RTLD_LOCAL);
-  if (handle == NULL)
-  {
-    android_printf("xb_dlopen: Error from dlopen(%s): %s", path, dlerror());
-    lib.filename = getfilename(path);
-    lib.handle = NULL;
-    libs.push_back(lib);
-    return NULL;
-  }
+
   lib.filename = getfilename(path);
   lib.handle = handle;
   libs.push_back(lib);
-  return handle;
 
+  if (handle == NULL)
+    android_printf("xb_dlopen: Error from dlopen(%s): %s", path, dlerror());
+  else
+    android_printf("dlopened: %s\n", path);
+
+  return handle;
 }
 
