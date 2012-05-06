@@ -19,4 +19,4 @@
  *
  */
 
-void *lo_dlopen(const char *library);
+void *xb_dlopen(const char *library);

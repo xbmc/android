@@ -25,7 +25,7 @@
 #include "filesystem/SpecialProtocol.h"
 #include "utils/log.h"
 #if defined(TARGET_ANDROID)
-#include "android/android_utils.h"
+#include "android/xb_dlopen.h"
 #endif
 
 SoLoader::SoLoader(const char *so, bool bGlobal) : LibraryLoader(so)
@@ -58,7 +58,7 @@ bool SoLoader::Load()
   {
     CLog::Log(LOGDEBUG, "Loading: %s\n", strFileName.c_str());
 #if defined(TARGET_ANDROID)
-    m_soHandle = lo_dlopen(strFileName.c_str());
+    m_soHandle = xb_dlopen(strFileName.c_str());
 #else
     m_soHandle = dlopen(strFileName.c_str(), flags);
 #endif

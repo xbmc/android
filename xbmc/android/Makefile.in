@@ -11,8 +11,8 @@ SRCS     = $(GLUEPATH)/android_native_app_glue.c \
            XBMCApp.cpp \
            unzip.cpp
 
-UTILS    = android_utils.cpp
-UTIL_LIB = android_utils.a
+UTILS    = xb_dlopen.cpp
+UTIL_LIB = xb_dlopen.a
 SOLIB    = libxbmcapp.so
 
 all: $(SOLIB)

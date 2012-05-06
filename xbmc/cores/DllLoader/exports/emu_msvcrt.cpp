@@ -71,7 +71,7 @@
 #endif
 #if defined(TARGET_ANDROID)
 #include "utils/URIUtils.h"
-#include "android/android_utils.h"
+#include "android/xb_dlopen.h"
 #endif
 using namespace std;
 using namespace XFILE;
@@ -454,11 +454,11 @@ extern "C"
     if (file.Left(3) == "lib")
     {
       URIUtils::AddFileToFolder(path, "libxb" + file.Mid(3), xbPath);
-      handle = lo_dlopen(xbPath.c_str());
+      handle = xb_dlopen(xbPath.c_str());
       if (handle)
         return handle;
     }
-    return lo_dlopen(filename);
+    return xb_dlopen(filename);
 #endif
     return NULL;
   }

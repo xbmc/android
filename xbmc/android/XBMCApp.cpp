@@ -23,7 +23,7 @@
 #include <dlfcn.h>
 
 #include <android/native_window.h>
-#include "android_utils.h"
+#include "xb_dlopen.h"
 
 #include "XBMCApp.h"
 #include "xbmc_log.h"
@@ -91,7 +91,7 @@ CXBMCApp::CXBMCApp(ANativeActivity *nativeActivity)
     return;
   }
 
-  void* soHandle = lo_dlopen("/data/data/org.xbmc/lib/libxbmc.so");
+  void* soHandle = xb_dlopen("/data/data/org.xbmc/lib/libxbmc.so");
   if (soHandle == NULL)
     return;
 
