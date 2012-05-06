@@ -115,7 +115,7 @@ int extract_to_cache(const char *archive, const char *cache_path)
     full_path = (char*)malloc( sizeof(char*) * (strlen(cache_path) + 1 + strlen(zipstat.name) + 1));
     sprintf(full_path, "%s/%s",cache_path,zipstat.name);
 
-    if (zipstat.name[strlen(cache_path) - 1] == '/')
+    if (zipstat.name[strlen(zipstat.name) - 1] == '/')
     {
       mkpath(full_path);
       free(full_path);
@@ -148,8 +148,8 @@ int extract_to_cache(const char *archive, const char *cache_path)
     fd = open(full_path, O_RDWR | O_TRUNC | O_CREAT, 0644);
     if(fd < 0)
     {
-      free(full_path);
       android_printf("unzip error: could not open %s",full_path);
+      free(full_path);
       continue;
     }
 
@@ -159,8 +159,8 @@ int extract_to_cache(const char *archive, const char *cache_path)
       len = zip_fread(zipfile, buf, 4096);
       if (len < 0)
       {
-        free(full_path);
         android_printf("unzip error: no data in %s",full_path);
+        free(full_path);
         continue;
       }
       write(fd, buf, len);
