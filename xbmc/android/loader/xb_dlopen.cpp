@@ -73,10 +73,23 @@ string finddep(const string &filename, const string &extrapath)
   if (extrapath.length() > 0)
     searchpaths.push_back(extrapath);
 
-  searchpaths.push_back("/data/data/org.xbmc/lib");
-  searchpaths.push_back("/data/data/org.xbmc/cache/apk/assets/system/players/dvdplayer");
-  searchpaths.push_back("/data/data/org.xbmc/cache/temp/assets/system/players/dvdplayer");
-  searchpaths.push_back("/system/lib");
+  string tempPath = getenv("XBMC_TEMP");
+  searchpaths.push_back(getenv("XBMC_ANDROID_LIBS"));
+  searchpaths.push_back(tempPath + "/apk/assets/system/players/dvdplayer");
+  searchpaths.push_back(tempPath + "/temp/assets/system/players/dvdplayer");
+  
+  // extract all the paths to system library locations
+  string systemLibs = getenv("XBMC_ANDROID_SYSTEM_LIBS");
+  while (true)
+  {
+    size_t pos = systemLibs.find(":");
+    searchpaths.push_back(systemLibs.substr(0, pos));
+    
+    if (pos != string::npos)
+      systemLibs.erase(0, pos + 1);
+    else
+      break;
+  }
 
   for (strings::iterator j = searchpaths.begin(); j != searchpaths.end(); ++j)
   {

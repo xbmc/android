@@ -49,15 +49,42 @@ void setup_env(struct android_app* state)
   jobject activity = state->activity->clazz;
   jclass activityClass = env->GetObjectClass(activity);
 
+  // get the path to the android system libraries
+  jclass jSystem = env->FindClass("java/lang/System");
+  jmethodID systemLib = env->GetStaticMethodID(jSystem, "getProperty", "(Ljava/lang/String;)Ljava/lang/String;");
+  jstring jSystemProperty = env->NewStringUTF("java.library.path");
+  jstring jSystemLib = (jstring)env->CallStaticObjectMethod(jSystem, systemLib, jSystemProperty);
+  temp = env->GetStringUTFChars(jSystemLib, NULL);
+  setenv("XBMC_ANDROID_SYSTEM_LIBS", temp, 0);
+  env->ReleaseStringUTFChars(jSystemLib, temp);
+
+  // get the path to XBMC's data directory (usually /data/data/<app-name>)
+  jmethodID getApplicationInfo = env->GetMethodID(activityClass, "getApplicationInfo", "()Landroid/content/pm/ApplicationInfo;");
+  jobject jApplicationInfo = env->CallObjectMethod(activity, getApplicationInfo);
+  jclass applicationInfoClass = env->GetObjectClass(jApplicationInfo);
+  jfieldID dataDir = env->GetFieldID(applicationInfoClass, "dataDir", "Ljava/lang/String;");
+  jstring jDataDir = (jstring)env->GetObjectField(jApplicationInfo, dataDir);
+  temp = env->GetStringUTFChars(jDataDir, NULL);
+  setenv("XBMC_ANDROID_DATA", temp, 0);
+  env->ReleaseStringUTFChars(jDataDir, temp);
+  
+  // get the path to where android extracts native libraries to
+  jfieldID nativeLibraryDir = env->GetFieldID(applicationInfoClass, "nativeLibraryDir", "Ljava/lang/String;");
+  jstring jNativeLibraryDir = (jstring)env->GetObjectField(jApplicationInfo, nativeLibraryDir);
+  temp = env->GetStringUTFChars(jNativeLibraryDir, NULL);
+  setenv("XBMC_ANDROID_LIBS", temp, 0);
+  env->ReleaseStringUTFChars(jNativeLibraryDir, temp);
+
+  // get the path to the APK
   char apkPath[1024];
   jmethodID getPackageResourcePath = env->GetMethodID(activityClass, "getPackageResourcePath", "()Ljava/lang/String;");
   jstring jApkPath = (jstring)env->CallObjectMethod(activity, getPackageResourcePath);
   temp = env->GetStringUTFChars(jApkPath, NULL);
   strcpy(apkPath, temp);
   env->ReleaseStringUTFChars(jApkPath, temp);
-
-  char cacheDir[1024];
+  
   // Get the path to the temp/cache directory
+  char cacheDir[1024];
   jmethodID getCacheDir = env->GetMethodID(activityClass, "getCacheDir", "()Ljava/io/File;");
   jobject jCacheDir = env->CallObjectMethod(activity, getCacheDir);
 
