@@ -8,7 +8,8 @@ SOURCE=$(LIBNAME)-$(VERSION)
 ARCHIVE=$(SOURCE).tar.gz
 
 # configuration settings
-CONFIGURE=./configure --prefix=$(PREFIX) --host=$(HOST) --disable-https
+CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess .; \
+          ./configure --prefix=$(PREFIX) --host=$(HOST)
 
 LIBDYLIB=$(PLATFORM)/.libs/$(LIBNAME).so
 
@@ -23,13 +24,18 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	rm -rf $(PLATFORM)/*; mkdir $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
 	echo $(PLATFORM) > .gitignore
+	cd $(PLATFORM); patch -p0 < ../fix-android-include.patch
 	cd $(PLATFORM); $(CONFIGURE)
 
 $(LIBDYLIB): $(PLATFORM)
-	make -j $(JOBS) -C $(PLATFORM)
+	make -j $(JOBS) -C $(PLATFORM)/src/daemon
 
 .installed:
-	make -C $(PLATFORM) install
+	rm -f $(PREFIX)/lib/libmicrohttpd.so $(PREFIX)/lib/libmicrohttpd.so.5 $(PREFIX)/lib/libmicrohttpd.so.5.2.1
+	make -C $(PLATFORM)/src/daemon install
+	mv $(PREFIX)/lib/libmicrohttpd.so.5.2.1 $(PREFIX)/lib/libmicrohttpd.so
+	rpl -e "libmicrohttpd.so.5" "libmicrohttpd.so\x00\x00" $(PREFIX)/lib/libmicrohttpd.so
+	readelf --dynamic $(PREFIX)/lib/libmicrohttpd.so | grep ibrary
 	touch $@
 
 clean:
