@@ -66,6 +66,7 @@ typedef struct XBMC_PLATFORM XBMC_PLATFORM;
 
 typedef int (*XBMC_Initialize_t)(XBMC_PLATFORM*, int, const char**);
 typedef int (*XBMC_Run_t)();
+typedef void (*XBMC_Pause_t)(bool);
 typedef void (*XBMC_Stop_t)();
 typedef void (*XBMC_Key_t)(uint8_t, uint16_t, uint16_t, bool);
 typedef void (*XBMC_Touch_t)(uint8_t, uint8_t, uint16_t, uint16_t);
@@ -74,6 +75,7 @@ typedef int (*XBMC_TouchGestureCheck_t)(float, float);
 
 extern "C" int XBMC_Initialize(XBMC_PLATFORM *platform, int argc, const char** argv);
 extern "C" int XBMC_Run();
+extern "C" void XBMC_Pause(bool pause);
 extern "C" void XBMC_Stop();
 extern "C" void XBMC_Key(uint8_t code, uint16_t key, uint16_t modifiers, bool up);
 extern "C" void XBMC_Touch(uint8_t type, uint8_t button, uint16_t x, uint16_t y);

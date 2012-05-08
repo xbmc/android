@@ -66,19 +66,40 @@ public:
 
 private:
   void run();
-  void join();
+  void stop();
   
   ANativeActivity *m_activity;
+  
+  typedef enum {
+    // XBMC_Initialize hasn't been executed yet
+    Uninitialized,
+    // XBMC_Initialize has been successfully executed
+    Initialized,
+    // XBMC is currently rendering
+    Rendering,
+    // XBMC has stopped rendering because it has lost focus
+    // but it still has an EGLContext
+    Unfocused,
+    // XBMC has been paused/stopped and does not have an
+    // EGLContext
+    Paused,
+    // XBMC is being stopped
+    Stopping,
+    // XBMC has stopped
+    Stopped,
+    // An error has occured
+    Error
+  } AppState;
 
   typedef struct {
     pthread_t thread;
     pthread_mutex_t mutex;
-    ActivityResult result;
-    bool stopping;
+    AppState appState;
 
     XBMC_PLATFORM* platform;
     XBMC_Initialize_t xbmcInitialize;
     XBMC_Run_t xbmcRun;
+    XBMC_Pause_t xbmcPause;
     XBMC_Stop_t xbmcStop;
     XBMC_Key_t xbmcKey;
     XBMC_Touch_t xbmcTouch;
@@ -87,6 +108,8 @@ private:
 
   State m_state;
   
+  void setAppState(AppState state);
+    
   class Touch {
     public:
       Touch() { reset(); }
@@ -116,8 +139,7 @@ private:
   
   Pointer m_touchPointers[TOUCH_MAX_POINTERS];
   
-  class CVector
-  {
+  class CVector {
     public:
       CVector()
       : x(0.0f), y(0.0f)
