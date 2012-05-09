@@ -143,7 +143,7 @@ CXBMCApp::~CXBMCApp()
 
 ActivityResult CXBMCApp::onActivate()
 {
-  android_printf("%s", __PRETTY_FUNCTION__);
+  android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
   if (m_state.platform->window == NULL)
   {
     android_printf("no valid ANativeWindow instance available");
@@ -183,38 +183,37 @@ ActivityResult CXBMCApp::onActivate()
 
 void CXBMCApp::onDeactivate()
 {
-  android_printf("%s", __PRETTY_FUNCTION__);
-  // TODO
+  android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
+  // TODO: This is called on pause, stop and window destroy
 }
 
 void CXBMCApp::onStart()
 {
-  android_printf("%s", __PRETTY_FUNCTION__);
+  android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
   // TODO
 }
 
 void CXBMCApp::onResume()
 {
-  android_printf("%s", __PRETTY_FUNCTION__);
+  android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
   // TODO
 }
 
 void CXBMCApp::onPause()
 {
-  android_printf("%s", __PRETTY_FUNCTION__);
-  setAppState(Paused);
+  android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
   // TODO
 }
 
 void CXBMCApp::onStop()
 {
-  android_printf("%s", __PRETTY_FUNCTION__);
+  android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
   // TODO
 }
 
 void CXBMCApp::onDestroy()
 {
-  android_printf("%s", __PRETTY_FUNCTION__);
+  android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
   stop();
 
   // TODO
@@ -222,25 +221,25 @@ void CXBMCApp::onDestroy()
 
 void CXBMCApp::onSaveState(void **data, size_t *size)
 {
-  android_printf("%s", __PRETTY_FUNCTION__);
+  android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
   // TODO
 }
 
 void CXBMCApp::onConfigurationChanged()
 {
-  android_printf("%s", __PRETTY_FUNCTION__);
+  android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
   // TODO
 }
 
 void CXBMCApp::onLowMemory()
 {
-  android_printf("%s", __PRETTY_FUNCTION__);
+  android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
   // TODO
 }
 
 void CXBMCApp::onCreateWindow(ANativeWindow* window)
 {
-  android_printf("%s", __PRETTY_FUNCTION__);
+  android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
   if (window == NULL)
   {
     android_printf(" => invalid ANativeWindow object");
@@ -253,25 +252,27 @@ void CXBMCApp::onCreateWindow(ANativeWindow* window)
 
 void CXBMCApp::onResizeWindow()
 {
-  android_printf("%s", __PRETTY_FUNCTION__);
+  android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
   // TODO
 }
 
 void CXBMCApp::onDestroyWindow()
 {
-  android_printf("%s", __PRETTY_FUNCTION__);
+  android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
   // TODO
+  if (m_state.appState < Paused)
+    setAppState(Paused);
 }
 
 void CXBMCApp::onGainFocus()
 {
-  android_printf("%s", __PRETTY_FUNCTION__);
-  // TODO
+  android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
+  // TODO: Probably nothing as everything is handled in onActivate()
 }
 
 void CXBMCApp::onLostFocus()
 {
-  android_printf("%s", __PRETTY_FUNCTION__);
+  android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
   switch (m_state.appState)
   {
     case Initialized:
@@ -289,7 +290,7 @@ void CXBMCApp::onLostFocus()
 
 bool CXBMCApp::onKeyboardEvent(AInputEvent* event)
 {
-  android_printf("%s", __PRETTY_FUNCTION__);
+  android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
   if (event == NULL)
     return false;
 
@@ -368,7 +369,7 @@ bool CXBMCApp::onKeyboardEvent(AInputEvent* event)
 
 bool CXBMCApp::onTouchEvent(AInputEvent* event)
 {
-  android_printf("%s", __PRETTY_FUNCTION__);
+  android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
   if (event == NULL)
     return false;
 
