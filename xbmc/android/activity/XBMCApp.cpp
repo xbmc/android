@@ -650,32 +650,32 @@ void CXBMCApp::run()
   }
 
   int status = m_state.xbmcInitialize(m_state.platform, 0, NULL);
-  if (status != 0)
+  if (status == 0)
+  {
+    setAppState(Initialized);
+
+    android_printf(" => running XBMC_Run...");
+    try
+    {
+      setAppState(Rendering);
+      status = m_state.xbmcRun();
+      android_printf(" => XBMC_Run finished with %d", status);
+    }
+    catch(...)
+    {
+      android_printf("ERROR: Exception caught on main loop. Exiting");
+      setAppState(Error);
+    }
+  }
+  else
   {
     android_printf("XBMC_Initialize failed");
     setAppState(Error);
-    return;
-  }
-  
-  setAppState(Initialized);
-
-  android_printf(" => running XBMC_Run...");
-  try
-  {
-    setAppState(Rendering);
-    status = m_state.xbmcRun();
-    android_printf(" => XBMC_Run finished with %d", status);
-  }
-  catch(...)
-  {
-    android_printf("ERROR: Exception caught on main loop. Exiting");
-    setAppState(Error);
-    return;
-  }
+  }    
 
   bool finishActivity = false;
   pthread_mutex_lock(&m_state.mutex);
-  finishActivity = m_state.appState < Stopping;
+  finishActivity = m_state.appState != Stopping;
   m_state.appState = Stopped;
   pthread_mutex_unlock(&m_state.mutex);
   

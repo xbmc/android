@@ -89,7 +89,7 @@ extern "C" int XBMC_Initialize(XBMC_PLATFORM *platform, int argc, const char** a
 
   if (!g_application.Create())
   {
-    CLog::Log(LOGERROR, "ERROR: Unable to create application. Exiting");
+    CLog::Log(LOGFATAL, "Unable to create application. Exiting");
     return 1;
   }
   return 0;
