@@ -792,32 +792,7 @@ bool CApplication::Create()
       g_guiSettings.m_LookAndFeelResolution = RES_DESKTOP;
     }
 
-#ifdef TARGET_DARWIN_OSX
-  // force initial window creation to be windowed, if fullscreen, it will switch to it below
-  // fixes the white screen of death if starting fullscreen and switching to windowed.
-  bool bFullScreen = false;
-  if (!g_Windowing.CreateNewWindow("XBMC", bFullScreen, g_settings.m_ResInfo[RES_WINDOW], OnEvent))
-  {
-    CLog::Log(LOGFATAL, "CApplication::Create: Unable to create window");
-    return false;
-  }
-#else
-    bool bFullScreen = g_guiSettings.m_LookAndFeelResolution != RES_WINDOW;
-    if (!g_Windowing.CreateNewWindow("XBMC", bFullScreen, g_settings.m_ResInfo[g_guiSettings.m_LookAndFeelResolution], OnEvent))
-    {
-      CLog::Log(LOGFATAL, "CApplication::Create: Unable to create window");
-      return false;
-    }
-#endif
-
-    if (!g_Windowing.InitRenderSystem())
-    {
-      CLog::Log(LOGFATAL, "CApplication::Create: Unable to init rendering system");
-      return false;
-    }
-
-    // set GUI res and force the clear of the screen
-    g_graphicsContext.SetVideoResolution(g_guiSettings.m_LookAndFeelResolution);
+    CreateWindow();
 
     if (g_advancedSettings.m_splashImage)
     {
@@ -856,6 +831,44 @@ bool CApplication::Create()
   m_lastRenderTime = m_lastFrameTime;
 
   return Initialize();
+}
+
+bool CApplication::CreateWindow()
+{
+#ifdef TARGET_DARWIN_OSX
+  // force initial window creation to be windowed, if fullscreen, it will switch to it below
+  // fixes the white screen of death if starting fullscreen and switching to windowed.
+  bool bFullScreen = false;
+  if (!g_Windowing.CreateNewWindow("XBMC", bFullScreen, g_settings.m_ResInfo[RES_WINDOW], OnEvent))
+  {
+    CLog::Log(LOGFATAL, "CApplication::Create: Unable to create window");
+    return false;
+  }
+#else
+    bool bFullScreen = g_guiSettings.m_LookAndFeelResolution != RES_WINDOW;
+    if (!g_Windowing.CreateNewWindow("XBMC", bFullScreen, g_settings.m_ResInfo[g_guiSettings.m_LookAndFeelResolution], OnEvent))
+    {
+      CLog::Log(LOGFATAL, "CApplication::Create: Unable to create window");
+      return false;
+    }
+#endif
+
+  if (!g_Windowing.InitRenderSystem())
+  {
+    CLog::Log(LOGFATAL, "CApplication::Create: Unable to init rendering system");
+    return false;
+  }
+
+  // set GUI res and force the clear of the screen
+  g_graphicsContext.SetVideoResolution(g_guiSettings.m_LookAndFeelResolution);
+
+  return true;
+}
+
+bool CApplication::DestroyWindow()
+{
+  g_Windowing.DestroyRenderSystem();
+  return g_Windowing.DestroyWindow();
 }
 
 bool CApplication::InitDirectoriesLinux()
@@ -3499,8 +3512,7 @@ void CApplication::Stop(int exitCode)
     }
 #endif
 
-    g_Windowing.DestroyRenderSystem();
-    g_Windowing.DestroyWindow();
+    DestroyWindow();
     g_Windowing.DestroyWindowSystem();
 
     CLog::Log(LOGNOTICE, "stopped");

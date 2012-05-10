@@ -42,7 +42,7 @@ CWinEGLPlatformGeneric::CWinEGLPlatformGeneric()
 
 CWinEGLPlatformGeneric::~CWinEGLPlatformGeneric()
 {
-  DestroyWindow();
+  UninitializeDisplay();
 }
 
 EGLNativeWindowType CWinEGLPlatformGeneric::InitWindowSystem(EGLNativeDisplayType nativeDisplay, int width, int height, int bpp)

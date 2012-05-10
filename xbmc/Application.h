@@ -316,6 +316,9 @@ public:
   bool ToggleDPMS(bool manual);
 
   float GetDimScreenSaverLevel() const;
+  
+  bool CreateWindow();
+  bool DestroyWindow();
 
 protected:
   XBMC_RUNFLAGS m_RunFlags;  // application options

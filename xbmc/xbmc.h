@@ -73,6 +73,11 @@ typedef void (*XBMC_Touch_t)(uint8_t, uint8_t, uint16_t, uint16_t);
 typedef void (*XBMC_TouchGesture_t)(int32_t, float, float, float, float);
 typedef int (*XBMC_TouchGestureCheck_t)(float, float);
 
+#if defined(ANDROID) || defined(__ANDROID__)
+typedef bool (*XBMC_SetupDisplay_t)();
+typedef bool (*XBMC_DestroyDisplay_t)();
+#endif
+
 extern "C" int XBMC_Initialize(XBMC_PLATFORM *platform, int argc, const char** argv);
 extern "C" int XBMC_Run();
 extern "C" void XBMC_Pause(bool pause);
@@ -81,4 +86,9 @@ extern "C" void XBMC_Key(uint8_t code, uint16_t key, uint16_t modifiers, bool up
 extern "C" void XBMC_Touch(uint8_t type, uint8_t button, uint16_t x, uint16_t y);
 extern "C" void XBMC_TouchGesture(int32_t action, float posX, float posY, float offsetX, float offsetY);
 extern "C" int XBMC_TouchGestureCheck(float posX, float posY);
+
+#if defined(ANDROID) || defined(__ANDROID__)
+extern "C" bool XBMC_SetupDisplay();
+extern "C" bool XBMC_DestroyDisplay();
+#endif
 

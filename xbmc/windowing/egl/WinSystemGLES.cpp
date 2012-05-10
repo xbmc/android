@@ -101,7 +101,6 @@ bool CWinSystemGLES::CreateNewWindow(const CStdString& name, bool fullScreen, RE
   if (m_bWindowCreated)
     m_eglplatform->CreateWindow();
 
-  CLog::Log(LOGDEBUG, "CWinEGLPlatformAndroid::BindSurface()");
   if (!m_eglplatform->BindSurface())
   {
     m_eglplatform->DestroyWindow();

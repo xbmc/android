@@ -104,6 +104,8 @@ private:
     XBMC_Key_t xbmcKey;
     XBMC_Touch_t xbmcTouch;
     XBMC_TouchGesture_t xbmcTouchGesture;
+    XBMC_SetupDisplay_t xbmcSetupDisplay;
+    XBMC_DestroyDisplay_t xbmcDestroyDisplay;
   } State;
 
   State m_state;

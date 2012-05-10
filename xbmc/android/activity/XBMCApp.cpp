@@ -83,6 +83,8 @@ CXBMCApp::CXBMCApp(ANativeActivity *nativeActivity)
   m_state.xbmcKey = NULL;
   m_state.xbmcTouch = NULL;
   m_state.xbmcTouchGesture = NULL;
+  m_state.xbmcSetupDisplay = NULL;
+  m_state.xbmcDestroyDisplay = NULL;
 
   if (pthread_mutex_init(&m_state.mutex, NULL) != 0)
   {
@@ -108,9 +110,12 @@ CXBMCApp::CXBMCApp(ANativeActivity *nativeActivity)
   m_state.xbmcKey = (XBMC_Key_t)dlsym(soHandle, "XBMC_Key");
   m_state.xbmcTouch = (XBMC_Touch_t)dlsym(soHandle, "XBMC_Touch");
   m_state.xbmcTouchGesture = (XBMC_TouchGesture_t)dlsym(soHandle, "XBMC_TouchGesture");
+  m_state.xbmcSetupDisplay = (XBMC_SetupDisplay_t)dlsym(soHandle, "XBMC_SetupDisplay");
+  m_state.xbmcDestroyDisplay = (XBMC_DestroyDisplay_t)dlsym(soHandle, "XBMC_DestroyDisplay");
   if (m_state.xbmcInitialize == NULL || m_state.xbmcRun == NULL ||
       m_state.xbmcPause == NULL || m_state.xbmcStop == NULL || m_state.xbmcKey == NULL ||
-      m_state.xbmcTouch == NULL || m_state.xbmcTouchGesture == NULL)
+      m_state.xbmcTouch == NULL || m_state.xbmcTouchGesture == NULL ||
+      m_state.xbmcSetupDisplay == NULL || m_state.xbmcDestroyDisplay == NULL)
   {
     android_printf("CXBMCApp: could not find XBMC_* functions. Error: %s", dlerror());
     m_state.appState = Error;
@@ -166,7 +171,9 @@ ActivityResult CXBMCApp::onActivate()
       break;
       
     case Paused:
-      // TODO
+      m_state.xbmcSetupDisplay();
+      m_state.xbmcPause(false);
+      setAppState(Rendering);
       break;
 
     case Initialized:
@@ -261,7 +268,10 @@ void CXBMCApp::onDestroyWindow()
   android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
   // TODO
   if (m_state.appState < Paused)
+  {
+    m_state.xbmcDestroyDisplay();
     setAppState(Paused);
+  }
 }
 
 void CXBMCApp::onGainFocus()

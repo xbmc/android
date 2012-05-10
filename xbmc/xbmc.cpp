@@ -170,3 +170,17 @@ extern "C" int XBMC_TouchGestureCheck(float posX, float posY)
   return EVENT_RESULT_UNHANDLED;
 }
 
+#ifdef TARGET_ANDROID
+extern "C" bool XBMC_SetupDisplay()
+{
+  CLog::Log(LOGDEBUG, "XBMC_SetupDisplay()");
+  return g_application.getApplicationMessenger().SetupDisplay();
+}
+
+extern "C" bool XBMC_DestroyDisplay()
+{
+  CLog::Log(LOGDEBUG, "XBMC_DestroyDisplay()");
+  return g_application.getApplicationMessenger().DestroyDisplay();
+}
+#endif
+
