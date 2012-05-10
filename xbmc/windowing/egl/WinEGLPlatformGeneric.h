@@ -38,17 +38,20 @@ public:
   virtual bool SetDisplayResolution(int width, int height, float refresh, bool interlace);
   virtual bool ClampToGUIDisplayLimits(int &width, int &height);
   virtual bool ProbeDisplayResolutions(std::vector<CStdString> &resolutions);
-  virtual bool CreateSurface();
+  
+  virtual bool InitializeDisplay();
+  virtual bool UninitializeDisplay();
+  virtual bool CreateWindow();
   virtual bool DestroyWindow();
-  virtual bool ShowWindow(bool show);
+  virtual bool BindSurface();
   virtual bool ReleaseSurface();
+  
+  virtual bool ShowWindow(bool show);
   virtual void SwapBuffers();
   virtual bool SetVSync(bool enable);
   virtual bool IsExtSupported(const char* extension);
 
 protected:
-  virtual bool setConfiguration();
-  virtual void createSurfaceCallback() { }
   virtual EGLNativeWindowType getNativeWindow();
 
   EGLNativeWindowType   m_nativeWindow;

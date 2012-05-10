@@ -43,6 +43,7 @@ EGLNativeWindowType CWinEGLPlatformAndroid::InitWindowSystem(EGLNativeDisplayTyp
 
 void CWinEGLPlatformAndroid::DestroyWindowSystem(EGLNativeWindowType native_window)
 {
+  CWinEGLPlatformGeneric::DestroyWindowSystem(native_window);
 }
 
 bool CWinEGLPlatformAndroid::ClampToGUIDisplayLimits(int &width, int &height)
@@ -50,7 +51,7 @@ bool CWinEGLPlatformAndroid::ClampToGUIDisplayLimits(int &width, int &height)
   return false;
 }
 
-void CWinEGLPlatformAndroid::createSurfaceCallback()
+bool CWinEGLPlatformAndroid::CreateWindow()
 {
   EGLint format;
   // EGL_NATIVE_VISUAL_ID is an attribute of the EGLConfig that is
@@ -60,6 +61,8 @@ void CWinEGLPlatformAndroid::createSurfaceCallback()
   eglGetConfigAttrib(m_display, m_config, EGL_NATIVE_VISUAL_ID, &format);
 
   CPlatformUtils::GetPlatform()->android_setBuffersGeometry(CPlatformUtils::GetPlatform()->window, 0, 0, format);
+  
+  CWinEGLPlatformGeneric::CreateWindow();
 }
 
 EGLNativeWindowType CWinEGLPlatformAndroid::getNativeWindow()

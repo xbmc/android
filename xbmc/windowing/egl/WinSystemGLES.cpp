@@ -48,6 +48,18 @@ bool CWinSystemGLES::InitWindowSystem()
 {
   m_display = EGL_DEFAULT_DISPLAY;
   m_window = m_eglplatform->InitWindowSystem(m_display, 1920, 1080, 8);
+  
+  // Initialize the display
+  // This needs to happen before the call to CWinSystemBase::InitWindowSystem()
+  // (at least for Android)
+  if (!m_eglplatform->InitializeDisplay())
+    return false;
+  
+  // Create a window to get valid width and height values
+  // This needs to happen before the call to CWinSystemBase::InitWindowSystem()
+  // (at least for Android)
+  if (!m_eglplatform->CreateWindow())
+    return false;
 
   if (!CWinSystemBase::InitWindowSystem())
     return false;
@@ -75,16 +87,26 @@ bool CWinSystemGLES::CreateNewWindow(const CStdString& name, bool fullScreen, RE
   m_nHeight = res.iHeight;
   m_bFullScreen = fullScreen;
   
+  // Destroy any existing window
   if (m_bWindowCreated)
-    m_eglplatform->ReleaseSurface();
+    m_eglplatform->DestroyWindow();
 
   // temp until split gui/display res comes in
   //m_eglplatform->SetDisplayResolution(res.iScreenWidth, res.iScreenHeight,
   m_eglplatform->SetDisplayResolution(res.iWidth, res.iHeight,
     res.fRefreshRate, res.dwFlags & D3DPRESENTFLAG_INTERLACED);
+    
+  // If we previously destroyed an existing window we need to create a new one
+  // (otherwise this is taken care of by InitWindowSystem())
+  if (m_bWindowCreated)
+    m_eglplatform->CreateWindow();
 
-  if (!m_eglplatform->CreateSurface())
+  CLog::Log(LOGDEBUG, "CWinEGLPlatformAndroid::BindSurface()");
+  if (!m_eglplatform->BindSurface())
+  {
+    m_eglplatform->DestroyWindow();
     return false;
+  }
 
   m_bWindowCreated = true;
 

@@ -31,8 +31,9 @@ public:
   virtual void DestroyWindowSystem(EGLNativeWindowType native_window);
   virtual bool ClampToGUIDisplayLimits(int &width, int &height);
   
+  virtual bool CreateWindow();
+  
 protected:
-  virtual void createSurfaceCallback();
   virtual EGLNativeWindowType getNativeWindow();
 };
 

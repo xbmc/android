@@ -50,11 +50,13 @@ EGLNativeWindowType CWinEGLPlatformGeneric::InitWindowSystem(EGLNativeDisplayTyp
   m_nativeDisplay = nativeDisplay;
   m_width = width;
   m_height = height;
-  
-  if (!setConfiguration())
-    return 0;
 
   return getNativeWindow();
+}
+
+void CWinEGLPlatformGeneric::DestroyWindowSystem(EGLNativeWindowType native_window)
+{
+  UninitializeDisplay();
 }
 
 bool CWinEGLPlatformGeneric::SetDisplayResolution(int width, int height, float refresh, bool interlace)
@@ -79,12 +81,11 @@ bool CWinEGLPlatformGeneric::ProbeDisplayResolutions(std::vector<CStdString> &re
   return true;
 }
 
-void CWinEGLPlatformGeneric::DestroyWindowSystem(EGLNativeWindowType native_window)
+bool CWinEGLPlatformGeneric::InitializeDisplay()
 {
-}
+  if (m_display != EGL_NO_DISPLAY && m_config != NULL)
+    return true;
 
-bool CWinEGLPlatformGeneric::setConfiguration()
-{
   EGLBoolean eglStatus;
   EGLint     configCount;
   EGLConfig* configList = NULL;
@@ -144,17 +145,47 @@ bool CWinEGLPlatformGeneric::setConfiguration()
   m_config = configList[0];
 
   if (m_surface != EGL_NO_SURFACE)
-  {
     ReleaseSurface();
+ 
+  free(configList);
+  return true;
+}
+
+bool CWinEGLPlatformGeneric::UninitializeDisplay()
+{
+  EGLBoolean eglStatus;
+  
+  DestroyWindow();
+
+  if (m_display != EGL_NO_DISPLAY)
+  {
+    eglMakeCurrent(m_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+
+    eglStatus = eglTerminate(m_display);
+    if (!eglStatus)
+      CLog::Log(LOGERROR, "Error terminating EGL");
+    m_display = EGL_NO_DISPLAY;
+  }
+
+  return true;
+}
+
+bool CWinEGLPlatformGeneric::CreateWindow()
+{
+  if (m_display == EGL_NO_DISPLAY || m_config == NULL)
+  {
+    if (!InitializeDisplay())
+      return false;
   }
   
-  createSurfaceCallback();
+  if (m_surface != EGL_NO_SURFACE)
+    return true;
   
   m_nativeWindow = getNativeWindow();
 
   m_surface = eglCreateWindowSurface(m_display, m_config, m_nativeWindow, NULL);
   if (!m_surface)
-  { 
+  {
     CLog::Log(LOGERROR, "EGL couldn't create window surface");
     return false;
   }
@@ -170,26 +201,41 @@ bool CWinEGLPlatformGeneric::setConfiguration()
 
   m_width = width;
   m_height = height;
- 
-  free(configList);
   
   return true;
 }
 
-EGLNativeWindowType CWinEGLPlatformGeneric::getNativeWindow()
+bool CWinEGLPlatformGeneric::DestroyWindow()
 {
-  // most egl platforms can handle EGLNativeWindowType == 0
-  return 0;
+  EGLBoolean eglStatus;
+  
+  ReleaseSurface();
+
+  if (m_surface == EGL_NO_SURFACE)
+    return true;
+
+  eglStatus = eglDestroySurface(m_display, m_surface);
+  if (!eglStatus)
+  {
+    CLog::Log(LOGERROR, "Error destroying EGL surface");
+    return false;
+  }
+
+  m_surface = EGL_NO_SURFACE;
+  m_width = 0;
+  m_height = 0;
+
+  return true;
 }
 
-bool CWinEGLPlatformGeneric::CreateSurface()
+bool CWinEGLPlatformGeneric::BindSurface()
 {
   EGLBoolean eglStatus;
   
   if (m_display == EGL_NO_DISPLAY || m_surface == EGL_NO_SURFACE || m_config == NULL)
   {
     CLog::Log(LOGINFO, "EGL not configured correctly. Let's try to do that now...");
-    if (!setConfiguration())
+    if (!CreateWindow())
     {
       CLog::Log(LOGERROR, "EGL not configured correctly to create a surface");
       return false;
@@ -257,9 +303,10 @@ bool CWinEGLPlatformGeneric::CreateSurface()
   return true;
 }
 
-bool CWinEGLPlatformGeneric::DestroyWindow()
+bool CWinEGLPlatformGeneric::ReleaseSurface()
 {
   EGLBoolean eglStatus;
+  
   if (m_context != EGL_NO_CONTEXT)
   {
     eglStatus = eglDestroyContext(m_display, m_context);
@@ -268,52 +315,13 @@ bool CWinEGLPlatformGeneric::DestroyWindow()
     m_context = EGL_NO_CONTEXT;
   }
 
-  if (m_surface != EGL_NO_SURFACE)
-  {
-    eglStatus = eglDestroySurface(m_display, m_surface);
-    if (!eglStatus)
-      CLog::Log(LOGERROR, "Error destroying EGL surface");
-    m_surface = EGL_NO_SURFACE;
-  }
-
-  if (m_display != EGL_NO_DISPLAY)
-  {
-    eglMakeCurrent(m_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-
-    eglStatus = eglTerminate(m_display);
-    if (!eglStatus)
-      CLog::Log(LOGERROR, "Error terminating EGL");
-    m_display = EGL_NO_DISPLAY;
-  }
+  eglMakeCurrent(m_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 
   return true;
 }
 
 bool CWinEGLPlatformGeneric::ShowWindow(bool show)
 {
-  return true;
-}
-
-bool CWinEGLPlatformGeneric::ReleaseSurface()
-{
-  EGLBoolean eglStatus;
-
-  if (m_surface == EGL_NO_SURFACE)
-  {
-    return true;
-  }
-
-  eglMakeCurrent(m_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-
-  eglStatus = eglDestroySurface(m_display, m_surface);
-  if (!eglStatus)
-  {
-    CLog::Log(LOGERROR, "Error destroying EGL surface");
-    return false;
-  }
-
-  m_surface = EGL_NO_SURFACE;
-
   return true;
 }
 
@@ -338,6 +346,12 @@ bool CWinEGLPlatformGeneric::IsExtSupported(const char* extension)
   name += " ";
 
   return m_eglext.find(name) != std::string::npos;
+}
+
+EGLNativeWindowType CWinEGLPlatformGeneric::getNativeWindow()
+{
+  // most egl platforms can handle EGLNativeWindowType == 0
+  return 0;
 }
 
 #endif
