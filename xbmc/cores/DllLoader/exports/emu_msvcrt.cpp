@@ -172,6 +172,11 @@ extern "C" void __stdcall init_emu_environ()
     dll_putenv(string("PATH=.;" + CSpecialProtocol::TranslatePath("special://xbmc") + ";" +
       CSpecialProtocol::TranslatePath("special://xbmc/system/python")).c_str());
   }
+
+#if defined(TARGET_ANDROID)
+  dll_putenv(string("PYTHONPATH=" + CSpecialProtocol::TranslatePath("special://xbmc/python2.6")).c_str());
+#endif
+
   //dll_putenv("PYTHONCASEOK=1");
   //dll_putenv("PYTHONDEBUG=1");
   //dll_putenv("PYTHONVERBOSE=2"); // "1" for normal verbose, "2" for more verbose ?

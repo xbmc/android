@@ -11,7 +11,7 @@ HOSTPYTHONDIR=$(CWD)/$(PLATFORM)/hostpython
 
 # configuration settings
 CONFIGURE=./configure --prefix=$(PREFIX) --host=$(HOST) --build=x86_64-linux-gnu \
-	  --enable-shared --disable-toolbox-glue --disable-framework
+	  --disable-toolbox-glue --disable-framework
 
 CONFIGURE_NATIVE= CFLAGS="" CXXFLAGS="" LDFLAGS="" CPPFLAGS="" \
   CPP="cpp" \
@@ -20,7 +20,7 @@ CONFIGURE_NATIVE= CFLAGS="" CXXFLAGS="" LDFLAGS="" CPPFLAGS="" \
   LD="ld" \
   ./configure --prefix=$(HOSTPYTHONDIR) --disable-shared --disable-toolbox-glue --disable-framework
 
-LIBDYLIB=$(PLATFORM)/libpython2.6.so
+LIBDYLIB=$(PLATFORM)/libpython2.6.a
 
 all: $(LIBDYLIB) .installed
 
@@ -46,16 +46,13 @@ $(LIBDYLIB): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); rm pyconfig.h
 	cd $(PLATFORM); rm Modules/config.c
 	cd $(PLATFORM); patch -Np1 -i ../Python-2.6.2-android.patch
-	make -j 4 -C $(PLATFORM) HOSTPYTHON=$(HOSTPYTHONDIR)/bin/python HOSTPGEN=$(HOSTPYTHONDIR)/bin/pgen CROSS_COMPILE_TARGET=yes
+	cp modules.setup $(PLATFORM)/Modules/Setup
+	make -j 4 -C $(PLATFORM) HOSTPYTHON=$(HOSTPYTHONDIR)/bin/python HOSTPGEN=$(HOSTPYTHONDIR)/bin/pgen CROSS_COMPILE_TARGET=yes libpython2.6.a
 
 .installed:
 	make -C $(PLATFORM) HOSTPYTHON=$(HOSTPYTHONDIR)/bin/python HOSTPGEN=$(HOSTPYTHONDIR)/bin/pgen CROSS_COMPILE_TARGET=yes install
 	find $(PREFIX)/lib/python2.6 -type f -name *.pyc -exec rm -f {} \;
 	find $(PREFIX)/lib/python2.6 -type f -name *.pyo -exec rm -f {} \;
-	#
-	mv -f $(PREFIX)/lib/libpython2.6.so.1.0 $(PREFIX)/lib/libpython2.6.so
-	rpl -e "libpython2.6.so.1.0" "libpython2.6.so\x00\x00\x00\x00" $(PREFIX)/lib/libpython2.6.so
-	readelf --dynamic $(PREFIX)/lib/libpython2.6.so | grep ibrary
 	#
 	touch $@
 

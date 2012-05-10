@@ -1043,7 +1043,7 @@ diff --ignore-file-name-case -wuprN Python-2.6.2/pyconfig.h python-src//pyconfig
 +/* Define if you have a useable wchar_t type defined in wchar.h; useable means
 +   wchar_t must be an unsigned type with at least 16 bits. (see
 +   Include/unicodeobject.h). */
-+/* #undef HAVE_USABLE_WCHAR_T */
++#define HAVE_USABLE_WCHAR_T 1
 +
 +/* Define to 1 if you have the `utimes' function. */
 +#define HAVE_UTIMES 1
@@ -1187,7 +1187,7 @@ diff --ignore-file-name-case -wuprN Python-2.6.2/pyconfig.h python-src//pyconfig
 +#define SIZEOF_VOID_P 4
 +
 +/* The size of `wchar_t', as computed by sizeof. */
-+#define SIZEOF_WCHAR_T 1
++#define SIZEOF_WCHAR_T 4
 +
 +/* The size of `_Bool', as computed by sizeof. */
 +#define SIZEOF__BOOL 1

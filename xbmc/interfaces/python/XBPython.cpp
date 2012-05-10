@@ -438,7 +438,7 @@ void XBPython::Initialize()
       // Info about interesting python envvars available
       // at http://docs.python.org/using/cmdline.html#environment-variables
 
-#if !defined(_WIN32)
+#if !defined(_WIN32) && !defined(TARGET_ANDROID)
       /* PYTHONOPTIMIZE is set off intentionally when using external Python.
          Reason for this is because we cannot be sure what version of Python
          was used to compile the various Python object files (i.e. .pyo,
@@ -469,6 +469,8 @@ void XBPython::Initialize()
       buf = "OS=win32";
       pgwin32_putenv(buf.c_str());
 
+#elif defined(TARGET_ANDROID)
+      setenv("PYTHONPATH", CSpecialProtocol::TranslatePath("special://xbmc/python2.6").c_str(), 1);
 #endif
 
       if (PyEval_ThreadsInitialized())

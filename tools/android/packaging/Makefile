@@ -5,8 +5,8 @@ include xbmc/jni/Application.mk
 
 OBJS = libgcrypt.so libgpg-error.so libfontconfig.so libfreetype.so \
   libiconv.so libfribidi.so libsqlite3.so libxbpng.so libpcre.so \
-  libpcrecpp.so libsamplerate.so libpython2.6.so libxbcrypto.so \
-  libpython2.6.so libyajl.so libxbssl.so libcurl.so \
+  libpcrecpp.so libsamplerate.so libxbcrypto.so \
+  libyajl.so libxbssl.so libcurl.so \
   libtiff.so libxbjpeg.so librtmp.so libmad.so libmicrohttpd.so
 
 XBMCROOT = $(CURDIR)/../../..
@@ -31,6 +31,8 @@ prepare:
 	$(STRIP) --strip-unneeded $(XBMCROOT)/libxbmc.so -o xbmc/lib/$(APP_ABI)/libxbmc.so
 	$(STRIP) --strip-unneeded $(XBMCROOT)/xbmc/android/activity/libxbmcapp.so -o xbmc/lib/$(APP_ABI)/libxbmcapp.so
 	$(foreach var,$(COPYDIRS), cp -rfp ../../../$(var) ./xbmc/assets/;)
+	cp -rfp $(PREFIX)/lib/python2.6 xbmc/assets/
+	cd xbmc/assets/python2.6/; rm -rf test config lib-dynload
 	$(STRIP) --strip-unneeded xbmc/assets/system/*.so
 	$(STRIP) --strip-unneeded xbmc/assets/system/players/*/*.so
 	find xbmc/assets/addons/skin.*/media/* -not -iname "Textures.xbt" -delete
