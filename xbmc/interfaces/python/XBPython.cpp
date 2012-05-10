@@ -471,6 +471,7 @@ void XBPython::Initialize()
 
 #elif defined(TARGET_ANDROID)
       setenv("PYTHONPATH", CSpecialProtocol::TranslatePath("special://xbmc/python2.6").c_str(), 1);
+      setenv("PYTHONOPTIMIZE","0",1);
 #endif
 
       if (PyEval_ThreadsInitialized())

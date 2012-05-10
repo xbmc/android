@@ -51,8 +51,8 @@ $(LIBDYLIB): $(TARBALLS_LOCATION)/$(ARCHIVE)
 
 .installed:
 	make -C $(PLATFORM) HOSTPYTHON=$(HOSTPYTHONDIR)/bin/python HOSTPGEN=$(HOSTPYTHONDIR)/bin/pgen CROSS_COMPILE_TARGET=yes install
-	find $(PREFIX)/lib/python2.6 -type f -name *.pyc -exec rm -f {} \;
-	find $(PREFIX)/lib/python2.6 -type f -name *.pyo -exec rm -f {} \;
+	find $(PREFIX)/lib/python2.6 -type f -name "*.py" -delete
+	find $(PREFIX)/lib/python2.6 -type f -name "*.pyc" -delete
 	#
 	touch $@
 
