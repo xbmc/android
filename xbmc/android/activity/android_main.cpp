@@ -67,7 +67,7 @@ void setup_env(struct android_app* state)
   env->ReleaseStringUTFChars(jNativeLibraryDir, temp);
 
   // get the path to the APK
-  char apkPath[1024];
+  char apkPath[PATH_MAX];
   jmethodID getPackageResourcePath = env->GetMethodID(activityClass, "getPackageResourcePath", "()Ljava/lang/String;");
   jstring jApkPath = (jstring)env->CallObjectMethod(activity, getPackageResourcePath);
   temp = env->GetStringUTFChars(jApkPath, NULL);
@@ -75,7 +75,7 @@ void setup_env(struct android_app* state)
   env->ReleaseStringUTFChars(jApkPath, temp);
   
   // Get the path to the temp/cache directory
-  char cacheDir[1024];
+  char cacheDir[PATH_MAX];
   jmethodID getCacheDir = env->GetMethodID(activityClass, "getCacheDir", "()Ljava/io/File;");
   jobject jCacheDir = env->CallObjectMethod(activity, getCacheDir);
 
@@ -101,7 +101,7 @@ void setup_env(struct android_app* state)
   // The path would actually be available from state->activity->externalDataPath (apart from a (known) bug in Android 2.3.x)
   // but calling getExternalFilesDir() will automatically create the necessary directories for us. We don't seem to have the
   // rights to create a directory in /mnt/sdcard/Android/data/ ourselfs.
-  char storagePath[1024];
+  char storagePath[PATH_MAX];
   jmethodID getExternalFilesDir = env->GetMethodID(activityClass, "getExternalFilesDir", "(Ljava/lang/String;)Ljava/io/File;");
   jobject jExternalDir = env->CallObjectMethod(activity, getExternalFilesDir, (jstring)NULL);
 
