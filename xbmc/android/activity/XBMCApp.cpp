@@ -191,45 +191,45 @@ ActivityResult CXBMCApp::onActivate()
 void CXBMCApp::onDeactivate()
 {
   android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
-  // TODO: This is called on pause, stop and window destroy
+  // this is called on pause, stop and window destroy which
+  // require specific (and different) actions
 }
 
 void CXBMCApp::onStart()
 {
   android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
-  // TODO
+  // wait for onCreateWindow() and onGainFocus()
 }
 
 void CXBMCApp::onResume()
 {
   android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
-  // TODO
+  // wait for onCreateWindow() and onGainFocus()
 }
 
 void CXBMCApp::onPause()
 {
   android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
-  // TODO
+  // wait for onDestroyWindow() and/or onLostFocus()
 }
 
 void CXBMCApp::onStop()
 {
   android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
-  // TODO
+  // everything has been handled in onLostFocus() so wait
+  // if onDestroy() is called
 }
 
 void CXBMCApp::onDestroy()
 {
   android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
   stop();
-
-  // TODO
 }
 
 void CXBMCApp::onSaveState(void **data, size_t *size)
 {
   android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
-  // TODO
+  // TODO: probably no need to save anything as XBMC is running in its own thread
 }
 
 void CXBMCApp::onConfigurationChanged()
@@ -241,7 +241,7 @@ void CXBMCApp::onConfigurationChanged()
 void CXBMCApp::onLowMemory()
 {
   android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
-  // TODO
+  // TODO: probably can't do much apart from closing completely
 }
 
 void CXBMCApp::onCreateWindow(ANativeWindow* window)
@@ -254,19 +254,18 @@ void CXBMCApp::onCreateWindow(ANativeWindow* window)
   }
 
   m_state.platform->window = window;
-  // TODO
 }
 
 void CXBMCApp::onResizeWindow()
 {
   android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
-  // TODO
+  // no need to do anything because we are fixed in fullscreen landscape mode
 }
 
 void CXBMCApp::onDestroyWindow()
 {
   android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
-  // TODO
+
   if (m_state.appState < Paused)
   {
     m_state.xbmcDestroyDisplay();
@@ -277,7 +276,7 @@ void CXBMCApp::onDestroyWindow()
 void CXBMCApp::onGainFocus()
 {
   android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
-  // TODO: Probably nothing as everything is handled in onActivate()
+  // everything is handled in onActivate()
 }
 
 void CXBMCApp::onLostFocus()
@@ -290,8 +289,6 @@ void CXBMCApp::onLostFocus()
       m_state.xbmcPause(true);
       setAppState(Unfocused);
       break;
-
-    // TODO
 
     default:
       break;
