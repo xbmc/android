@@ -3,7 +3,7 @@ include Makefile.include
 BUILDTOOLS = help2man autoconf automake libtool pkg-config yasm cmake
 
 SUBDIRS = \
-	pcre expat libiconv gettext readline sqlite3 libgpg-error \
+	ncurses pcre expat libiconv gettext readline sqlite3 libgpg-error \
 	libgcrypt bzip2 liblzo2 libzip freetype2 fontconfig \
 	openssl curl libssh2 \
 	libjpeg-turbo tiff jasper libpng \
