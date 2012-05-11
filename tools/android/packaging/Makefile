@@ -7,7 +7,8 @@ OBJS = libgcrypt.so libgpg-error.so libfontconfig.so libfreetype.so \
   libiconv.so libfribidi.so libsqlite3.so libxbpng.so libpcre.so \
   libpcrecpp.so libsamplerate.so libxbcrypto.so \
   libyajl.so libxbssl.so libcurl.so libmysql.so \
-  libtiff.so libxbjpeg.so librtmp.so libmad.so libmicrohttpd.so
+  libtiff.so libxbjpeg.so librtmp.so libmad.so libmicrohttpd.so \
+  libsmbclient.so
 
 XBMCROOT = $(CURDIR)/../../..
 COPYDIRS = system addons language media
