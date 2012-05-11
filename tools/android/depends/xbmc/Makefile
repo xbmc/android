@@ -14,7 +14,7 @@ export USE_TEXTUREPACKER_NATIVE_ROOT=/usr
 CONFIGURE=./configure --prefix=$(PREFIX) --host=$(HOST) \
   --enable-neon --enable-gles --enable-debug \
   --disable-sdl --disable-x11 --disable-xrandr --disable-samba --disable-dvdcss \
-  --disable-mysql --disable-optical-drive --disable-joystick \
+  --disable-optical-drive --disable-joystick \
   --with-platform=android --disable-optimizations
 
 
