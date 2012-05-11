@@ -65,10 +65,14 @@ public:
   bool onTouchEvent(AInputEvent* event);
 
 private:
+  jobject getWakeLock();
+  void acquireWakeLock();
+  void releaseWakeLock();
   void run();
   void stop();
   
   ANativeActivity *m_activity;
+  jobject m_wakeLock;
   
   typedef enum {
     // XBMC_Initialize hasn't been executed yet
