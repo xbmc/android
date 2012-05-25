@@ -828,10 +828,10 @@ else
   AC_CHECK_LIB([jasper],     [main],, AC_MSG_ERROR($missing_library)) # check for cximage
   if test "$target_platform" != "target_android" ; then
     AC_CHECK_LIB([rt],         [clock_gettime],, AC_MSG_ERROR($missing_library))
-    PKG_CHECK_MODULES([ALSA],  [alsa],
-      [INCLUDES="$INCLUDES $ALSA_CFLAGS"; LIBS="$LIBS $ALSA_LIBS"; use_alsa=yes],
-      AC_MSG_NOTICE($alsa_not_found); use_alsa=no)
   fi
+  PKG_CHECK_MODULES([ALSA],  [alsa],
+    [INCLUDES="$INCLUDES $ALSA_CFLAGS"; LIBS="$LIBS $ALSA_LIBS"; use_alsa=yes],
+    AC_MSG_NOTICE($alsa_not_found); use_alsa=no)
   PKG_CHECK_MODULES([DBUS],  [dbus-1],
     [INCLUDES="$INCLUDES $DBUS_CFLAGS"; LIBS="$LIBS $DBUS_LIBS"; use_dbus=yes]; \
     AC_DEFINE([HAVE_DBUS],[1],["Define to 1 if dbus is installed"]),
