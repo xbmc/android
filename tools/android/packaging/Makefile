@@ -8,7 +8,7 @@ OBJS = libgcrypt.so libgpg-error.so libfontconfig.so libfreetype.so \
   libpcrecpp.so libsamplerate.so libxbcrypto.so \
   libyajl.so libxbssl.so libcurl.so \
   libtiff.so libxbjpeg.so librtmp.so libmad.so libmicrohttpd.so \
-  libsmbclient.so
+  libsmbclient.so libxbasound.so
 
 XBMCROOT = $(CURDIR)/../../..
 COPYDIRS = system addons language media
@@ -38,6 +38,7 @@ prepare:
 	$(STRIP) --strip-unneeded xbmc/assets/system/*.so
 	$(STRIP) --strip-unneeded xbmc/assets/system/players/*/*.so
 	find xbmc/assets/addons/skin.*/media/* -not -iname "Textures.xbt" -delete
+	mkdir -p xbmc/assets/system/alsa; cp -rf ../depends/alsa-lib/$(PLATFORM)/src/conf/* xbmc/assets/system/alsa
 	rm -rf xbmc/assets/addons/skin.confluence
 	install -p $(NDKROOT)/toolchains/arm-linux-androideabi-4.4.3/prebuilt/gdbserver ./xbmc/lib/$(APP_ABI)/gdbserver
 	echo "set solib-search-path ./obj/local/$(APP_ABI):$(PREFIX)/lib:$(XBMCROOT):$(XBMCROOT)/xbmc/android/activity" > ./xbmc/lib/$(APP_ABI)/gdb.setup

@@ -16,7 +16,7 @@ CFLAGS += \
 CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess .; \
           autoreconf -vif; \
           ./configure --prefix=$(PREFIX) --host=$(HOST) \
-          --with-alsa-devdir=/dev/snd/ --with-plugindir=/system/usr/lib/alsa-lib --with-configdir=/system/usr/share/alsa \
+          --with-alsa-devdir=/dev/snd/ --with-plugindir=/system/usr/lib/alsa-lib --with-configdir=/data/data/org.xbmc/cache/apk/assets/system/alsa \
           --with-ctl-plugins=ext \
           --with-pcm-plugins="copy,linear,route,mulaw,alaw,adpcm,rate,plug,multi,file,null,empty,share,meter,hooks,lfloat,ladspa,asym,iec958,softvol,extplug,ioplug,mmap_emul" \
           --disable-resmgr --enable-aload --enable-mixer  --enable-pcm  --disable-rawmidi  --enable-hwdep  --disable-seq  --disable-alisp  --disable-old-symbols --disable-python \
