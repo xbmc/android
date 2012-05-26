@@ -27,6 +27,12 @@
 #define _onexit_t void*
 #endif
 
+#if defined(__ANDROID__)
+typedef long int __off_t;
+typedef long int __off64_t;
+typedef fpos_t   fpos64_t; // no 64-bit on android
+#endif
+
 #ifdef WIN32
 #include "win32-dirent.h"
 #else
@@ -172,7 +178,9 @@ extern "C"
   int dll_filbuf(FILE *fp);
   int dll_flsbuf(int data, FILE*fp);
 
-#ifdef _LINUX
+#if defined(__ANDROID__)
+  volatile int * __cdecl dll_errno(void);
+#elif defined(_LINUX)
   int * __cdecl dll_errno(void);
 #endif
 

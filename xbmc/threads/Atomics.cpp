@@ -46,7 +46,7 @@ long cas(volatile long *pAddr, long expectedVal, long swapVal)
   return prev;
 }
 
-#elif defined(__arm__)
+#elif defined(__arm__) && !defined(__ARM_ARCH_5__)
 long cas(volatile long* pAddr, long expectedVal, long swapVal)
 {
   register long prev;
@@ -92,6 +92,16 @@ long cas(volatile long* pAddr, long expectedVal, long swapVal)
   }
 
   return prev;
+}
+
+#elif defined(__ARM_ARCH_5__)
+  // can be removed when we're running on real devices (does not work on emulator)
+long cas(volatile long* pAddr, long expectedVal, long swapVal)
+{
+  int oldval = *pAddr;
+  if (oldval == expectedVal) 
+     *pAddr = swapVal;
+  return old_reg_val;
 }
 
 #else // Linux / OSX86 (GCC)
@@ -188,7 +198,7 @@ long AtomicIncrement(volatile long* pAddr)
   return val;
 }
 
-#elif defined(__arm__)
+#elif defined(__arm__) && !defined(__ARM_ARCH_5__)
 
 long AtomicIncrement(volatile long* pAddr)
 {
@@ -225,6 +235,13 @@ long AtomicIncrement(volatile long* pAddr)
     mov val, eax ;
   }
   return val;
+}
+
+#elif defined(__ARM_ARCH_5__)
+ // can be removed when we're running on real devices (does not work on emulator)
+long AtomicIncrement(volatile long* pAddr)
+{
+  return __atomic_inc(pAddr) + 1;
 }
 
 #else // Linux / OSX86 (GCC)
@@ -267,7 +284,7 @@ long AtomicAdd(volatile long* pAddr, long amount)
   return val;
 }
 
-#elif defined(__arm__)
+#elif defined(__arm__) && !defined(__ARM_ARCH_5__)
 
 long AtomicAdd(volatile long* pAddr, long amount)
 {
@@ -304,6 +321,12 @@ long AtomicAdd(volatile long* pAddr, long amount)
     mov amount, ebx;
   }
   return amount;
+}
+
+#elif defined(__ARM_ARCH_5__)
+long AtomicAdd(volatile long* pAddr, long amount)
+{
+  return 0;
 }
 
 #else // Linux / OSX86 (GCC)
@@ -345,7 +368,7 @@ long AtomicDecrement(volatile long* pAddr)
   return val;
 }
 
-#elif defined(__arm__)
+#elif defined(__arm__) && !defined(__ARM_ARCH_5__)
 
 long AtomicDecrement(volatile long* pAddr)
 {
@@ -383,6 +406,13 @@ long AtomicDecrement(volatile long* pAddr)
     mov val, eax ;
   }
   return val;
+}
+
+#elif defined(__ARM_ARCH_5__)
+ // can be removed when we're running on real devices (does not work on emulator)
+long AtomicDecrement(volatile long* pAddr)
+{
+  return __atomic_dec(pAddr) - 1;
 }
 
 #else // Linux / OSX86 (GCC)
@@ -425,7 +455,7 @@ long AtomicSubtract(volatile long* pAddr, long amount)
   return val;
 }
 
-#elif defined(__arm__)
+#elif defined(__arm__) && !defined(__ARM_ARCH_5__)
 
 long AtomicSubtract(volatile long* pAddr, long amount)
 {
@@ -464,6 +494,12 @@ long AtomicSubtract(volatile long* pAddr, long amount)
     mov amount, ebx;
   }
   return amount;
+}
+
+#elif defined(__ARM_ARCH_5__)
+long AtomicSubtract(volatile long* pAddr, long amount)
+{
+  return 0;
 }
 
 #else // Linux / OSX86 (GCC)
