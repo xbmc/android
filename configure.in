@@ -24,6 +24,10 @@ AC_DEFUN([XB_FIND_SONAME],
     if [[ ! -z $$1_FILENAME ]]; then
       $1_SONAME=$(objdump -p $$1_FILENAME | grep "SONAME.*$2" | awk '{V=2; print $V}')
     fi
+    if [[ -z $$1_FILENAME ]]; then
+      #try gold linker syntax
+      $1_FILENAME=$($CC -nostdlib -o /dev/null $LDFLAGS -l$2 -Wl,-t 3>&1 1>&2 2>&3 | grep "$2")
+    fi
   else
     AC_MSG_CHECKING([for lib$2 dylib])
     gcc_lib_path=[`$CC -print-search-dirs 2>/dev/null | fgrep libraries: | sed 's/[^=]*=\(.*\)/\1/' | sed 's/:/ /g'`]
