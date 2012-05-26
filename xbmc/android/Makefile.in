@@ -1,0 +1,28 @@
+include @abs_top_srcdir@/tools/android/depends/Makefile.include
+include @abs_top_srcdir@/tools/android/depends/android-sdk.mk
+
+LOADER_TARGET   = loader
+LOADER_LIB      = $(LOADER_TARGET)/xb_dlopen.a
+ACTIVITY_TARGET = activity
+ACTIVITY_LIB    = $(ACTIVITY)/libxbmcapp.so
+
+all: $(LOADER_TARGET) $(ACTIVITY_TARGET)
+
+$(LOADER_TARGET): $(LOADER_LIB)
+
+$(LOADER_LIB):
+	$(MAKE) -C $(LOADER_TARGET)
+
+
+$(ACTIVITY_TARGET): $(LOADER_TARGET) $(ACTIVITY_LIB)
+
+$(ACTIVITY_LIB):
+	$(MAKE) -C $(ACTIVITY_TARGET)
+
+install: $(ACTIVITY_TARGET)
+	-@$(MAKE) -C $(ACTIVITY_TARGET) install
+
+clean:
+	-@rm -f *.o 2>/dev/null || true
+	-@$(MAKE) -C $(LOADER_TARGET) clean
+	-@$(MAKE) -C $(ACTIVITY_TARGET) clean
