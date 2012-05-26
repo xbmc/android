@@ -1005,7 +1005,10 @@ bool CApplication::InitDirectoriesOSX()
   fontconfigPath = xbmcPath + "/system/players/dvdplayer/etc/fonts/fonts.conf";
   setenv("FONTCONFIG_FILE", fontconfigPath.c_str(), 0);
 #endif
-  
+
+#if defined(TARGET_ANDROID)
+  setenv("ALSA_CONFIG_PATH", CSpecialProtocol::TranslatePath("special://xbmc/system/alsa").c_str(), 0);
+#endif
   // setup path to our internal dylibs so loader can find them
   CStdString frameworksPath = CUtil::GetFrameworksPath();
   CSpecialProtocol::SetXBMCFrameworksPath(frameworksPath);
