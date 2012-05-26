@@ -1,0 +1,6 @@
+/images/*
+xbmc/assets/*
+xbmc/lib/*
+xbmc/libs/*
+xbmc/obj/*
+tmp/*
