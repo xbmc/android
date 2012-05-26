@@ -7,6 +7,16 @@
 #define va_copy(dst, src) ((dst) = (src))
 #endif
 
+#if defined(__ANDROID__)
+namespace std
+{
+  typedef basic_string<wchar_t> wstring;
+  typedef basic_stringstream<wchar_t, char_traits<wchar_t> > wstringstream;
+
+}
+#endif
+
+
 // =============================================================================
 //  FILE:  StdString.h
 //  AUTHOR:  Joe O'Leary (with outside help noted in comments)
@@ -864,7 +874,7 @@ inline const Type& SSMAX(const Type& arg1, const Type& arg2)
       PWSTR pNextDstW      = pDstW;
       SSCodeCvt::result res  = SSCodeCvt::ok;
       const SSCodeCvt& conv  = SS_USE_FACET(loc, SSCodeCvt);
-#if defined(TARGET_DARWIN)
+#if defined(TARGET_DARWIN) || defined(TARGET_ANDROID)
       SSCodeCvt::state_type st= { { 0 } };
 #else
       SSCodeCvt::state_type st= { 0 };
@@ -911,7 +921,7 @@ inline const Type& SSMAX(const Type& arg1, const Type& arg2)
       PCWSTR pNextSrcW    = pSrcW;
       SSCodeCvt::result res  = SSCodeCvt::ok;
       const SSCodeCvt& conv  = SS_USE_FACET(loc, SSCodeCvt);
-#if defined(TARGET_DARWIN)
+#if defined(TARGET_DARWIN) || defined(TARGET_ANDROID)
       SSCodeCvt::state_type st= { { 0 } };
 #else
       SSCodeCvt::state_type st= { 0 };

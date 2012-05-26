@@ -19,6 +19,10 @@ SRCS=ConvUtils.cpp \
      XTimeUtils.cpp \
      XThreadUtils.cpp \
 
+ifeq (@USE_ANDROID@,1)
+SRCS+=getdelim.c
+endif
+
 LIB=linux.a
 
 include @abs_top_srcdir@/Makefile.include

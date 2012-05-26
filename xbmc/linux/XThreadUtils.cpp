@@ -29,8 +29,12 @@
 
 #ifdef _LINUX
 #include <signal.h>
-#include <pthread.h>
 #include <limits.h>
+#include <pthread.h>
+
+#if defined(__ANDROID__)
+#include <asm/page.h>
+#endif
 
 HANDLE WINAPI CreateThread(
       LPSECURITY_ATTRIBUTES lpThreadAttributes,

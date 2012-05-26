@@ -20,7 +20,7 @@
  */
 
 #include "CDDAcodec.h"
-#if !(defined(__APPLE__) && defined(__arm__))
+#if !(defined(__APPLE__) && defined(__arm__)) && !defined(TARGET_ANDROID)
 #include <cdio/sector.h>
 #else
 typedef int32_t lsn_t;

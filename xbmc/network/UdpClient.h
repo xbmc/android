@@ -23,6 +23,9 @@
 #include "utils/StdString.h"
 #include "threads/Thread.h"
 #include "threads/CriticalSection.h"
+#if defined(TARGET_ANDROID)
+#include <linux/socket.h>
+#endif
 #include <sys/socket.h>
 #include <netinet/in.h>
 

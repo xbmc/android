@@ -28,7 +28,7 @@
 #include "system.h"
 #include "threads/CriticalSection.h"
 
-#if defined(_LINUX) && !defined(__APPLE__) && !defined(__FreeBSD__)
+#if defined(_LINUX) && !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(__ANDROID__)
 #define _file _fileno
 #endif
 
