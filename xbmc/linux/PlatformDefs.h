@@ -677,8 +677,6 @@ typedef struct tWAVEFORMATEXTENSIBLE
   GUID SubFormat;
 } __attribute__((__packed__)) WAVEFORMATEXTENSIBLE;
 
-
-
 #endif
 
 #endif //__PLATFORM_DEFS_H__
