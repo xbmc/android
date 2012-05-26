@@ -21,12 +21,12 @@ AC_DEFUN([XB_FIND_SONAME],
   if [[ "$host_vendor" != "apple" ]]; then
     AC_MSG_CHECKING([for lib$2 soname])
     $1_FILENAME=$($CC -nostdlib -o /dev/null $LDFLAGS -l$2 -Wl,-M 2>/dev/null | grep "^LOAD.*$2" | awk '{V=2; print $V}')
-    if [[ ! -z $$1_FILENAME ]]; then
-      $1_SONAME=$(objdump -p $$1_FILENAME | grep "SONAME.*$2" | awk '{V=2; print $V}')
-    fi
     if [[ -z $$1_FILENAME ]]; then
       #try gold linker syntax
       $1_FILENAME=$($CC -nostdlib -o /dev/null $LDFLAGS -l$2 -Wl,-t 3>&1 1>&2 2>&3 | grep "$2")
+    fi
+    if [[ ! -z $$1_FILENAME ]]; then
+      $1_SONAME=$(objdump -p $$1_FILENAME | grep "SONAME.*$2" | awk '{V=2; print $V}')
     fi
   else
     AC_MSG_CHECKING([for lib$2 dylib])
@@ -515,6 +515,21 @@ case $host in
      use_arch="arm"
      AC_SUBST(ARCH_DEFINES, "-DTARGET_POSIX -DTARGET_LINUX -D_LINUX")
      ;;
+  arm*-*linux-android*)
+     USE_ANDROID=1
+     target_platform=target_android
+     use_texturepacker_native=yes
+     webserver_checkdepends=yes
+     AC_SUBST(ARCH_DEFINES, "-DTARGET_POSIX -DTARGET_LINUX -D_LINUX -D_ARMEL -DTARGET_ANDROID")
+     CFLAGS="$CFLAGS -Wno-psabi"
+     CXXFLAGS="$CXXFLAGS -Wno-psabi"
+     use_arch="arm"
+
+     #TODO: Don't hard-code these, they're big assumptions.
+     AC_DEFINE(HAS_EGLGLES, [1], [Define if supporting EGL based GLES Framebuffer])
+     use_cpu=cortex-a9
+     ARCH="arm"
+     ;;
   *)
      AC_MSG_ERROR(unsupported host ($host))
 esac
@@ -706,6 +721,7 @@ AC_CHECK_HEADER([openssl/crypto.h], AC_DEFINE([HAVE_OPENSSL],[1],[Define if we h
 AC_CHECK_HEADER([gcrypt.h], gcrypt_headers_available=yes,gcrypt_headers_available=no)
 if test "$gcrypt_headers_available" = "yes"; then
    # if we have the headers then we must have the lib
+   AC_CHECK_LIB([gpg-error],[main],, AC_MSG_ERROR($missing_library))
    AC_CHECK_LIB([gcrypt],[gcry_control],, AC_MSG_ERROR($missing_library))
    AC_DEFINE([HAVE_GCRYPT],[1],[Define if we have gcrypt])
 fi
@@ -713,7 +729,9 @@ fi
 AC_CHECK_LIB([bz2],         [main],, AC_MSG_ERROR($missing_library))
 AC_CHECK_LIB([jpeg],        [main],, AC_MSG_ERROR($missing_library)) # check for cximage
 AC_CHECK_LIB([tiff],        [main],, AC_MSG_ERROR($missing_library))
+if test "$target_platform" != "target_android" ; then
 AC_CHECK_LIB([pthread],     [main],, AC_MSG_ERROR($missing_library))
+fi
 AC_CHECK_LIB([lzo2],        [main],, AC_MSG_ERROR($missing_library))
 AC_CHECK_LIB([z],           [main],, AC_MSG_ERROR($missing_library))
 AC_CHECK_LIB([crypto],      [main],, AC_MSG_ERROR($missing_library))
@@ -753,6 +771,12 @@ PKG_CHECK_MODULES([FREETYPE2],  [freetype2],
   [INCLUDES="$INCLUDES $FREETYPE2_CFLAGS"; LIBS="$LIBS $FREETYPE2_LIBS"],
   AC_MSG_ERROR($missing_library))
 
+if test "$target_platform" = "target_android" ; then
+PKG_CHECK_MODULES([ZIP],       [libzip],
+  [INCLUDES="$INCLUDES $ZIP_CFLAGS"; LIBS="$LIBS $ZIP_LIBS"],
+  AC_MSG_ERROR($missing_library))
+fi
+
 # check for libbluray
 AS_CASE([x$use_libbluray],
   [xyes],[
@@ -785,9 +809,11 @@ else
   case $host_os in
     linux*) AC_CHECK_LIB([dl], [main],, AC_MSG_ERROR($missing_library)) ;;
   esac
-  AC_CHECK_LIB([resolv],     [main],, AC_MSG_ERROR($missing_library))
+  if test "$target_platform" != "target_android" ; then
+    AC_CHECK_LIB([resolv],     [main],, AC_MSG_ERROR($missing_library))
+    AC_CHECK_LIB([rt],         [clock_gettime],, AC_MSG_ERROR($missing_library))
+  fi
   AC_CHECK_LIB([jasper],     [main],, AC_MSG_ERROR($missing_library)) # check for cximage
-  AC_CHECK_LIB([rt],         [clock_gettime],, AC_MSG_ERROR($missing_library))
 
   PKG_CHECK_MODULES([ALSA],  [alsa],
     [INCLUDES="$INCLUDES $ALSA_CFLAGS"; LIBS="$LIBS $ALSA_LIBS"; use_alsa=yes],
@@ -1877,7 +1903,10 @@ OUTPUT_FILES="Makefile \
     tools/TexturePacker/Makefile \
     tools/EventClients/Clients/OSXRemote/Makefile \
     xbmc/peripherals/bus/Makefile \
-    xbmc/peripherals/devices/Makefile"
+    xbmc/peripherals/devices/Makefile \
+    xbmc/android/Makefile \
+    xbmc/android/activity/Makefile \
+    xbmc/android/loader/Makefile"
 
 if test "$use_skin_touched" = "yes"; then
 OUTPUT_FILES="$OUTPUT_FILES addons/skin.touched/media/Makefile"
@@ -1937,6 +1966,7 @@ AC_SUBST(USE_AIRTUNES)
 AC_SUBST(USE_LIBUDEV)
 AC_SUBST(USE_LIBUSB)
 AC_SUBST(USE_LIBCEC)
+AC_SUBST(USE_ANDROID)
 
 
 # pushd and popd are not available in other shells besides bash, so implement
@@ -2064,6 +2094,7 @@ XB_CONFIG_MODULE([lib/ffmpeg], [
       --enable-gpl \
       `if test "x$use_vdpau" != "xno"; then echo --enable-vdpau; else echo --disable-vdpau; fi` \
       `if test "x$use_vaapi" != "xno"; then echo --enable-vaapi; else echo --disable-vaapi; fi` \
+      `if test "$use_optimizations" != "no"; then echo --enable-optimizations; else echo --disable-optimizations; fi` \
       --enable-protocol=http \
       --enable-pthreads \
       --enable-runtime-cpudetect \
@@ -2205,7 +2236,7 @@ XB_CONFIG_MODULE([lib/cpluff], [
     --prefix="${prefix}" --includedir="${includedir}" --libdir="${libdir}" --datadir="${datadir}" \
     --host=$host_alias \
     --build=$build_alias \
-    --target=$target_alias CFLAGS="$CFLAGS" CC="$CC" CXX="$CXX"
+    --target=$target_alias CFLAGS="$CFLAGS" CC="$CC" CXX="$CXX" LIBS=""
     #LDFLAGS="$LDFLAGS -Wl,-read_only_relocs,suppress"    
 ], [0])
 
