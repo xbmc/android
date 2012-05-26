@@ -1,0 +1,31 @@
+include @abs_top_srcdir@/tools/android/depends/Makefile.include
+include @abs_top_srcdir@/tools/android/depends/android-sdk.mk
+
+SRCS       = $(GLUEPATH)/android_native_app_glue.c \
+             android_main.cpp \
+             EventLoop.cpp \
+             XBMCApp.cpp \
+             unzip.cpp
+SOLIB      = libxbmcapp.so
+
+LOADER     = ../loader
+LOADER_LIB = $(LOADER)/xb_dlopen.a
+
+GLUEPATH   = $(NDKROOT)/sources/android/native_app_glue
+CFLAGS    += -I@abs_top_srcdir@/xbmc -I$(GLUEPATH) -I$(PREFIX)/lib/libzip/include -I.. -I$(LOADER)
+LDFLAGS   += -llog -landroid -Wl,--no-undefined
+
+all: $(SOLIB)
+
+$(LOADER_LIB):
+	$(MAKE) -C $(LOADER)
+
+
+$(SOLIB): $(SRCS) $(LOADER_LIB)
+	$(CXX) $(CFLAGS) $(LDFLAGS) -lz -Wl,--whole-archive -lzip -Wl,--no-whole-archive -o $@ -shared $(SRCS) $(LOADER_LIB)
+
+install: $(SOLIB)
+	install $(SOLIB) $(PREFIX)/lib/$(SOLIB)
+
+clean:
+	-@rm -f $(SOLIB) *.o 2>/dev/null || true
