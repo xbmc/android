@@ -1,0 +1,17 @@
+include @abs_top_srcdir@/tools/android/depends/Makefile.include
+include @abs_top_srcdir@/tools/android/depends/android-sdk.mk
+
+CFLAGS    += -I..
+LDFLAGS += -llog
+
+SRCS     = xb_dlopen.cpp
+LIB      = xb_dlopen.a
+
+all: $(LIB)
+
+$(LIB): $(SRCS)
+	$(CXX) $(CFLAGS) $(LDFLAGS) -c -o $(@:.a=.o) $(SRCS)
+	$(AR) cr $@ $(SRCS:.cpp=.o)
+
+clean:
+	-@rm -f $(LIB) *.o 2>/dev/null || true
