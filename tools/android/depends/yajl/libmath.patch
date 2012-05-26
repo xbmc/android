@@ -1,0 +1,11 @@
+diff -ruN src-old/CMakeLists.txt src/CMakeLists.txt
+--- src-old/CMakeLists.txt	2012-03-01 12:02:54.549492179 -0500
++++ src/CMakeLists.txt	2012-03-01 12:04:22.859492123 -0500
+@@ -38,6 +38,7 @@
+ 
+ ADD_LIBRARY(yajl SHARED ${SRCS} ${HDRS} ${PUB_HDRS})
+ 
++TARGET_LINK_LIBRARIES(yajl m)
+ #### setup shared library version number
+ SET_TARGET_PROPERTIES(yajl PROPERTIES
+                       DEFINE_SYMBOL YAJL_SHARED
