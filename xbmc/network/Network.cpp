@@ -29,6 +29,9 @@
 #include "guilib/LocalizeStrings.h"
 #include "dialogs/GUIDialogKaiToast.h"
 
+#if defined(TARGET_ANDROID)
+#include <sys/socket.h>
+#endif
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
