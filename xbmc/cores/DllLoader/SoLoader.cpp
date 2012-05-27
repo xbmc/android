@@ -24,6 +24,9 @@
 #include "utils/StdString.h"
 #include "filesystem/SpecialProtocol.h"
 #include "utils/log.h"
+#if defined(TARGET_ANDROID)
+#include "android/loader/xb_dlopen.h"
+#endif
 
 SoLoader::SoLoader(const char *so, bool bGlobal) : LibraryLoader(so)
 {
@@ -54,7 +57,11 @@ bool SoLoader::Load()
   else
   {
     CLog::Log(LOGDEBUG, "Loading: %s\n", strFileName.c_str());
+#if defined(TARGET_ANDROID)
+    m_soHandle = xb_dlopen(strFileName.c_str());
+#else
     m_soHandle = dlopen(strFileName.c_str(), flags);
+#endif
     if (!m_soHandle)
     {
       CLog::Log(LOGERROR, "Unable to load %s, reason: %s", strFileName.c_str(), dlerror());
@@ -67,6 +74,13 @@ bool SoLoader::Load()
 
 void SoLoader::Unload()
 {
+#if defined(TARGET_ANDROID)
+  // Unloading a library in Android will lead to a crash when trying to load it
+  // again later on. Android assumes that all libraries are loaded once
+  // and only unloaded when the app is destroyed.
+  return;
+#endif
+
   CLog::Log(LOGDEBUG, "Unloading: %s\n", GetName());
 
   if (m_soHandle)
