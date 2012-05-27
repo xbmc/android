@@ -24,9 +24,11 @@
 extern "C" {
 #ifdef _LINUX
 #undef _DLL
+#warning LINUX
 #include <png.h>
 #else
 #include "../png/png.h"
+#warning LINUX_ELSE
 #endif
 }
 
