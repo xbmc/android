@@ -144,7 +144,7 @@ int DCR_CLASS main (int argc, char **argv)
 
 		//!!! set return point for error handling
 		if (setjmp (dcr.failure)) {
-			if (fileno(dcr.obj_) > 2) (*dcr.ops_->close_)(dcr.obj_);
+		  if (fileno((FILE*)dcr.obj_) > 2) (*dcr.ops_->close_)(dcr.obj_);
 			if (fileno(ofp) > 2) fclose(ofp);
 			status = 1;
 			goto cleanup;
