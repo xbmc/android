@@ -31,6 +31,7 @@
 #include <unistd.h>
 #include <limits.h>
 #include <dirent.h>
+#include <paths.h>
 
 #define WITH_CACHE
 
@@ -492,7 +493,7 @@ dvd_reader_t *DVDOpen( const char *ppath )
 	    fclose( mntfile );
 	}
 #elif defined(__linux__)
-        mntfile = fopen( MOUNTED, "r" );
+        mntfile = fopen( _PATH_MOUNTED, "r" );
         if( mntfile ) {
             struct mntent *me;
 
