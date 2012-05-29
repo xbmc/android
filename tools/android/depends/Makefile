@@ -11,7 +11,7 @@ SUBDIRS = \
 	libass libsamplerate \
 	libmodplug librtmp libxml2 yajl libmicrohttpd mysql \
 	python26 samba alsa-lib \
-	boost xbmc \
+	boost dummy-libxbmc xbmc \
 
 .PHONY: $(BUILDTOOLS) $(SUBDIRS)
 
