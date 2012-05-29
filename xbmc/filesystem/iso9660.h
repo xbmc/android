@@ -25,7 +25,7 @@
 #include <string>
 #include "system.h" // for win32 types
 
-#if defined(_WIN32) || defined(TARGET_ANDROID)
+#ifdef _WIN32
 // Ideally we should just be including iso9660.h, but it's not win32-ified at this point,
 // and these are all we need
 typedef uint32_t iso723_t;

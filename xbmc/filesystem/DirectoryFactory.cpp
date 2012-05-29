@@ -56,9 +56,7 @@
 #endif
 #include "PluginDirectory.h"
 #ifdef HAS_FILESYSTEM
-#ifdef HAVE_CDIO_ISO9660_H
 #include "ISO9660Directory.h"
-#endif
 #ifdef HAS_FILESYSTEM_RTV
 #include "RTVDirectory.h"
 #endif
@@ -88,9 +86,7 @@
 #include "TuxBoxDirectory.h"
 #include "HDHomeRunDirectory.h"
 #include "SlingboxDirectory.h"
-#ifdef HAS_MYSQL
 #include "MythDirectory.h"
-#endif
 #include "FileItem.h"
 #include "URL.h"
 #include "RSSDirectory.h"
@@ -133,7 +129,7 @@ IDirectory* CDirectoryFactory::Create(const CStdString& strPath)
 #if defined(HAS_FILESYSTEM_CDDA) && defined(HAS_DVD_DRIVE)
   if (strProtocol == "cdda") return new CCDDADirectory();
 #endif
-#if defined(HAS_FILESYSTEM) && defined(HAVE_CDIO_ISO9660_H)
+#ifdef HAS_FILESYSTEM
   if (strProtocol == "iso9660") return new CISO9660Directory();
 #endif
   if (strProtocol == "udf") return new CUDFDirectory();
@@ -185,10 +181,8 @@ IDirectory* CDirectoryFactory::Create(const CStdString& strPath)
 #endif
     if (strProtocol == "hdhomerun") return new CHomeRunDirectory();
     if (strProtocol == "sling") return new CSlingboxDirectory();
-#ifdef HAS_MYSQL
     if (strProtocol == "myth") return new CMythDirectory();
     if (strProtocol == "cmyth") return new CMythDirectory();
-#endif
     if (strProtocol == "rss") return new CRSSDirectory();
 #ifdef HAS_FILESYSTEM_SAP
     if (strProtocol == "sap") return new CSAPDirectory();

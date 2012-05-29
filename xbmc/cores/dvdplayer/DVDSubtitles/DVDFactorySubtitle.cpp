@@ -27,9 +27,7 @@
 #include "DVDSubtitleParserMicroDVD.h"
 #include "DVDSubtitleParserMPL2.h"
 #include "DVDSubtitleParserSami.h"
-#if defined(HAS_LIBASS)
 #include "DVDSubtitleParserSSA.h"
-#endif
 #include "DVDSubtitleParserVplayer.h"
 #include "Util.h"
 #include "utils/log.h"
@@ -77,13 +75,8 @@ CDVDSubtitleParser* CDVDFactorySubtitle::CreateParser(string& strFile)
       }
       else if ((!memcmp(line, "Dialogue: Marked", 16)) || (!memcmp(line, "Dialogue: ", 10)))
       {
-#if defined(HAS_LIBASS)
         pParser =  new CDVDSubtitleParserSSA(pStream, strFile.c_str());
         pStream = NULL;
-#else
-	pParser = NULL;
-	pStream = NULL;
-#endif
       }
       //   if (sscanf (line, "%d:%d:%d.%d,%d:%d:%d.%d",     &i, &i, &i, &i, &i, &i, &i, &i)==8){
       //     this->uses_time=1;

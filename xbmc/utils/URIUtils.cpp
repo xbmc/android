@@ -23,9 +23,7 @@
 #include "Application.h"
 #include "FileItem.h"
 #include "filesystem/MultiPathDirectory.h"
-#ifdef HAS_MYSQL
 #include "filesystem/MythDirectory.h"
-#endif
 #include "filesystem/SpecialProtocol.h"
 #include "filesystem/StackDirectory.h"
 #include "network/DNSNameCache.h"
@@ -755,10 +753,8 @@ bool URIUtils::IsLiveTV(const CStdString& strFile)
   || strFile.Left(4).Equals("sap:"))
     return true;
 
-#ifdef HAS_MYSQL
   if (IsMythTV(strFile) && CMythDirectory::IsLiveTV(strFile))
     return true;
-#endif
 
   return false;
 }

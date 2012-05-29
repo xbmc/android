@@ -71,7 +71,6 @@ void CDVDOverlayRenderer::Render(DVDPictureRenderer* pPicture, CDVDOverlaySSA* p
   height = pPicture->height;
   width = pPicture->width;
 
-#if defined(HAS_LIBASS)
   ASS_Image* img = pOverlay->m_libass->RenderImage(width, height, pts);
 
   while(img)
@@ -129,7 +128,6 @@ void CDVDOverlayRenderer::Render(DVDPictureRenderer* pPicture, CDVDOverlaySSA* p
     }
     img = img->next;
   }
-#endif
 }
 
 void CDVDOverlayRenderer::Render(DVDPictureRenderer* pPicture, CDVDOverlayImage* pOverlay)

@@ -33,9 +33,7 @@ using namespace std;
 CDVDOverlayCodecSSA::CDVDOverlayCodecSSA() : CDVDOverlayCodec("SSA Subtitle Decoder")
 {
   m_pOverlay = NULL;
-#if defined(HAS_LIBASS)
   m_libass   = NULL;
-#endif
   m_order    = 0;
 }
 
@@ -52,20 +50,14 @@ bool CDVDOverlayCodecSSA::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options)
   Dispose();
 
   m_hints  = hints;
-#if defined(HAS_LIBASS)
   m_libass = new CDVDSubtitlesLibass();
   return m_libass->DecodeHeader((char *)hints.extradata, hints.extrasize);
-#else
-  return false;
-#endif
 }
 
 void CDVDOverlayCodecSSA::Dispose()
 {
-#if defined(HAS_LIBASS)
   if(m_libass)
     SAFE_RELEASE(m_libass);
-#endif
 
   if(m_pOverlay)
     SAFE_RELEASE(m_pOverlay);
@@ -73,7 +65,6 @@ void CDVDOverlayCodecSSA::Dispose()
 
 int CDVDOverlayCodecSSA::Decode(BYTE* data, int size, double pts, double duration)
 {
-#if defined(HAS_LIBASS)
   if(m_pOverlay)
     SAFE_RELEASE(m_pOverlay);
 
@@ -129,17 +120,13 @@ int CDVDOverlayCodecSSA::Decode(BYTE* data, int size, double pts, double duratio
   }
 
   return OC_OVERLAY;
-#endif
-  return 0; // TODO what needs to be returned here?
 }
 void CDVDOverlayCodecSSA::Reset()
 {
   Dispose();
   m_order  = 0;
-#if defined(HAS_LIBASS)
   m_libass = new CDVDSubtitlesLibass();
   m_libass->DecodeHeader((char *)m_hints.extradata, m_hints.extrasize);
-#endif
 }
 
 void CDVDOverlayCodecSSA::Flush()

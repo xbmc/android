@@ -18,8 +18,7 @@
  *  http://www.gnu.org/copyleft/gpl.html
  *
  */
-#include "system.h"
-#if defined(HAVE_LIBMYSQLCLIENT)
+
 #include <iostream>
 #include <string>
 #include <set>
@@ -1563,4 +1562,3 @@ void MysqlDataset::interrupt() {
 
 }//namespace
 
-#endif

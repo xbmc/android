@@ -131,9 +131,6 @@ libusb_disabled_udev_found="== libusb disabled. =="
 libcec_enabled="== libcec enabled. =="
 libcec_disabled="== libcec disabled. CEC adapter support will not be available. =="
 libcec_disabled_missing_libs="== libcec disabled because both libudev and libusb are not available. CEC adapter support will not be available. =="
-mysql_enabled="== mysql enabled. =="
-mysql_disabled="== mysql disabled. =="
-mysql_disabled_missing_libs="== Could not find mysql. mysql db and mythtv support disabled. =="
 
 # External library message strings
 external_libraries_enabled="== Use of all supported external libraries enabled. =="
@@ -423,12 +420,6 @@ AC_ARG_ENABLE([libcec],
   [use_libcec=$enableval],
   [use_libcec=auto])
 
-AC_ARG_ENABLE([mysql],
-  [AS_HELP_STRING([--enable-mysql],
-  [enable mysql support (default is auto)])],
-  [use_mysql=$enableval],
-  [use_mysql=auto])
-
 ### External libraries options
 AC_ARG_ENABLE([external-libraries],
   [AS_HELP_STRING([--enable-external-libraries],
@@ -524,8 +515,8 @@ case $host in
      ARCH="powerpc64-linux"
      AC_SUBST(ARCH_DEFINES, "-DTARGET_POSIX -DTARGET_LINUX -D_LINUX -D_POWERPC64")
      ;;
-  arm*-linux-*)
-     use_texturepacker_native=yes
+  arm*-*-linux-gnu*)
+     use_texturepacker=no
      ARCH="arm"
      use_arch="arm"
      AC_SUBST(ARCH_DEFINES, "-DTARGET_POSIX -DTARGET_LINUX -D_LINUX")
@@ -541,7 +532,6 @@ case $use_platform in
      USE_ANDROID=1
      target_platform=target_android
      use_texturepacker_native=yes
-     webserver_checkdepends=yes
      AC_SUBST(ARCH_DEFINES, "-DTARGET_POSIX -DTARGET_LINUX -D_LINUX -D_ARMEL -DTARGET_ANDROID")
      use_cpu=cortex-a9
      AC_DEFINE(HAS_EGLGLES, [1], [Define if supporting EGL based GLES Framebuffer])
@@ -707,7 +697,15 @@ else
 fi
 
 # platform common libraries
-
+AC_CHECK_PROG(MYSQL_CONFIG, mysql_config, "yes", "no")
+if test $MYSQL_CONFIG = "yes"; then
+  INCLUDES="$INCLUDES `mysql_config --include`"
+  MYSQL_LIBS=`mysql_config --libs`
+  LIBS="$LIBS $MYSQL_LIBS"
+  AC_SUBST(MYSQL_LIBS)
+else
+  AC_MSG_ERROR($missing_program)
+fi
 AC_CHECK_HEADER([ass/ass.h],, AC_MSG_ERROR($missing_library))
 AC_CHECK_HEADER([mpeg2dec/mpeg2.h],, AC_MSG_ERROR($missing_library))
 AC_CHECK_HEADER([mpeg2dec/mpeg2convert.h],, AC_MSG_ERROR($missing_library),
@@ -745,6 +743,7 @@ AC_CHECK_LIB([lzo2],        [main],, AC_MSG_ERROR($missing_library))
 AC_CHECK_LIB([z],           [main],, AC_MSG_ERROR($missing_library))
 AC_CHECK_LIB([crypto],      [main],, AC_MSG_ERROR($missing_library))
 AC_CHECK_LIB([ssl],         [main],, AC_MSG_ERROR($missing_library))
+AC_CHECK_LIB([mysqlclient], [main],, AC_MSG_ERROR($missing_library))
 AC_CHECK_LIB([ssh],         [sftp_tell64],, AC_MSG_RESULT([Could not find suitable version of libssh]))
 AC_CHECK_LIB([bluetooth],   [hci_devid],, AC_MSG_RESULT([Could not find suitable version of libbluetooth]))
 AC_CHECK_LIB([yajl],        [main],, AC_MSG_ERROR($missing_library))
@@ -769,14 +768,9 @@ PKG_CHECK_MODULES([PCRECPP],    [libpcrecpp],
   [INCLUDES="$INCLUDES $PCRECPP_CFLAGS"; LIBS="$LIBS $PCRECPP_LIBS"]; \
   AC_DEFINE([HAVE_LIBPCRECPP],[1],["Define to 1 if libpcrecpp is installed"]),
   AC_MSG_ERROR($missing_library))
-if test "$target_platform" != "target_android" ; then
-USE_LIBCDIO=1
 PKG_CHECK_MODULES([CDIO],       [libcdio],
   [INCLUDES="$INCLUDES $CDIO_CFLAGS"; LIBS="$LIBS $CDIO_LIBS"],
   AC_MSG_ERROR($missing_library))
-else
-USE_LIBCDIO=0
-fi
 PKG_CHECK_MODULES([SAMPLERATE], [samplerate],
   [INCLUDES="$INCLUDES $SAMPLERATE_CFLAGS"; LIBS="$LIBS $SAMPLERATE_LIBS"],
   AC_MSG_ERROR($missing_library))
@@ -832,7 +826,7 @@ else
   PKG_CHECK_MODULES([ALSA],  [alsa],
     [INCLUDES="$INCLUDES $ALSA_CFLAGS"; LIBS="$LIBS $ALSA_LIBS"; use_alsa=yes],
     AC_MSG_NOTICE($alsa_not_found); use_alsa=no)
-  PKG_CHECK_MODULES([DBUS],  [dbus-1],
+  PKG_CHECK_MODULES([DBUS],    [dbus-1],
     [INCLUDES="$INCLUDES $DBUS_CFLAGS"; LIBS="$LIBS $DBUS_LIBS"; use_dbus=yes]; \
     AC_DEFINE([HAVE_DBUS],[1],["Define to 1 if dbus is installed"]),
     AC_MSG_NOTICE($missing_library); use_dbus=no)
@@ -860,10 +854,6 @@ XB_FIND_SONAME([MPEG2],       [mpeg2])
 
 # WebServer
 if test "$use_webserver" = "yes"; then
-  if test "$webserver_checkdepends" = "yes"; then
-    AC_CHECK_LIB([gpg-error],   [main],, AC_MSG_ERROR($missing_library))
-    AC_CHECK_LIB([gcrypt],      [main],, AC_MSG_ERROR($missing_library))
-  fi
   AC_CHECK_LIB([microhttpd],  [main],, AC_MSG_ERROR($missing_library))
 fi
 
@@ -1209,29 +1199,6 @@ else
   AC_MSG_NOTICE($libcec_disabled)
 fi
 
-# mysql
-USE_MYSQL=0
-if test "x$use_mysql" != "xno"; then
-  AC_CHECK_PROG(MYSQL_CONFIG, mysql_config, "yes", "no")
-  if test $MYSQL_CONFIG = "yes"; then
-    INCLUDES="$INCLUDES `mysql_config --include`"
-    MYSQL_LIBS=`mysql_config --libs`
-    LIBS="$LIBS $MYSQL_LIBS"
-    AC_SUBST(MYSQL_LIBS)
-    AC_CHECK_LIB([mysqlclient],[main],, AC_MSG_ERROR($missing_library))
-    USE_MYSQL=1;AC_DEFINE([HAVE_MYSQL],[1],["Define to 1 if mysql is installed"])
-  else
-    if test "x$use_mysql" != "xauto"; then
-      AC_MSG_ERROR($mysql_disabled_missing_libs)
-    fi
-    AC_MSG_NOTICE($mysql_disabled_missing_libs)
-    use_mysql="no"
-  fi
-else
-  use_mysql="no"
-  AC_MSG_NOTICE($mysql_disabled)
-fi
-
 ### External libraries checks
 
 # External FFmpeg
@@ -1539,9 +1506,7 @@ AC_CHECK_HEADERS([arpa/inet.h fcntl.h float.h inttypes.h limits.h locale.h \
   malloc.h memory.h netdb.h netinet/in.h stddef.h stdint.h stdlib.h string.h \
   strings.h sys/file.h sys/ioctl.h sys/mount.h sys/param.h sys/socket.h \
   sys/time.h sys/timeb.h sys/vfs.h termios.h unistd.h utime.h wchar.h wctype.h])
-if test "$target_platform" != "target_android" ; then
-  AC_CHECK_HEADERS([cdio/iso9660.h],,AC_MSG_ERROR([$missing_headers]))
-fi
+AC_CHECK_HEADERS([cdio/iso9660.h],,AC_MSG_ERROR([$missing_headers]))
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STAT
@@ -1820,10 +1785,8 @@ fi
 
 if test "$use_webserver" = "yes"; then
   final_message="$final_message\n  Webserver:\tYes"
-  USE_WEB_SERVER=1
 else
   final_message="$final_message\n  Webserver:\tNo"
-  USE_WEB_SERVER=0
 fi
 
 if test "$use_librtmp" != "no"; then
@@ -1886,13 +1849,6 @@ else
   final_message="$final_message\n  libcec support:\tNo"
 fi
 
-if test "x$use_mysql" != "xno"; then
-  USE_MYSQL=1
-  final_message="$final_message\n  mysql support:\tYes"
-else
-  final_message="$final_message\n  mysql support:\tNo"
-fi
-
 ### External libraries messages
 
 if test "$use_external_ffmpeg" = "yes"; then
@@ -1912,7 +1868,6 @@ OUTPUT_FILES="Makefile \
     xbmc/cores/Makefile \
     xbmc/cores/VideoRenderers/Makefile \
     xbmc/cores/dvdplayer/Makefile \
-    xbmc/dbwrappers/Makefile \
     lib/Makefile \
     lib/libdvd/Makefile \
     xbmc/cores/DllLoader/Makefile \
@@ -2025,10 +1980,7 @@ AC_SUBST(USE_AIRTUNES)
 AC_SUBST(USE_LIBUDEV)
 AC_SUBST(USE_LIBUSB)
 AC_SUBST(USE_LIBCEC)
-AC_SUBST(USE_MYSQL)
-AC_SUBST(USE_LIBCDIO)
 AC_SUBST(USE_ANDROID)
-AC_SUBST(USE_WEB_SERVER)
 
 
 # pushd and popd are not available in other shells besides bash, so implement

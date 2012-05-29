@@ -63,9 +63,7 @@ namespace MEDIA_DETECT
 #include "windowing/XBMC_events.h"
 #include "threads/Thread.h"
 
-#ifdef HAS_WEB_SERVER
 #include "network/WebServer.h"
-#endif
 
 class CKaraokeLyricsManager;
 class CInertialScrollingHandler;

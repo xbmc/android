@@ -33,6 +33,9 @@ SRCS=AddonsDirectory.cpp \
      HTTPDirectory.cpp \
      IDirectory.cpp \
      IFile.cpp \
+     iso9660.cpp \
+     ISO9660Directory.cpp \
+     ISOFile.cpp \
      LastFMDirectory.cpp \
      LastFMFile.cpp \
      MemBufferCache.cpp \
@@ -42,6 +45,7 @@ SRCS=AddonsDirectory.cpp \
      MusicDatabaseFile.cpp \
      MusicFileDirectory.cpp \
      MusicSearchDirectory.cpp \
+     MythDirectory.cpp \
      MythFile.cpp \
      MythSession.cpp \
      NptXbmcFile.cpp \
@@ -89,16 +93,6 @@ SRCS=AddonsDirectory.cpp \
 ifeq (@USE_ANDROID@,1)
 SRCS+=FileAPK.cpp
 SRCS+=APKDirectory.cpp
-endif
-
-ifeq (@USE_LIBCDIO@,1)
-SRCS+=ISOFile.cpp
-SRCS+=iso9660.cpp
-SRCS+=ISO9660Directory.cpp
-endif
-
-ifeq (@USE_MYSQL@,1)
-SRCS+=MythDirectory.cpp
 endif
 
 ifeq (@HAVE_XBMC_NONFREE@,1)

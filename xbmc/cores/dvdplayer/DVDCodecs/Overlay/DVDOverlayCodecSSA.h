@@ -40,9 +40,7 @@ public:
   virtual CDVDOverlay* GetOverlay();
 
 private:
-#if defined(HAS_LIBASS)
   CDVDSubtitlesLibass* m_libass;
-#endif
   CDVDOverlaySSA*      m_pOverlay;
   CDVDStreamInfo       m_hints;
   int                  m_order;

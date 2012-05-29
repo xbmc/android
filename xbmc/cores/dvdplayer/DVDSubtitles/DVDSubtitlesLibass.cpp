@@ -19,8 +19,6 @@
  *
  */
 
-#if defined(HAS_LIBASS)
-
 #include "DVDSubtitlesLibass.h"
 #include "DVDClock.h"
 #include "filesystem/SpecialProtocol.h"
@@ -184,4 +182,3 @@ int CDVDSubtitlesLibass::GetNrOfEvents()
   return m_track->n_events;
 }
 
-#endif

@@ -80,10 +80,6 @@
   #define HAS_AIRTUNES
 #endif
 
-#ifdef HAVE_MYSQL
-  #define HAS_MYSQL
-#endif
-
 /**********************
  * Non-free Components
  **********************/
@@ -172,9 +168,6 @@
 #endif
 #ifdef HAVE_LIBXRANDR
 #define HAS_XRANDR
-#endif
-#if !defined(HAVE_LIBSMBCLIENT)
-#undef HAS_FILESYSTEM_SMB
 #endif
 #endif
 
