@@ -11,11 +11,11 @@ export PYTHON_NOVERSIONCHECK=no-check
 export USE_TEXTUREPACKER_NATIVE_ROOT=/usr
 
 # configuration settings
-CONFIGURE=./configure --prefix=$(PREFIX) --host=$(HOST) \
+CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess build-aux/ ;\
+  ./configure --prefix=$(PREFIX) --host=$(HOST) \
   --enable-neon --enable-gles --enable-debug \
   --disable-sdl --disable-x11 --disable-xrandr --disable-dvdcss \
-  --disable-optical-drive --disable-joystick \
-  --with-platform=android --disable-optimizations
+  --disable-optical-drive --disable-joystick --disable-optimizations
 
 
 all: $(SOURCE)/libxbmc.so
