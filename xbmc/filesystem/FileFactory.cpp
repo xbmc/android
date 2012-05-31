@@ -55,6 +55,9 @@
 #ifdef HAS_FILESYSTEM_VTP
 #include "VTPFile.h"
 #endif
+#if defined(TARGET_ANDROID)
+#include "FileAPK.h"
+#endif
 #include "ZipFile.h"
 #ifdef HAS_FILESYSTEM_RAR
 #include "RarFile.h"
@@ -104,6 +107,9 @@ IFile* CFileFactory::CreateLoader(const CURL& url)
   CStdString strProtocol = url.GetProtocol();
   strProtocol.MakeLower();
 
+#if defined(TARGET_ANDROID)
+  if (strProtocol == "apk") return new CFileAPK();
+#endif
   if (strProtocol == "zip") return new CZipFile();
 #ifdef HAS_FILESYSTEM_RAR
   else if (strProtocol == "rar") return new CRarFile();
