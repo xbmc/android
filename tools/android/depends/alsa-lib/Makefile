@@ -16,7 +16,7 @@ CFLAGS += \
 CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess .; \
           autoreconf -vif; \
           ./configure --prefix=$(PREFIX) --host=$(HOST) \
-          --with-alsa-devdir=/dev/snd/ --with-plugindir=/system/usr/lib/alsa-lib --with-configdir=/data/data/org.xbmc/cache/apk/assets/system/alsa \
+          --with-alsa-devdir=/dev/snd/ --with-plugindir=/system/usr/lib/alsa-lib --with-configdir=/system/usr/share/alsa \
           --with-ctl-plugins=ext \
           --with-pcm-plugins="copy,linear,route,mulaw,alaw,adpcm,rate,plug,multi,file,null,empty,share,meter,hooks,lfloat,ladspa,asym,iec958,softvol,extplug,ioplug,mmap_emul" \
           --disable-resmgr --enable-aload --enable-mixer  --enable-pcm  --disable-rawmidi  --enable-hwdep  --disable-seq  --disable-alisp  --disable-old-symbols --disable-python \
@@ -48,10 +48,9 @@ $(LIBDYLIB): $(PLATFORM)
 	make -C $(PLATFORM)/src install-libLTLIBRARIES
 	make -C $(PLATFORM)/include install
 	rm -f $(PREFIX)/lib/libasound.la $(PREFIX)/lib/libasound.so $(PREFIX)/lib/libxbasound.so $(PREFIX)/lib/libasound.so.2
-	mv -f $(PREFIX)/lib/libasound.so.2.0.0 $(PREFIX)/lib/libxbasound.so
-	ln -s $(PREFIX)/lib/libxbasound.so $(PREFIX)/lib/libasound.so
-	rpl -e "libasound.so.2" "libxbasound.so" $(PREFIX)/lib/libxbasound.so
-	readelf --dynamic $(PREFIX)/lib/libxbasound.so | grep ibrary
+	mv -f $(PREFIX)/lib/libasound.so.2.0.0 $(PREFIX)/lib/libasound.so
+	rpl -e "libasound.so.2" "libasound.so\x00\x00" $(PREFIX)/lib/libasound.so
+	readelf --dynamic $(PREFIX)/lib/libasound.so | grep ibrary
 	touch $@
 
 clean:
