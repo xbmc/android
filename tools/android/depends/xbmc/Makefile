@@ -15,7 +15,8 @@ CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automak
   ./configure --prefix=$(PREFIX) --host=$(HOST) \
   --enable-neon --enable-gles --enable-debug \
   --disable-sdl --disable-x11 --disable-xrandr --disable-dvdcss \
-  --disable-optical-drive --disable-joystick --disable-optimizations
+  --disable-optical-drive --disable-joystick --disable-optimizations \
+  --enable-shared-lib
 
 
 all: $(SOURCE)/libxbmc.so
