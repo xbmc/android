@@ -23,13 +23,12 @@
 #include "DynamicDll.h"
 #include "threads/CriticalSection.h"
 
-#define CURL CURL_HANDLE
-#include <curl/curl.h>
-#undef CURL
-
 /* put types of curl in namespace to avoid namespace pollution */
 namespace XCURL
 {
+  #define CURL CURL_HANDLE
+  #include <curl/curl.h>
+  #undef CURL
 
   class DllLibCurlInterface
   {

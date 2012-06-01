@@ -37,25 +37,18 @@
                  "special://xbmcbin/system/players/mplayer/;" \
                  "special://xbmcbin/system/players/dvdplayer/;" \
                  "special://xbmcbin/system/players/paplayer/;" \
-                 "special://xbmcbin/system/python/;"
-
-#define ENV_EXTENDED_PARTIAL_PATH "special://xbmc/system/;" \
+                 "special://xbmcbin/system/python/;" \
+                 "special://xbmc/system/;" \
                  "special://xbmc/system/players/mplayer/;" \
                  "special://xbmc/system/players/dvdplayer/;" \
                  "special://xbmc/system/players/paplayer/;" \
                  "special://xbmc/system/python/"
 
-#if   defined(TARGET_DARWIN)
+#ifdef __APPLE__
 #define ENV_PATH ENV_PARTIAL_PATH \
                  ";special://frameworks/"
-
-#elif defined(TARGET_ANDROID)
-#define ENV_PATH ENV_PARTIAL_PATH \
-                 ";/data/data/org.xbmc/lib/"
-
 #else
-#define ENV_PATH ENV_PARTIAL_PATH ENV_EXTENDED_PARTIAL_PATH
-
+#define ENV_PATH ENV_PARTIAL_PATH
 #endif
 
 //Define this to get loggin on all calls to load/unload of dlls

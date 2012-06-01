@@ -37,20 +37,18 @@
 
 using namespace XFILE;
 
-#ifdef _WIN32
-static void xb_smbc_log(const char* msg)
+void xb_smbc_log(const char* msg)
 {
   CLog::Log(LOGINFO, "%s%s", "smb: ", msg);
 }
-#endif
 
-static void xb_smbc_auth(const char *srv, const char *shr, char *wg, int wglen,
+void xb_smbc_auth(const char *srv, const char *shr, char *wg, int wglen,
                   char *un, int unlen, char *pw, int pwlen)
 {
   return ;
 }
 
-static smbc_get_cached_srv_fn orig_cache;
+smbc_get_cached_srv_fn orig_cache;
 
 SMBCSRV* xb_smbc_cache(SMBCCTX* c, const char* server, const char* share, const char* workgroup, const char* username)
 {
@@ -319,7 +317,7 @@ void CSMB::CheckIfIdle()
 	  else
 	  {
         CLog::Log(LOGNOTICE, "Samba is idle. Closing the remaining connections");
-        Deinit();
+        smb.Deinit();
       }
     }
   }

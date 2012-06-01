@@ -80,7 +80,7 @@ void SoLoader::Unload()
   // and only unloaded when the app is destroyed.
   return;
 #endif
-  
+
   CLog::Log(LOGDEBUG, "Unloading: %s\n", GetName());
 
   if (m_soHandle)

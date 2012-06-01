@@ -23,7 +23,6 @@
 #include "SectionLoader.h"
 #include "filesystem/File.h"
 #include "utils/log.h"
-#include "filesystem/SpecialProtocol.h"
 
 using namespace XFILE;
 
@@ -35,7 +34,7 @@ DllDynamic::DllDynamic()
 
 DllDynamic::DllDynamic(const CStdString& strDllName)
 {
-  m_strDllName=CSpecialProtocol::TranslatePath(strDllName);
+  m_strDllName=strDllName;
   m_dll=NULL;
   m_DelayUnload=true;
 }
@@ -90,7 +89,7 @@ bool DllDynamic::SetFile(const CStdString& strDllName)
   if (m_dll)
     return false;
 
-  m_strDllName=CSpecialProtocol::TranslatePath(strDllName);
+  m_strDllName=strDllName;
   return true;
 }
 

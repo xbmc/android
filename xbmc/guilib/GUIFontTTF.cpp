@@ -131,7 +131,7 @@ public:
 
     return face;
   };
-
+  
   FT_Stroker GetStroker()
   {
     if (!m_library)
@@ -149,7 +149,7 @@ public:
     assert(face);
     FT_Done_Face(face);
   };
-
+  
   void ReleaseStroker(FT_Stroker stroker)
   {
     assert(stroker);

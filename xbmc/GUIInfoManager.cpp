@@ -20,7 +20,6 @@
  */
 
 #include "system.h"
-#include "settings/GUISettings.h"
 #include "dialogs/GUIDialogSeekBar.h"
 #include "windows/GUIMediaWindow.h"
 #include "dialogs/GUIDialogFileBrowser.h"

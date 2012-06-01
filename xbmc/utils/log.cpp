@@ -98,7 +98,7 @@ void CLog::Log(int loglevel, const char *format, ... )
       OutputDebugString(strData2);
       m_repeatCount = 0;
     }
-
+    
     m_repeatLine      = strData;
     m_repeatLogLevel  = loglevel;
 
@@ -113,7 +113,7 @@ void CLog::Log(int loglevel, const char *format, ... )
 
     if (!length)
       return;
-
+    
     OutputDebugString(strData);
 
     /* fixup newline alignment, number of spaces should equal prefix length */

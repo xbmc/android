@@ -54,7 +54,7 @@ using namespace XCURL;
 #define dllselect select
 
 // curl calls this routine to debug
-extern "C" int debug_callback(::CURL_HANDLE *handle, curl_infotype info, char *output, size_t size, void *data)
+extern "C" int debug_callback(CURL_HANDLE *handle, curl_infotype info, char *output, size_t size, void *data)
 {
   if (info == CURLINFO_DATA_IN || info == CURLINFO_DATA_OUT)
     return 0;
@@ -357,7 +357,7 @@ void CCurlFile::Close()
 
 void CCurlFile::SetCommonOptions(CReadState* state)
 {
-  XCURL::CURL_HANDLE* h = state->m_easyHandle;
+  CURL_HANDLE* h = state->m_easyHandle;
 
   g_curlInterface.easy_reset(h);
 

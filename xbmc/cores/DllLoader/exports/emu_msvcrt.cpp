@@ -141,8 +141,6 @@ extern "C" void __stdcall init_emu_environ()
   dll_putenv("OS=win32");
 #elif defined(__APPLE__)
   dll_putenv("OS=darwin");
-#elif defined(__ANDROID__)
-  dll_putenv("OS=android");
 #elif defined(_LINUX)
   dll_putenv("OS=linux");
 #else
@@ -514,11 +512,6 @@ extern "C"
         str[size-1] = '\0';
     }
 
-    // might have embedded protocol so url translate the path.
-    CStdString path;
-    path = str;
-    CURL url(path);
-
     CFile* pFile = new CFile();
     bool bWrite = false;
     if ((iMode & O_RDWR) || (iMode & O_WRONLY))
@@ -533,9 +526,9 @@ extern "C"
     // or the python DLLs have malformed slashes on Win32 & Xbox
     // (-> E:\test\VIDEO_TS/VIDEO_TS.BUP))
     if (bWrite)
-      bResult = pFile->OpenForWrite(CUtil::ValidatePath(path), bOverwrite);
+      bResult = pFile->OpenForWrite(CUtil::ValidatePath(str), bOverwrite);
     else
-      bResult = pFile->Open(CUtil::ValidatePath(path));
+      bResult = pFile->Open(CUtil::ValidatePath(str));
 
     if (bResult)
     {
