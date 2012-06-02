@@ -32,15 +32,14 @@ prepare:
 	$(foreach var,$(OBJS),$(STRIP) --strip-unneeded $(PREFIX)/lib/$(var) -o xbmc/lib/$(APP_ABI)/`echo $(var) | sed -e 's/\.so.*/\.so/g'`;)
 	$(STRIP) $(PREFIX)/lib/mysql/libmysqlclient.so -o xbmc/lib/$(APP_ABI)/libmysqlclient.so
 	$(STRIP) --strip-unneeded $(XBMCROOT)/libxbmc.so -o xbmc/lib/$(APP_ABI)/libxbmc.so
-	$(STRIP) --strip-unneeded $(XBMCROOT)/xbmc/android/activity/libxbmcapp.so -o xbmc/lib/$(APP_ABI)/libxbmcapp.so
+	$(STRIP) --strip-unneeded $(XBMCROOT)/libxbmcapp.so -o xbmc/lib/$(APP_ABI)/libxbmcapp.so
 	$(foreach var,$(COPYDIRS), cp -rfp ../../../$(var) ./xbmc/assets/;)
 	cp -rfp $(PREFIX)/lib/python2.6 xbmc/assets/
 	cd xbmc/assets/python2.6/; rm -rf test config lib-dynload
 	$(STRIP) --strip-unneeded xbmc/assets/system/*.so
 	$(STRIP) --strip-unneeded xbmc/assets/system/players/*/*.so
 	find xbmc/assets/addons/skin.*/media/* -not -iname "Textures.xbt" -delete
-	rm -rf xbmc/assets/addons/skin.confluence
 	install -p $(NDKROOT)/toolchains/arm-linux-androideabi-4.4.3/prebuilt/gdbserver ./xbmc/lib/$(APP_ABI)/gdbserver
-	echo "set solib-search-path ./obj/local/$(APP_ABI):$(PREFIX)/lib:$(XBMCROOT):$(XBMCROOT)/xbmc/android/activity" > ./xbmc/lib/$(APP_ABI)/gdb.setup
+	echo "set solib-search-path ./obj/local/$(APP_ABI):$(PREFIX)/lib:$(XBMCROOT)" > ./xbmc/lib/$(APP_ABI)/gdb.setup
 	echo "directory $(NDKROOT)/platforms/$(APP_PLATFORM)/arch-arm/usr/include $(NDKROOT)/sources/android/native_app_glue" \
-	     "$(NDKROOT)/sources/cxx-stl/gnu-libstdc++ $(XBMCROOT) $(XBMCROOT)/xbmc/android/activity $(PREFIX)/include jni" >> ./xbmc/lib/$(APP_ABI)/gdb.setup
+	     "$(NDKROOT)/sources/cxx-stl/gnu-libstdc++ $(XBMCROOT) $(PREFIX)/include jni" >> ./xbmc/lib/$(APP_ABI)/gdb.setup
