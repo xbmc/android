@@ -45,6 +45,13 @@ CAdvancedSettings::CAdvancedSettings()
 
 void CAdvancedSettings::Initialize()
 {
+
+  if (!g_advancedSettings.m_logLevelHint)
+  {
+    g_advancedSettings.m_logLevelHint = LOG_LEVEL_NORMAL;
+    CLog::SetLogLevel(g_advancedSettings.m_logLevel);
+  }
+
   m_audioHeadRoom = 0;
   m_ac3Gain = 12.0f;
   m_audioApplyDrc = true;

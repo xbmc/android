@@ -37,7 +37,6 @@ int XBMC_Run(bool renderGUI, XBMC_PLATFORM *platform)
 {
   int status = 0;
   g_application.PlatformInitialize(platform);
-
   if (!g_application.Create())
   {
     fprintf(stderr, "ERROR: Unable to create application. Exiting\n");

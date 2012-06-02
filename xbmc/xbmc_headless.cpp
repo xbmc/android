@@ -1,10 +1,3 @@
-/*!
-\file IWindowManagerCallback.h
-\brief
-*/
-
-#pragma once
-
 /*
  *      Copyright (C) 2005-2008 Team XBMC
  *      http://www.xbmc.org
@@ -26,17 +19,11 @@
  *
  */
 
-/*!
- \ingroup winman
- \brief
- */
-class IWindowManagerCallback
-{
-public:
-  IWindowManagerCallback(void);
-  virtual ~IWindowManagerCallback(void);
 
-  virtual void FrameMove(bool processEvents, bool processGUI = true) = 0;
-  virtual void Render() = 0;
-  virtual void Process() = 0;
-};
+#include "xbmc.h"
+
+int main(int argc, char* argv[])
+{
+  bool renderGUI = false;
+  return XBMC_Run(renderGUI);
+}

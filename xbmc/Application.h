@@ -103,13 +103,16 @@ public:
   virtual ~CApplication(void);
   virtual void PlatformInitialize(XBMC_PLATFORM *platform);
   virtual bool Initialize();
-  virtual void FrameMove(bool processEvents);
+  virtual void FrameMove(bool processEvents, bool processGUI = true);
   virtual void Render();
   virtual bool RenderNoPresent();
   virtual void Preflight();
   virtual bool Create();
   virtual bool Cleanup();
 
+  bool CreateGUI();
+  bool CreateWindow();
+  bool DestroyWindow();
   void StartServices();
   void StopServices();
   bool StartWebServer();

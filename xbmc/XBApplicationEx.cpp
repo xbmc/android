@@ -68,7 +68,7 @@ VOID CXBApplicationEx::Destroy()
 }
 
 /* Function that runs the application */
-INT CXBApplicationEx::Run()
+INT CXBApplicationEx::Run(bool renderGUI)
 {
   CLog::Log(LOGNOTICE, "Running the application..." );
 
@@ -117,7 +117,7 @@ INT CXBApplicationEx::Run()
     try
     {
 #endif
-      if (!m_bStop) FrameMove(true);
+      if (!m_bStop) FrameMove(true, renderGUI);
       //reset exception count
       frameMoveExceptionCount = 0;
 
@@ -138,11 +138,12 @@ INT CXBApplicationEx::Run()
 #endif
 
     // Render the scene
+
 #ifndef _DEBUG
     try
     {
 #endif
-      if (!m_bStop) Render();
+      if (renderGUI && !m_bStop) Render();
       //reset exception count
       renderExceptionCount = 0;
 
@@ -159,8 +160,10 @@ INT CXBApplicationEx::Run()
         CLog::Log(LOGERROR, "CApplication::Render(), too many exceptions");
         throw;
       }
+
     }
 #endif
+
   } // while (!m_bStop)
   Destroy();
 
