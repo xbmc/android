@@ -6,7 +6,7 @@ SRCS       = $(GLUEPATH)/android_native_app_glue.c \
              EventLoop.cpp \
              XBMCApp.cpp \
              unzip.cpp
-SOLIB      = libxbmcapp.so
+SOLIB      = @abs_top_srcdir@/libxbmcapp.so
 
 LOADER     = ../loader
 LOADER_LIB = $(LOADER)/xb_dlopen.a
@@ -17,11 +17,8 @@ LDFLAGS   += -llog -landroid -Wl,--no-undefined
 
 all: $(SOLIB)
 
-$(LOADER_LIB):
-	$(MAKE) -C $(LOADER)
 
-
-$(SOLIB): $(SRCS) $(LOADER_LIB)
+$(SOLIB): $(SRCS)
 	$(CXX) $(CFLAGS) $(LDFLAGS) -lz -Wl,--whole-archive -lzip -Wl,--no-whole-archive -o $@ -shared $(SRCS) $(LOADER_LIB)
 
 install: $(SOLIB)
