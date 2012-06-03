@@ -28,6 +28,8 @@ CONFIGURE= cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automa
         samba_cv_have_longlong=yes \
         samba_cv_HAVE_OFF64_T=yes \
 	samba_cv_HAVE_UT_UT_TYPE=no \
+        ac_cv_func_srand=yes \
+        ac_cv_func_rand=yes \
         --disable-cups \
         --enable-static \
         --enable-shared \
