@@ -10,7 +10,7 @@ SUBDIRS = \
 	libogg libvorbis libflac libid3tag libmad fribidi libmpeg2 \
 	libass libsamplerate \
 	libmodplug librtmp libxml2 yajl libmicrohttpd mysql \
-	python26 samba alsa-lib libcdio libnfs afpfs-ng \
+	python26 samba alsa-lib libcdio libnfs afpfs-ng libshairport \
 	boost dummy-libxbmc xbmc \
 
 .PHONY: $(BUILDTOOLS) $(SUBDIRS)
