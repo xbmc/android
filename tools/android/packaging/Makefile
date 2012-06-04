@@ -9,7 +9,8 @@ OBJS = libgcrypt.so libgpg-error.so libfontconfig.so libfreetype.so \
   libyajl.so libxbssl.so libcurl.so \
   libtiff.so libxbjpeg.so librtmp.so libmad.so libmicrohttpd.so \
   libsmbclient.so libcdio.so libudf.so libcdio++.so \
-  libiso9660.so libiso9660++.so libnfs.so
+  libiso9660.so libiso9660++.so libnfs.so libafpclient.so \
+  libshairport.so libplist++.so libplist.so
 
 XBMCROOT = $(CURDIR)/../../..
 COPYDIRS = system addons language media
