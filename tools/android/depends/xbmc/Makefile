@@ -14,7 +14,7 @@ export USE_TEXTUREPACKER_NATIVE_ROOT=/usr
 CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess build-aux/ ;\
   ./configure --prefix=$(PREFIX) --host=$(HOST) \
   --enable-neon --enable-gles --enable-debug \
-  --disable-sdl --disable-x11 --disable-xrandr --disable-dvdcss \
+  --disable-sdl --disable-x11 --disable-xrandr \
   --disable-optical-drive --disable-joystick --disable-optimizations \
   --enable-shared-lib
 
