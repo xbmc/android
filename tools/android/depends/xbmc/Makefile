@@ -19,10 +19,10 @@ CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automak
   --enable-shared-lib
 
 
-all: $(SOURCE)/libxbmc.so
+all: $(SOURCE)/libxbmc.so $(SOURCE)/libxbmcapp.so
 
 $(SOURCE)/libxbmc.so: $(SOURCE)/Makefile
-	cd $(SOURCE); make -j4 libxbmc.so
+	cd $(SOURCE); make -j4
 
 $(SOURCE)/Makefile: $(SOURCE)/configure
 	cd $(SOURCE); $(CONFIGURE)
