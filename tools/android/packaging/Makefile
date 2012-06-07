@@ -33,7 +33,7 @@ prepare:
 	$(foreach var,$(OBJS),$(STRIP) --strip-unneeded $(PREFIX)/lib/$(var) -o xbmc/lib/$(APP_ABI)/`echo $(var) | sed -e 's/\.so.*/\.so/g'`;)
 	$(STRIP) $(PREFIX)/lib/mysql/libmysqlclient.so -o xbmc/lib/$(APP_ABI)/libmysqlclient.so
 	$(STRIP) --strip-unneeded $(XBMCROOT)/libxbmc.so -o xbmc/lib/$(APP_ABI)/libxbmc.so
-	$(STRIP) --strip-unneeded $(XBMCROOT)/xbmc/android/activity/libxbmcapp.so -o xbmc/lib/$(APP_ABI)/libxbmcapp.so
+	$(STRIP) --strip-unneeded $(XBMCROOT)/libxbmcapp.so -o xbmc/lib/$(APP_ABI)/libxbmcapp.so
 	$(foreach var,$(COPYDIRS), cp -rfp ../../../$(var) ./xbmc/assets/;)
 	cp -rfp $(PREFIX)/lib/python2.6 xbmc/assets/
 	cd xbmc/assets/python2.6/; rm -rf test config lib-dynload
