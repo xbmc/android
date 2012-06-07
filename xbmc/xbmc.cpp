@@ -30,6 +30,7 @@ int XBMC_Run(bool renderGUI, XBMC_PLATFORM *platform)
 {
   int status = -1;
 
+  g_application.PlatformInitialize(platform);
   if (!g_advancedSettings.Initialized())
     g_advancedSettings.Initialize();
 
