@@ -2080,7 +2080,6 @@ OUTPUT_FILES="Makefile \
     tools/EventClients/Clients/OSXRemote/Makefile \
     xbmc/peripherals/bus/Makefile \
     xbmc/peripherals/devices/Makefile \
-    xbmc/android/Makefile \
     xbmc/android/activity/Makefile \
     xbmc/android/loader/Makefile"
 
