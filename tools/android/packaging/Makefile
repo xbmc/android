@@ -3,14 +3,10 @@ include ../depends/android-sdk.mk
 
 include xbmc/jni/Application.mk
 
-OBJS = libgcrypt.so libgpg-error.so libfontconfig.so libfreetype.so \
-  libiconv.so libfribidi.so libsqlite3.so libxbpng.so libpcre.so \
-  libpcrecpp.so libsamplerate.so libxbcrypto.so \
-  libyajl.so libxbssl.so libcurl.so \
-  libtiff.so libxbjpeg.so librtmp.so libmad.so libmicrohttpd.so \
-  libsmbclient.so libcdio.so libudf.so libcdio++.so \
-  libiso9660.so libiso9660++.so libnfs.so libafpclient.so \
-  libshairport.so libplist++.so libplist.so libxml2.so
+OBJS = libxbpng.so libyajl.so libcurl.so \
+  libtiff.so libxbjpeg.so librtmp.so libmad.so \
+  libnfs.so libafpclient.so \
+  libshairport.so
 
 XBMCROOT = $(CURDIR)/../../..
 COPYDIRS = system addons language media
