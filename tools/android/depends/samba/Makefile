@@ -32,7 +32,7 @@ CONFIGURE= cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automa
         ac_cv_func_rand=yes \
         --disable-cups \
         --enable-static \
-        --enable-shared \
+        --disable-shared \
         --disable-shared-libs \
         --disable-pie \
         --disable-iprint \
@@ -83,8 +83,6 @@ $(LIBDYLIB): $(PLATFORM)
 
 .installed:
 	make -C $(PLATFORM)/source installclientlib
-	rpl -e "libsmbclient.so.0" "libsmbclient.so\x00\x00" $(PREFIX)/lib/libsmbclient.so
-	readelf --dynamic $(PREFIX)/lib/libsmbclient.so | grep ibrary
 	touch $@
 
 clean:

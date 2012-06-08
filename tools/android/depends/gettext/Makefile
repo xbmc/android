@@ -17,7 +17,7 @@ CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automak
     --with-included-libcroco \
     --with-included-libxml \
     --without-git --without-cvs \
-    gl_cv_header_working_stdint_h=yes 
+    --disable-shared gl_cv_header_working_stdint_h=yes 
 
 LIBDYLIB=$(PLATFORM)/.libs/lib$(LIBNAME).so
 
@@ -41,30 +41,6 @@ $(LIBDYLIB): $(PLATFORM)
 
 .installed:
 	make -C $(PLATFORM) install
-	rm -f $(PREFIX)/lib/libgettextpo.la $(PREFIX)/lib/libgettextpo.so $(PREFIX)/lib/libgettextpo.so.0
-	mv -f $(PREFIX)/lib/libgettextpo.so.0.4.0 $(PREFIX)/lib/libgettextpo.so
-	rpl -e "libgettextpo.so.0" "libgettextpo.so\x00\x00" $(PREFIX)/lib/libgettextpo.so
-	rpl -e "libintl.so.8" "libintl.so\x00\x00" $(PREFIX)/lib/libgettextpo.so
-	readelf --dynamic $(PREFIX)/lib/libgettextpo.so | grep ibrary
-	#
-	rm -f $(PREFIX)/lib/libgettextsrc.la $(PREFIX)/lib/libgettextsrc.so
-	mv -f $(PREFIX)/lib/libgettextsrc-0.17.so $(PREFIX)/lib/libgettextsrc.so
-	rpl -e "libgettextsrc-0.17.so" "libgettextsrc.so\x00\x00\x00\x00\x00" $(PREFIX)/lib/libgettextsrc.so
-	rpl -e "libgettextlib-0.17.so" "libgettextlib.so\x00\x00\x00\x00\x00" $(PREFIX)/lib/libgettextsrc.so
-	rpl -e "libintl.so.8" "libintl.so\x00\x00" $(PREFIX)/lib/libgettextsrc.so
-	readelf --dynamic $(PREFIX)/lib/libgettextsrc.so | grep ibrary
-	#
-	rm -f $(PREFIX)/lib/libgettextlib.la $(PREFIX)/lib/libgettextlib.so
-	mv -f $(PREFIX)/lib/libgettextlib-0.17.so $(PREFIX)/lib/libgettextlib.so
-	rpl -e "libgettextlib-0.17.so" "libgettextlib.so\x00\x00\x00\x00\x00" $(PREFIX)/lib/libgettextlib.so
-	rpl -e "libintl.so.8" "libintl.so\x00\x00" $(PREFIX)/lib/libgettextlib.so
-	readelf --dynamic $(PREFIX)/lib/libgettextlib.so | grep ibrary
-	#
-	rm -f $(PREFIX)/lib/libintl.la $(PREFIX)/lib/libintl.so $(PREFIX)/lib/libintl.so.8
-	mv -f $(PREFIX)/lib/libintl.so.8.0.2 $(PREFIX)/lib/libintl.so
-	rpl -e "libintl.so.8" "libintl.so\x00\x00" $(PREFIX)/lib/libintl.so
-	readelf --dynamic $(PREFIX)/lib/libintl.so | grep ibrary
-	#
 	touch $@
 
 clean:

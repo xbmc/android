@@ -9,7 +9,7 @@ ARCHIVE=$(SOURCE).tar.gz
 
 # configuration settings
 CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess .; \
-          ./configure --prefix=$(PREFIX) --host=$(HOST) --without-python
+          ./configure --prefix=$(PREFIX) --host=$(HOST) --without-python --disable-shared
 
 LIBDYLIB=$(PLATFORM)/$(LIBNAME)/.libs/$(LIBNAME).so
 
@@ -33,10 +33,6 @@ $(LIBDYLIB): $(PLATFORM)
 
 .installed:
 	make -C $(PLATFORM) install
-	rm -f $(PREFIX)/lib/libxml2.la $(PREFIX)/lib/libxml2.so $(PREFIX)/lib/libxml2.so.2
-	mv -f $(PREFIX)/lib/libxml2.so.2.7.6 $(PREFIX)/lib/libxml2.so
-	rpl -e "libxml2.so.2" "libxml2.so\x00\x00" $(PREFIX)/lib/libxml2.so
-	readelf --dynamic $(PREFIX)/lib/libxml2.so | grep ibrary
 	touch $@
 
 clean:
