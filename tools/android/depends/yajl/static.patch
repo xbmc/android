@@ -1,0 +1,26 @@
+--- src/CMakeLists.txt	2012-06-08 13:21:05.444097675 -0400
++++ src/CMakeLists.txt	2012-06-08 13:27:58.694097415 -0400
+@@ -39,12 +39,15 @@
+ ADD_LIBRARY(yajl SHARED ${SRCS} ${HDRS} ${PUB_HDRS})
+ 
+ TARGET_LINK_LIBRARIES(yajl m)
++TARGET_LINK_LIBRARIES(yajl_s m)
+ #### setup shared library version number
+ SET_TARGET_PROPERTIES(yajl PROPERTIES
+                       DEFINE_SYMBOL YAJL_SHARED
+                       SOVERSION ${YAJL_MAJOR}
+                       VERSION ${YAJL_MAJOR}.${YAJL_MINOR}.${YAJL_MICRO})
+ 
++SET_TARGET_PROPERTIES(yajl_s PROPERTIES OUTPUT_NAME yajl)
++
+ #### ensure a .dylib has correct absolute installation paths upon installation
+ IF(APPLE)
+   MESSAGE("INSTALL_NAME_DIR: ${CMAKE_INSTALL_PREFIX}/lib")
+@@ -76,7 +79,6 @@
+ IF(NOT WIN32)
+   # at build time you may specify the cmake variable LIB_SUFFIX to handle
+   # 64-bit systems which use 'lib64'
+-  INSTALL(TARGETS yajl LIBRARY DESTINATION lib${LIB_SUFFIX})
+   INSTALL(TARGETS yajl_s ARCHIVE DESTINATION lib${LIB_SUFFIX})
+   INSTALL(FILES ${PUB_HDRS} DESTINATION include/yajl)
+   INSTALL(FILES ${incDir}/yajl_version.h DESTINATION include/yajl)
