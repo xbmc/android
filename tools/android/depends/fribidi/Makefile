@@ -9,7 +9,8 @@ ARCHIVE=$(SOURCE).tar.gz
 
 # configuration settings
 CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess .; \
-          ./configure --prefix=$(PREFIX) --host=$(HOST) --disable-docs --enable-malloc gl_cv_header_working_stdint_h=yes
+          ./configure --prefix=$(PREFIX) --host=$(HOST) --disable-docs --enable-malloc gl_cv_header_working_stdint_h=yes \
+          --disable-shared
 
 LIBDYLIB=$(PLATFORM)/.libs/lib$(LIBNAME).so
 
@@ -31,10 +32,6 @@ $(LIBDYLIB): $(PLATFORM)
 
 .installed:
 	make -C $(PLATFORM) install
-	rm -f $(PREFIX)/lib/libfribidi.la $(PREFIX)/lib/libfribidi.so $(PREFIX)/lib/libfribidi.so.0
-	mv -f $(PREFIX)/lib/libfribidi.so.0.0.0 $(PREFIX)/lib/libfribidi.so
-	rpl -e "libfribidi.so.0" "libfribidi.so\x00\x00" $(PREFIX)/lib/libfribidi.so
-	readelf --dynamic $(PREFIX)/lib/libfribidi.so | grep ibrary
 	touch $@
 
 clean:

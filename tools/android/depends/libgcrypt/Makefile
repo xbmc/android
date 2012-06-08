@@ -9,7 +9,7 @@ ARCHIVE=$(SOURCE).tar.bz2
 
 # configuration settings
 CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess .; \
-          ./configure --prefix=$(PREFIX) --host=$(HOST)
+          ./configure --prefix=$(PREFIX) --host=$(HOST) --disable-shared
 # ac_cv_sys_symbol_underscore=no \
 
 ifeq ($(PLATFORM),x86)
@@ -38,10 +38,6 @@ $(LIBDYLIB): $(PLATFORM)
 
 .installed:
 	make -C $(PLATFORM) install
-	rm -f $(PREFIX)/lib/libgcrypt.la $(PREFIX)/lib/libgcrypt.so $(PREFIX)/lib/libgcrypt.so.11
-	mv -f $(PREFIX)/lib/libgcrypt.so.11.4.3 $(PREFIX)/lib/libgcrypt.so
-	rpl -e "libgcrypt.so.11" "libgcrypt.so\x00\x00\x00" $(PREFIX)/lib/libgcrypt.so
-	readelf --dynamic $(PREFIX)/lib/libgcrypt.so | grep ibrary
 	touch $@
 
 clean:

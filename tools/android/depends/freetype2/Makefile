@@ -11,7 +11,7 @@ ARCHIVE=$(SOURCE).tar.bz2
 # force using internal libtool
 export LIBTOOL=builds/unix/libtool
 CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess builds/unix; \
-          ./configure --prefix=$(PREFIX) --host=$(HOST)
+          ./configure --prefix=$(PREFIX) --host=$(HOST) --disable-shared
 
 LIBDYLIB=$(PLATFORM)/objs/.libs/lib$(LIBNAME).so
 
@@ -33,10 +33,6 @@ $(LIBDYLIB): $(PLATFORM)
 
 .installed:
 	make -C $(PLATFORM) install
-	rm -f $(PREFIX)/lib/libfreetype.la $(PREFIX)/lib/libfreetype.so $(PREFIX)/lib/libfreetype.so.6
-	mv -f $(PREFIX)/lib/libfreetype.so.6.3.20 $(PREFIX)/lib/libfreetype.so
-	rpl -e "libfreetype.so.6" "libfreetype.so\x00\x00" $(PREFIX)/lib/libfreetype.so
-	readelf --dynamic $(PREFIX)/lib/libfreetype.so | grep ibrary
 	touch $@
 
 clean:
