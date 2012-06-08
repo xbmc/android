@@ -27,17 +27,14 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	sed -ie "s|WORKING_DIRECTORY|#WORKING_DIRECTORY|g" "$(PLATFORM)/CMakeLists.txt"
 	sed -ie "s|ADD_SUBDIRECTORY(reformatter)|#ADD_SUBDIRECTORY(reformatter)|g" "$(PLATFORM)/CMakeLists.txt"
 	cd $(PLATFORM); patch -p0 < ../libmath.patch
-	cd $(PLATFORM); mkdir build; cd build; $(CMAKE) -DCMAKE_INSTALL_PREFIX='$(PREFIX)' ../
+	cd $(PLATFORM); patch -p0 < ../static.patch
+	cd $(PLATFORM); mkdir build; cd build; BUILD_SHARED_LIBRARIES=0 CMAKE_BUILD_TYPE=MinSizeRel $(CMAKE) --debug-output -DCMAKE_INSTALL_PREFIX='$(PREFIX)' ../
 
 $(LIBDYLIB): $(PLATFORM)
 	make -j $(JOBS) -C $(PLATFORM)/build
 
 .installed:
 	make -C $(PLATFORM)/build install
-	rm -f $(PREFIX)/lib/libyajl.la $(PREFIX)/lib/libyajl.so $(PREFIX)/lib/libyajl.so.2
-	mv -f $(PREFIX)/lib/libyajl.so.2.0.1 $(PREFIX)/lib/libyajl.so
-	rpl -e "libyajl.so.2" "libyajl.so\x00\x00" $(PREFIX)/lib/libyajl.so
-	readelf --dynamic $(PREFIX)/lib/libyajl.so | grep SONAME
 	touch $@
 
 clean:
