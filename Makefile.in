@@ -358,8 +358,6 @@ endif
 
 OBJSXBMC:=$(filter-out $(DYNOBJSXBMC), $(OBJSXBMC))
 
-LIBS += @PYTHON_LDFLAGS@
-
 libxbmcapp.so: xbmc/android/loader/xb_dlopen.a
 	$(MAKE) -C xbmc/android/activity
 
