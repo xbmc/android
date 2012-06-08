@@ -8,7 +8,7 @@ SOURCE=$(LIBNAME)-$(VERSION)
 ARCHIVE=$(SOURCE).tar.gz
 
 # configuration settings
-CONFIGURE=./configure --prefix=$(PREFIX) --host=$(HOST)
+CONFIGURE=./configure --prefix=$(PREFIX) --host=$(HOST) --disable-shared
 
 
 LIBDYLIB=$(PLATFORM)/src/.libs/libtinyxml.so.0.0.0
@@ -30,10 +30,6 @@ $(LIBDYLIB): $(PLATFORM)
 
 .installed:
 	make -C $(PLATFORM)/src install
-	rm -f $(PREFIX)/lib/libtinyxml.la $(PREFIX)/lib/libtinyxml.so $(PREFIX)/lib/libtinyxml.so.0
-	mv -f $(PREFIX)/lib/libtinyxml.so.0.0.0 $(PREFIX)/lib/libtinyxml.so
-	rpl -e "libtinyxml.so.0" "libtinyxml.so\x00\x00" $(PREFIX)/lib/libtinyxml.so
-	readelf --dynamic $(PREFIX)/lib/libtinyxml.so | grep ibrary
 	touch $@
 
 clean:

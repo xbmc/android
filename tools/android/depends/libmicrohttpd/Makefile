@@ -9,7 +9,7 @@ ARCHIVE=$(SOURCE).tar.gz
 
 # configuration settings
 CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess .; \
-          ./configure --prefix=$(PREFIX) --host=$(HOST)
+          ./configure --prefix=$(PREFIX) --host=$(HOST) --disable-shared
 
 LIBDYLIB=$(PLATFORM)/.libs/$(LIBNAME).so
 
@@ -34,9 +34,6 @@ $(LIBDYLIB): $(PLATFORM)
 .installed:
 	rm -f $(PREFIX)/lib/libmicrohttpd.so $(PREFIX)/lib/libmicrohttpd.so.5 $(PREFIX)/lib/libmicrohttpd.so.5.2.1
 	make -C $(PLATFORM)/src/daemon install
-	mv $(PREFIX)/lib/libmicrohttpd.so.5.2.1 $(PREFIX)/lib/libmicrohttpd.so
-	rpl -e "libmicrohttpd.so.5" "libmicrohttpd.so\x00\x00" $(PREFIX)/lib/libmicrohttpd.so
-	readelf --dynamic $(PREFIX)/lib/libmicrohttpd.so | grep ibrary
 	touch $@
 
 clean:

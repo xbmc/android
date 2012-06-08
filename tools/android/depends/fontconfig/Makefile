@@ -10,7 +10,7 @@ ARCHIVE=$(SOURCE).tar.gz
 # configuration settings
 CONFIGURE=./configure --prefix=$(PREFIX) --host=$(HOST) \
   --with-freetype-config=$(PREFIX)/bin/freetype-config \
-  --disable-libxml2 --disable-docs --with-arch=arm
+  --disable-libxml2 --disable-docs --with-arch=arm --disable-shared
 
 LIBDYLIB=$(PLATFORM)/.libs/lib$(LIBNAME).so
 
@@ -35,10 +35,6 @@ $(LIBDYLIB): $(PLATFORM)
 
 .installed:
 	make -C $(PLATFORM) install
-	rm -f $(PREFIX)/lib/libfontconfig.la $(PREFIX)/lib/libfontconfig.so $(PREFIX)/lib/libfontconfig.so.1
-	mv -f $(PREFIX)/lib/libfontconfig.so.1.4.4 $(PREFIX)/lib/libfontconfig.so
-	rpl -e "libfontconfig.so.1" "libfontconfig.so\x00\x00" $(PREFIX)/lib/libfontconfig.so
-	readelf --dynamic $(PREFIX)/lib/libfontconfig.so | grep ibrary
 	touch $@
 
 clean:

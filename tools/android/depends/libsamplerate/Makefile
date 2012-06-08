@@ -10,7 +10,7 @@ ARCHIVE=$(SOURCE).tar.gz
 # configuration settings
 CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess .; \
           cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess Cfg; \
-          ./configure --prefix=$(PREFIX) --host=$(HOST) --disable-sndfile --disable-fftw
+          ./configure --prefix=$(PREFIX) --host=$(HOST) --disable-sndfile --disable-fftw --disable-shared
 
 LIBDYLIB=$(PLATFORM)/.libs/$(LIBNAME).so
 
@@ -32,10 +32,6 @@ $(LIBDYLIB): $(PLATFORM)
 
 .installed:
 	make -C $(PLATFORM) install
-	rm -f $(PREFIX)/lib/libsamplerate.la $(PREFIX)/lib/libsamplerate.so $(PREFIX)/lib/libsamplerate.so.0
-	mv -f $(PREFIX)/lib/libsamplerate.so.0.1.7 $(PREFIX)/lib/libsamplerate.so
-	rpl -e "libsamplerate.so.0" "libsamplerate.so\x00\x00" $(PREFIX)/lib/libsamplerate.so
-	readelf --dynamic $(PREFIX)/lib/libsamplerate.so | grep ibrary
 	touch $@
 
 clean:
