@@ -29,14 +29,14 @@ debug: prepare
 
 prepare:
 	rm -rf xbmc/assets xbmc/lib tmp
-	mkdir -p xbmc/assets xbmc/res xbmc/lib/$(APP_ABI) images
+	mkdir -p xbmc/assets xbmc/res xbmc/lib/$(APP_ABI) images xbmc/assets/python2.6/lib/
 	$(foreach var,$(OBJS),$(STRIP) --strip-unneeded $(PREFIX)/lib/$(var) -o xbmc/lib/$(APP_ABI)/`echo $(var) | sed -e 's/\.so.*/\.so/g'`;)
-	$(STRIP) $(PREFIX)/lib/mysql/libmysqlclient.so -o xbmc/lib/$(APP_ABI)/libmysqlclient.so
 	$(STRIP) --strip-unneeded $(XBMCROOT)/libxbmc.so -o xbmc/lib/$(APP_ABI)/libxbmc.so
 	$(STRIP) --strip-unneeded $(XBMCROOT)/libxbmcapp.so -o xbmc/lib/$(APP_ABI)/libxbmcapp.so
 	$(foreach var,$(COPYDIRS), cp -rfp ../../../$(var) ./xbmc/assets/;)
-	cp -rfp $(PREFIX)/lib/python2.6 xbmc/assets/
-	cd xbmc/assets/python2.6/; rm -rf test config lib-dynload
+	cp -rfp $(PREFIX)/lib/python2.6 xbmc/assets/python2.6/lib/
+	cd xbmc/assets/python2.6/lib/python2.6/; rm -rf test config lib-dynload
+	cd xbmc/assets/python2.6/; zip -q -r -m python26.zip *
 	$(STRIP) --strip-unneeded xbmc/assets/system/*.so
 	$(STRIP) --strip-unneeded xbmc/assets/system/players/*/*.so
 	find xbmc/assets/addons/skin.*/media/* -not -iname "Textures.xbt" -delete
