@@ -3,7 +3,7 @@ include ../depends/android-sdk.mk
 
 include xbmc/jni/Application.mk
 
-OBJS = libxbpng.so libyajl.so libcurl.so \
+OBJS = libxbpng.so libcurl.so \
   libtiff.so libxbjpeg.so librtmp.so libmad.so \
   libnfs.so libafpclient.so \
   libshairport.so
