@@ -531,8 +531,10 @@ void XBPython::Initialize()
       pgwin32_putenv(buf.c_str());
 
 #elif defined(TARGET_ANDROID)
-      setenv("PYTHONPATH", CSpecialProtocol::TranslatePath("special://xbmc/python2.6").c_str(), 1);
-      setenv("PYTHONOPTIMIZE","0",1);
+      setenv("PYTHONHOME", CSpecialProtocol::TranslatePath("special://xbmc/python2.6/python26.zip").c_str(), 1);
+      setenv("PYTHONPATH", "", 1);
+      setenv("PYTHONOPTIMIZE","",1);
+      setenv("PYTHONNOUSERSITE","1",1);
 #endif
 
       if (PyEval_ThreadsInitialized())
