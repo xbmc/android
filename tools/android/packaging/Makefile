@@ -40,7 +40,6 @@ prepare:
 	$(STRIP) --strip-unneeded xbmc/assets/system/*.so
 	$(STRIP) --strip-unneeded xbmc/assets/system/players/*/*.so
 	find xbmc/assets/addons/skin.*/media/* -not -iname "Textures.xbt" -delete
-	rm -rf xbmc/assets/addons/skin.confluence
 	install -p $(NDKROOT)/toolchains/arm-linux-androideabi-4.4.3/prebuilt/gdbserver ./xbmc/lib/$(APP_ABI)/gdbserver
 	echo "set solib-search-path ./obj/local/$(APP_ABI):$(PREFIX)/lib:$(XBMCROOT):$(XBMCROOT)/xbmc/android/activity" > ./xbmc/lib/$(APP_ABI)/gdb.setup
 	echo "directory $(NDKROOT)/platforms/$(APP_PLATFORM)/arch-arm/usr/include $(NDKROOT)/sources/android/native_app_glue" \
