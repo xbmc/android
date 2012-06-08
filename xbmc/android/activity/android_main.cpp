@@ -76,6 +76,7 @@ void setup_env(struct android_app* state)
   
   // Get the path to the temp/cache directory
   char cacheDir[PATH_MAX];
+  char tempDir[PATH_MAX];
   jmethodID getCacheDir = env->GetMethodID(activityClass, "getCacheDir", "()Ljava/io/File;");
   jobject jCacheDir = env->CallObjectMethod(activity, getCacheDir);
 
@@ -85,9 +86,12 @@ void setup_env(struct android_app* state)
   jstring jCachePath = (jstring)env->CallObjectMethod(jCacheDir, getAbsolutePath);
   temp = env->GetStringUTFChars(jCachePath, NULL);
   strcpy(cacheDir, temp);
+  strcpy(tempDir, temp);
   env->ReleaseStringUTFChars(jCachePath, temp);
 
-  setenv("XBMC_TEMP", cacheDir, 0);
+  strcat(tempDir, "/temp");
+  setenv("XBMC_TEMP", tempDir, 0);
+
   strcat(cacheDir, "/apk");
 
   //cache assets from the apk
