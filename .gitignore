@@ -502,6 +502,7 @@ lib/cmyth/Makefile
 
 # /xbmc/
 /xbmc/DllPaths_generated.h
+/xbmc/DllPaths_generated_android.h
 /xbmc/Makefile
 
 # /xbmc/addons/
