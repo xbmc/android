@@ -6,7 +6,7 @@ include xbmc/jni/Application.mk
 OBJS = libxbpng.so libcurl.so \
   libtiff.so libxbjpeg.so librtmp.so libmad.so \
   libnfs.so libafpclient.so \
-  libshairport.so
+  libshairport.so libfontconfig.so
 
 XBMCROOT = $(CURDIR)/../../..
 COPYDIRS = system addons language media
