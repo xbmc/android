@@ -33,8 +33,9 @@ prepare:
 	cp -rfp $(PREFIX)/lib/python2.6 xbmc/assets/python2.6/lib/
 	cd xbmc/assets/python2.6/lib/python2.6/; rm -rf test config lib-dynload
 	cd xbmc/assets/python2.6/; zip -q -r -m python26.zip *
-	$(STRIP) --strip-unneeded xbmc/assets/system/*.so
-	$(STRIP) --strip-unneeded xbmc/assets/system/players/*/*.so
+	find xbmc/assets/system -name "*.so" -exec mv {} xbmc/lib/$(APP_ABI) \;
+	$(STRIP) --strip-unneeded xbmc/lib/$(APP_ABI)/*.so
+	cd xbmc/lib/$(APP_ABI); find  -name "*.so" -not -name "lib*.so" -printf "%f\n" | xargs -I@ mv @ lib@
 	find xbmc/assets/addons/skin.*/media/* -not -iname "Textures.xbt" -delete
 	install -p $(NDKROOT)/toolchains/arm-linux-androideabi-4.4.3/prebuilt/gdbserver ./xbmc/lib/$(APP_ABI)/gdbserver
 	echo "set solib-search-path ./obj/local/$(APP_ABI):$(PREFIX)/lib:$(XBMCROOT):$(XBMCROOT)/xbmc/android/activity" > ./xbmc/lib/$(APP_ABI)/gdb.setup
