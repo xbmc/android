@@ -7,6 +7,7 @@ VERSION=1.2.3
 SOURCE=$(LIBNAME)-$(VERSION)
 ARCHIVE=$(SOURCE).tar.gz
 
+export LIBS=-lm
 # configuration settings
 CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess .; \
           ./configure --prefix=$(PREFIX) --host=$(HOST) --disable-oggtest --disable-docs --disable-examples
