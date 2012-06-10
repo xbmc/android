@@ -23,7 +23,7 @@ mkdir -p $XBMCPREFIX/$PLATFORM/lib $XBMCPREFIX/$PLATFORM/include
 echo "NDKROOT=$NDKROOT"                                                >  $SCRIPT_PATH/Makefile.include
 echo "SDKROOT=$SDKROOT"                                                >> $SCRIPT_PATH/Makefile.include
 echo "XBMCPREFIX=$XBMCPREFIX"                                          >> $SCRIPT_PATH/Makefile.include
-echo "HOST=$HOST"                                                      >> $SCRIPT_PATH/Makefile.include
+echo "HOST=`$TOOLCHAIN/bin/*-gcc -dumpmachine`"                        >> $SCRIPT_PATH/Makefile.include
 echo "PLATFORM=$PLATFORM"                                              >> $SCRIPT_PATH/Makefile.include
 echo "PREFIX=$XBMCPREFIX/\$(PLATFORM)"                                 >> $SCRIPT_PATH/Makefile.include
 echo "PLATFORM_FLAGS=$PLATFORM_FLAGS"                                  >> $SCRIPT_PATH/Makefile.include
