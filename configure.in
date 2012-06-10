@@ -487,6 +487,12 @@ MAKE="${MAKE:-make}"
 
 # host detection and setup
 case $host in
+  i*86*-android-linux-gnu*)
+     target_platform=target_android
+     ARCH="i486-linux"
+     use_arch="x86"
+     use_cpu="i686"
+     ;;
   i*86*-linux-gnu*)
      ARCH="i486-linux"
      AC_SUBST(ARCH_DEFINES, "-DTARGET_POSIX -DTARGET_LINUX -D_LINUX")
