@@ -16,14 +16,14 @@ $(TARBALLS_LOCATION)/$(ARCHIVE):
 	rm -rf $(PLATFORM)/*; mkdir $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
 	echo $(PLATFORM) > .gitignore
-	echo 'using gcc : : $(HOST)-g++ : ' > $(PLATFORM)/tools/build/v2/user-config.jam
+	echo 'using gcc : : gcc : ' > $(PLATFORM)/tools/build/v2/user-config.jam
 	echo '	<cflags>"-fvisibility-inlines-hidden -DBOOST_AC_USE_PTHREADS -DBOOST_SP_USE_PTHREADS"' >> $(PLATFORM)/tools/build/v2/user-config.jam
 	echo '  <cxxflags>"-fvisibility-inlines-hidden -DBOOST_AC_USE_PTHREADS -DBOOST_SP_USE_PTHREADS"' >> $(PLATFORM)/tools/build/v2/user-config.jam
 	echo '	;' >> $(PLATFORM)/tools/build/v2/user-config.jam
 	cd $(PLATFORM); patch -p1 < ../add-arm-mem-barrier.patch
 	cd $(PLATFORM); patch -p1 < ../fix-deprecated-swp.patch
 	cd $(PLATFORM); ./bootstrap.sh --prefix=$(PREFIX)
-	cd $(PLATFORM); ./bjam --prefix=$(PREFIX) toolset=gcc --toolset-root=$(TOOLCHAIN) --disable-icu \
+	cd $(PLATFORM); ./bjam --prefix=$(PREFIX) toolset=gcc --toolset-root=$(TOOLCHAIN)/$(HOST)/bin --disable-icu \
 	--without-date_time --without-filesystem --without-graph --without-graph_parallel --without-iostreams --without-math --without-mpi --without-program_options \
 --without-python --without-random --without-regex --without-serialization --without-signals --without-system --without-test --without-thread --without-wave install 
 	touch .installed
