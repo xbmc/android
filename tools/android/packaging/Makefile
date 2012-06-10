@@ -1,8 +1,6 @@
 include ../depends/Makefile.include
 include ../depends/android-sdk.mk
 
-include xbmc/jni/Application.mk
-
 OBJS = libcurl.so \
   libxbjpeg.so librtmp.so libmad.so \
   libnfs.so libafpclient.so  \
@@ -26,20 +24,20 @@ debug: prepare
 
 prepare:
 	rm -rf xbmc/assets xbmc/lib tmp
-	mkdir -p xbmc/assets xbmc/res xbmc/lib/$(APP_ABI) images xbmc/assets/python2.6/lib/
-	$(foreach var,$(OBJS),$(STRIP) --strip-unneeded $(PREFIX)/lib/$(var) -o xbmc/lib/$(APP_ABI)/`echo $(var) | sed -e 's/\.so.*/\.so/g'`;)
-	$(STRIP) $(PREFIX)/lib/mysql/libmysqlclient.so -o xbmc/lib/$(APP_ABI)/libmysqlclient.so
-	$(STRIP) --strip-unneeded $(XBMCROOT)/libxbmc.so -o xbmc/lib/$(APP_ABI)/libxbmc.so
-	$(STRIP) --strip-unneeded $(XBMCROOT)/libxbmcapp.so -o xbmc/lib/$(APP_ABI)/libxbmcapp.so
+	mkdir -p xbmc/assets xbmc/res xbmc/lib/$(PLATFORM) images xbmc/assets/python2.6/lib/
+	$(foreach var,$(OBJS),$(STRIP) --strip-unneeded $(PREFIX)/lib/$(var) -o xbmc/lib/$(PLATFORM)/`echo $(var) | sed -e 's/\.so.*/\.so/g'`;)
+	$(STRIP) $(PREFIX)/lib/mysql/libmysqlclient.so -o xbmc/lib/$(PLATFORM)/libmysqlclient.so
+	$(STRIP) --strip-unneeded $(XBMCROOT)/libxbmc.so -o xbmc/lib/$(PLATFORM)/libxbmc.so
+	$(STRIP) --strip-unneeded $(XBMCROOT)/libxbmcapp.so -o xbmc/lib/$(PLATFORM)/libxbmcapp.so
 	$(foreach var,$(COPYDIRS), cp -rfp ../../../$(var) ./xbmc/assets/;)
 	cp -rfp $(PREFIX)/lib/python2.6 xbmc/assets/python2.6/lib/
 	cd xbmc/assets/python2.6/lib/python2.6/; rm -rf test config lib-dynload
 	cd xbmc/assets/python2.6/; zip -q -r -m python26.zip *
-	find xbmc/assets/system -name "*.so" -exec mv {} xbmc/lib/$(APP_ABI) \;
-	$(STRIP) --strip-unneeded xbmc/lib/$(APP_ABI)/*.so
-	cd xbmc/lib/$(APP_ABI); find  -name "*.so" -not -name "lib*.so" -printf "%f\n" | xargs -I@ mv @ lib@
+	find xbmc/assets/system -name "*.so" -exec mv {} xbmc/lib/$(PLATFORM) \;
+	$(STRIP) --strip-unneeded xbmc/lib/$(PLATFORM)/*.so
+	cd xbmc/lib/$(PLATFORM); find  -name "*.so" -not -name "lib*.so" -printf "%f\n" | xargs -I@ mv @ lib@
 	find xbmc/assets/addons/skin.*/media/* -not -iname "Textures.xbt" -delete
-	install -p $(NDKROOT)/toolchains/arm-linux-androideabi-4.4.3/prebuilt/gdbserver ./xbmc/lib/$(APP_ABI)/gdbserver
-	echo "set solib-search-path ./obj/local/$(APP_ABI):$(PREFIX)/lib:$(XBMCROOT):$(XBMCROOT)/xbmc/android/activity" > ./xbmc/lib/$(APP_ABI)/gdb.setup
+	install -p $(NDKROOT)/toolchains/arm-linux-androideabi-4.4.3/prebuilt/gdbserver ./xbmc/lib/$(PLATFORM)/gdbserver
+	echo "set solib-search-path ./obj/local/$(PLATFORM):$(PREFIX)/lib:$(XBMCROOT):$(XBMCROOT)/xbmc/android/activity" > ./xbmc/lib/$(PLATFORM)/gdb.setup
 	echo "directory $(NDKROOT)/platforms/$(APP_PLATFORM)/arch-arm/usr/include $(NDKROOT)/sources/android/native_app_glue" \
-	     "$(NDKROOT)/sources/cxx-stl/gnu-libstdc++ $(XBMCROOT) $(XBMCROOT)/xbmc/android/activity $(PREFIX)/include jni" >> ./xbmc/lib/$(APP_ABI)/gdb.setup
+	     "$(NDKROOT)/sources/cxx-stl/gnu-libstdc++ $(XBMCROOT) $(XBMCROOT)/xbmc/android/activity $(PREFIX)/include jni" >> ./xbmc/lib/$(PLATFORM)/gdb.setup
