@@ -566,17 +566,8 @@ case $host in
      AC_SUBST(ARCH_DEFINES, "-DTARGET_POSIX -DTARGET_LINUX -D_LINUX")
      ;;
   arm*-*linux-android*)
-     USE_ANDROID=1
      target_platform=target_android
-     use_texturepacker_native=yes
-     webserver_checkdepends=yes
-     AC_SUBST(ARCH_DEFINES, "-DTARGET_POSIX -DTARGET_LINUX -D_LINUX -D_ARMEL -DTARGET_ANDROID")
-     CFLAGS="$CFLAGS -Wno-psabi"
-     CXXFLAGS="$CXXFLAGS -Wno-psabi"
      use_arch="arm"
-
-     #TODO: Don't hard-code these, they're big assumptions.
-     AC_DEFINE(HAS_EGLGLES, [1], [Define if supporting EGL based GLES Framebuffer])
      use_cpu=cortex-a9
      ARCH="arm"
      ;;
@@ -584,6 +575,16 @@ case $host in
      AC_MSG_ERROR(unsupported host ($host))
 esac
 AC_SUBST([ARCH])
+
+if test "$target_platform" = "target_android" ; then
+  USE_ANDROID=1
+  use_texturepacker_native=yes
+  webserver_checkdepends=yes
+  AC_SUBST(ARCH_DEFINES, "-DTARGET_POSIX -DTARGET_LINUX -D_LINUX -DTARGET_ANDROID")
+  CFLAGS="$CFLAGS -Wno-psabi"
+  CXXFLAGS="$CXXFLAGS -Wno-psabi"
+  AC_DEFINE(HAS_EGLGLES, [1], [Define if supporting EGL based GLES Framebuffer])
+fi
 
 if test "$build_shared_lib" = "yes"; then
   final_message="$final_message\n Shared lib\tYes"
