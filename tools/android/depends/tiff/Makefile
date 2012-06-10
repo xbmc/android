@@ -9,7 +9,7 @@ ARCHIVE=$(SOURCE).tar.gz
 
 # configuration settings
 CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess config/; \
-          ./configure --prefix=$(PREFIX) --host=$(HOST)
+          ./configure --prefix=$(PREFIX) --host=$(HOST) --disable-shared
 
 LIBDYLIB=$(PLATFORM)/libtiff/.libs/lib$(LIBNAME).so
 
@@ -31,16 +31,6 @@ $(LIBDYLIB): $(PLATFORM)
 
 .installed:
 	make -C $(PLATFORM) install
-	rm -f $(PREFIX)/lib/libtiffxx.la $(PREFIX)/lib/libtiffxx.so $(PREFIX)/lib/libtiffxx.so.3
-	mv -f $(PREFIX)/lib/libtiffxx.so.3.8.2 $(PREFIX)/lib/libtiffxx.so
-	rpl -e "libtiffxx.so.3" "libtiffxx.so\x00\x00" $(PREFIX)/lib/libtiffxx.so
-	rpl -e "libtiff.so.3" "libtiff.so\x00\x00" $(PREFIX)/lib/libtiffxx.so
-	readelf --dynamic $(PREFIX)/lib/libtiffxx.so | grep ibrary
-	#
-	rm -f $(PREFIX)/lib/libtiff.la $(PREFIX)/lib/libtiff.so $(PREFIX)/lib/libtiff.so.3
-	mv -f $(PREFIX)/lib/libtiff.so.3.8.2 $(PREFIX)/lib/libtiff.so
-	rpl -e "libtiff.so.3" "libtiff.so\x00\x00" $(PREFIX)/lib/libtiff.so
-	readelf --dynamic $(PREFIX)/lib/libtiff.so | grep ibrary
 	touch $@
 
 clean:
