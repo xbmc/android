@@ -19,11 +19,22 @@ sudo chown -R $USER:$USER $XBMCPREFIX/$PLATFORM $TARBALLS_LOCATION
 mkdir -p $XBMCPREFIX/$PLATFORM/lib $XBMCPREFIX/$PLATFORM/include
 
 #
+# Guess platform and CFLAGS. Can be changed in the resulting Makefile.include
+HOST="`$TOOLCHAIN/bin/*-gcc -dumpmachine`"
+if [ -n "`echo $HOST | grep ^arm`" ]; then
+  PLATFORM=armeabi-v7a
+  PLATFORM_FLAGS="-march=armv7-a -mtune=cortex-a9 -mfloat-abi=softfp -mfpu=neon -D__ARM_ARCH_7__ -D__ARM_ARCH_7A__ -DANDROID -Os"
+elif [ -n "`echo $HOST | grep i686`" ]; then
+  PLATFORM=x86
+  PLATFORM_FLAGS="-DANDROID -Os"
+fi
+
+#
 #
 echo "NDKROOT=$NDKROOT"                                                >  $SCRIPT_PATH/Makefile.include
 echo "SDKROOT=$SDKROOT"                                                >> $SCRIPT_PATH/Makefile.include
 echo "XBMCPREFIX=$XBMCPREFIX"                                          >> $SCRIPT_PATH/Makefile.include
-echo "HOST=`$TOOLCHAIN/bin/*-gcc -dumpmachine`"                        >> $SCRIPT_PATH/Makefile.include
+echo "HOST=$HOST"                                                      >> $SCRIPT_PATH/Makefile.include
 echo "PLATFORM=$PLATFORM"                                              >> $SCRIPT_PATH/Makefile.include
 echo "PREFIX=$XBMCPREFIX/\$(PLATFORM)"                                 >> $SCRIPT_PATH/Makefile.include
 echo "PLATFORM_FLAGS=$PLATFORM_FLAGS"                                  >> $SCRIPT_PATH/Makefile.include
