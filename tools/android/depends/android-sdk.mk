@@ -14,6 +14,11 @@ export LDFLAGS=$(PLATFORM_FLAGS) -L$(PREFIX)/lib
 export CPPFLAGS=$(PLATFORM_FLAGS) -I$(PREFIX)/include -fexceptions -frtti
 export CXXFLAGS=$(PLATFORM_FLAGS) -I$(PREFIX)/include -fexceptions -frtti
 export LIBS=-lstdc++
+
 export PKG_CONFIG_PATH=$(PREFIX)/lib/pkgconfig
 export PKG_CONFIG=$(PREFIX)/bin/pkg-config
+
+export AUTOMAKE=$(PREFIX)/bin/automake
+export ACLOCAL=$(PREFIX)/bin/aclocal
+export LIBTOOLIZE=$(PREFIX)/bin/libtoolize
 export AUTORECONF=$(PREFIX)/bin/autoreconf
