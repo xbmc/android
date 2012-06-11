@@ -14,7 +14,7 @@ LIBDYLIB=$(PLATFORM)/src/.libs/lib$(LIBNAME).so
 
 CLEAN_FILES=$(ARCHIVE) $(PLATFORM)
 
-all: $(LIBDYLIB) .installed
+all: $(LIBDYLIB) .installed-$(PLATFORM)
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
@@ -28,7 +28,7 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 $(LIBDYLIB): $(PLATFORM)
 	make -j1 -C $(PLATFORM)
 
-.installed:
+.installed-$(PLATFORM):
 	make -C $(PLATFORM) install_sw
 	rm -f $(PREFIX)/lib/libssl.so $(PREFIX)/lib/libxbssl.so
 	mv -f $(PREFIX)/lib/libssl.so.0.9.8 $(PREFIX)/lib/libxbssl.so
@@ -49,8 +49,8 @@ $(LIBDYLIB): $(PLATFORM)
 
 clean:
 	make -C $(PLATFORM) clean
-	rm -f .installed
+	rm -f .installed-$(PLATFORM)
 
 distclean::
-	rm -rf $(PLATFORM) .installed
+	rm -rf $(PLATFORM) .installed-$(PLATFORM)
 
