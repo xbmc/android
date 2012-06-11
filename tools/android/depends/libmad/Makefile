@@ -8,7 +8,7 @@ SOURCE=$(LIBNAME)-$(VERSION)
 ARCHIVE=$(SOURCE).tar.gz
 
 # configuration settings
-CONFIGURE=rm config.sub config.guess; automake -ac; ./configure --prefix=$(PREFIX) --host=$(HOST)
+CONFIGURE=rm config.sub config.guess; $(AUTOMAKE) -ac; ./configure --prefix=$(PREFIX) --host=$(HOST)
 
 LIBDYLIB=$(PLATFORM)/.libs/$(LIBNAME).so
 
