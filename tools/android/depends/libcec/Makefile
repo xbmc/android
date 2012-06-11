@@ -13,7 +13,7 @@ CONFIGURE=./configure --prefix=$(PREFIX) --host=$(HOST) \
 
 LIBDYLIB=$(PLATFORM)/src/lib/.libs/libcec.so.1.0.5
 
-all: $(LIBDYLIB) .installed
+all: $(LIBDYLIB) .installed-$(PLATFORM)
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
@@ -29,7 +29,7 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 $(LIBDYLIB): $(PLATFORM)
 	make -j $(JOBS) -C $(PLATFORM)/src/lib
 
-.installed:
+.installed-$(PLATFORM):
 	make -C $(PLATFORM)/src/lib install
 	rm -f $(PREFIX)/lib/libcec.la $(PREFIX)/lib/libcec.so $(PREFIX)/lib/libcec.so.1
 	mv -f $(PREFIX)/lib/libcec.so.1.0.5 $(PREFIX)/lib/libcec.so
@@ -38,8 +38,8 @@ $(LIBDYLIB): $(PLATFORM)
 	touch $@
 
 clean:
-	rm -rf $(PLATFORM) .installed
+	rm -rf $(PLATFORM) .installed-$(PLATFORM)
 
 distclean::
-	rm -rf $(PLATFORM) .installed
+	rm -rf $(PLATFORM) .installed-$(PLATFORM)
 

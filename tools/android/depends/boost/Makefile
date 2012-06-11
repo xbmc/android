@@ -7,12 +7,12 @@ VERSION=1_44_0
 SOURCE=$(LIBNAME)_$(VERSION)
 ARCHIVE=$(SOURCE).tar.bz2
 
-all: .installed
+all: .installed-$(PLATFORM)
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
 
-.installed: $(TARBALLS_LOCATION)/$(ARCHIVE)
+.installed-$(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	rm -rf $(PLATFORM)/*; mkdir $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
 	echo $(PLATFORM) > .gitignore
@@ -26,10 +26,10 @@ $(TARBALLS_LOCATION)/$(ARCHIVE):
 	cd $(PLATFORM); ./bjam --prefix=$(PREFIX) toolset=gcc --toolset-root=$(TOOLCHAIN)/$(HOST)/bin --disable-icu \
 	--without-date_time --without-filesystem --without-graph --without-graph_parallel --without-iostreams --without-math --without-mpi --without-program_options \
 --without-python --without-random --without-regex --without-serialization --without-signals --without-system --without-test --without-thread --without-wave install 
-	touch .installed
+	touch .installed-$(PLATFORM)
 
 clean:
-	rm -rf $(PLATFORM) .installed
+	rm -rf $(PLATFORM) .installed-$(PLATFORM)
 
 distclean::
-	rm -rf $(PLATFORM) .installed
+	rm -rf $(PLATFORM) .installed-$(PLATFORM)

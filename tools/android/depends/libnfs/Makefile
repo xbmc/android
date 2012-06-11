@@ -16,7 +16,7 @@ LIBDYLIB=$(PLATFORM)/lib/$(DYLIBNAME)
 
 CLEAN_FILES=$(ARCHIVE) $(PLATFORM)
 
-all: $(LIBDYLIB) .installed
+all: $(LIBDYLIB) .installed-$(PLATFORM)
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
@@ -35,7 +35,7 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 $(LIBDYLIB): $(PLATFORM)
 	make -C $(PLATFORM)
 
-.installed:
+.installed-$(PLATFORM):
 	make -C $(PLATFORM) install
 	rm -f $(PREFIX)/lib/libnfs.la $(PREFIX)/lib/libnfs.so $(PREFIX)/lib/libnfs.so.0
 	mv -f $(PREFIX)/lib/libnfs.so.0.0.0 $(PREFIX)/lib/libnfs.so
@@ -46,8 +46,8 @@ $(LIBDYLIB): $(PLATFORM)
 	touch $@
 clean:
 	make -C $(PLATFORM) clean
-	rm -r .installed
+	rm -r .installed-$(PLATFORM)
 	rm -rf $(PLATFORM)
 
 distclean::
-	rm -rf $(PLATFORM) .installed
+	rm -rf $(PLATFORM) .installed-$(PLATFORM)

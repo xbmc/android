@@ -19,7 +19,7 @@ LIBDYLIB=$(PLATFORM)/$(LIBNAME)/.libs/$(LIBNAME).so
 
 CLEAN_FILES=$(ARCHIVE) $(PLATFORM)
 
-all: $(LIBDYLIB) .installed
+all: $(LIBDYLIB) .installed-$(PLATFORM)
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
@@ -38,7 +38,7 @@ $(LIBDYLIB): $(PLATFORM)
 	make -j $(JOBS) -C $(PLATFORM)/include
 	make -j $(JOBS) -C $(PLATFORM)/libmysql
 
-.installed:
+.installed-$(PLATFORM):
 	make -C $(PLATFORM)/libmysql install
 	make -j $(JOBS) -C $(PLATFORM)/scripts/ install-binSCRIPTS
 	make -j $(JOBS) -C $(PLATFORM)/include/ install
@@ -50,8 +50,8 @@ $(LIBDYLIB): $(PLATFORM)
 
 clean:
 	make -C $(PLATFORM) clean
-	rm -f .installed
+	rm -f .installed-$(PLATFORM)
 
 distclean::
-	rm -rf $(PLATFORM) .installed
+	rm -rf $(PLATFORM) .installed-$(PLATFORM)
 
