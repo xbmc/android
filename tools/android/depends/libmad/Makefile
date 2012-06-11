@@ -7,6 +7,11 @@ VERSION=0.15.1b
 SOURCE=$(LIBNAME)-$(VERSION)
 ARCHIVE=$(SOURCE).tar.gz
 
+#Arm build borks with -mthumb
+ifeq ($(findstring arm,$(PLATFORM)),arm)
+export CFLAGS+=-marm
+endif
+
 # configuration settings
 CONFIGURE=rm config.sub config.guess; $(AUTOMAKE) -ac; ./configure --prefix=$(PREFIX) --host=$(HOST)
 
