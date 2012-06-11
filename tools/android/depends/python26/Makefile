@@ -41,7 +41,7 @@ $(LIBDYLIB): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); cp Parser/pgen $(HOSTPYTHONDIR)/bin
 	cd $(PLATFORM); make distclean
 	cd $(PLATFORM); patch -Np1 -i ../Python-2.6.5-xcompile.patch
-	cd $(PLATFORM); autoreconf
+	cd $(PLATFORM); $(AUTORECONF)
 	cd $(PLATFORM); $(CONFIGURE)
 	cd $(PLATFORM); rm pyconfig.h
 	cd $(PLATFORM); rm Modules/config.c

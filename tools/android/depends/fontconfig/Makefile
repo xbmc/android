@@ -27,7 +27,7 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	echo $(PLATFORM) > .gitignore
 	cd $(PLATFORM); patch -p1 < ../01-fontconfig-cross-compile-fix.patch
 	cd $(PLATFORM); patch -p1 < ../lconv.patch 
-	cd $(PLATFORM); autoreconf -vif
+	cd $(PLATFORM); $(AUTORECONF) -vif
 	cd $(PLATFORM); $(CONFIGURE)
 
 $(LIBDYLIB): $(PLATFORM)

@@ -35,7 +35,7 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); patch -p1 <../10-fix-errno.patch
 	cd $(PLATFORM); patch -p1 <../11-fix-stat.patch
 	cd $(PLATFORM); patch -p0 < ../android.patch
-	cd $(PLATFORM); autoreconf -vif
+	cd $(PLATFORM); $(AUTORECONF) -vif
 	cd $(PLATFORM); $(CONFIGURE)
 
 $(LIBDYLIB): $(PLATFORM)
