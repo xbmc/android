@@ -14,7 +14,7 @@ CFLAGS += \
 	-finline-limit=300 -finline-functions -fno-inline-functions-called-once \
 
 CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess .; \
-          autoreconf -vif; \
+          $(AUTORECONF) -vif; \
           ./configure --prefix=$(PREFIX) --host=$(HOST) \
           --with-alsa-devdir=/dev/snd/ --with-plugindir=/system/usr/lib/alsa-lib --with-configdir=/system/usr/share/alsa \
           --with-ctl-plugins=ext \
