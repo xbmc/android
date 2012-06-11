@@ -1,3 +1,5 @@
 /Makefile.include
 /**/.gitignore
-/**/.installed
+/**/.installed-*
+/*/x86/*
+/*/armeabi-v7a/*
