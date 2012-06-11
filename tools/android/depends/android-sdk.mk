@@ -16,3 +16,4 @@ export CXXFLAGS=$(PLATFORM_FLAGS) -I$(PREFIX)/include -fexceptions -frtti
 export LIBS=-lstdc++
 export PKG_CONFIG_PATH=$(PREFIX)/lib/pkgconfig
 export PKG_CONFIG=$(PREFIX)/bin/pkg-config
+export AUTORECONF=$(PREFIX)/bin/autoreconf

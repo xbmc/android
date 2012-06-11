@@ -33,7 +33,7 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); patch -p0 < ../009_fix_ipv6.patch
 	cd $(PLATFORM); patch -p0 < ../010_handle_metadata.patch
 	cd $(PLATFORM); patch -p0 < ../android.patch
-	cd $(PLATFORM); autoreconf -vif
+	cd $(PLATFORM); $(AUTORECONF) -vif
 	cd $(PLATFORM); $(CONFIGURE)
 
 $(LIBDYLIB): $(PLATFORM)
