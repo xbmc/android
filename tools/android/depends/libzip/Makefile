@@ -14,7 +14,7 @@ CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automak
 
 LIBDYLIB=$(PLATFORM)/.libs/$(LIBNAME).dylib
 
-all: $(LIBDYLIB) .installed
+all: $(LIBDYLIB) .installed-$(PLATFORM)
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
@@ -28,14 +28,14 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 $(LIBDYLIB): $(PLATFORM)
 	make -j $(MAKE_JOBS) -C $(PLATFORM)
 
-.installed:
+.installed-$(PLATFORM):
 	make -C $(PLATFORM) install
 	rm -f $(PREFIX)/lib/libzip.la $(PREFIX)/lib/libzip*.so*
 	touch $@
 
 clean:
 	make -C $(PLATFORM) clean
-	rm -f .installed
+	rm -f .installed-$(PLATFORM)
 
 distclean::
-	rm -rf $(PLATFORM) .installed
+	rm -rf $(PLATFORM) .installed-$(PLATFORM)
