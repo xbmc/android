@@ -1,3 +1,4 @@
+NATIVE_BUILD=1
 include ../Makefile.include
 
 # lib name, version

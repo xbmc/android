@@ -1,4 +1,7 @@
+/Makefile
+/configure
 /Makefile.include
+/autom4te.cache/
 /**/.gitignore
 /**/.installed-*
 /*/x86/*
