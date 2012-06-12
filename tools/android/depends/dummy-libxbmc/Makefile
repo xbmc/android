@@ -1,5 +1,4 @@
 include ../Makefile.include
-include ../android-sdk.mk
 
 LIBDYLIB=libxbmc.so
 

@@ -1,5 +1,4 @@
 include ../Makefile.include
-include ../android-sdk.mk
 
 # lib name, version
 LIBNAME=libssh2
