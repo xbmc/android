@@ -1,0 +1,51 @@
+TOOLCHAIN=@use_toolchain@
+NDKROOT=@use_ndk@
+SDKROOT=@use_sdk@
+XBMCPREFIX=@use_staging@
+TARBALLS_LOCATION=@use_tarballs@
+HOST=@use_host@
+PLATFORM=@use_cpu@
+PREFIX=$(XBMCPREFIX)/$(PLATFORM)
+
+PLATFORM_FLAGS=-DANDROID -Os
+ifeq ($(PLATFORM),armeabi-v7a)
+  PLATFORM_FLAGS+=-march=armv7-a -mtune=cortex-a9 -mfloat-abi=softfp -mfpu=neon -D__ARM_ARCH_7__ -D__ARM_ARCH_7A__
+endif
+
+ifeq ($(PLATFORM),x86)
+  PLATFORM_FLAGS+=
+endif
+
+BASE_URL=http://mirrors.xbmc.org/build-deps/darwin-libs
+RETRIEVE_TOOL=/usr/bin/curl
+RETRIEVE_TOOL_FLAGS=-Ls --create-dirs -f --output $(TARBALLS_LOCATION)/$(ARCHIVE)
+ARCHIVE_TOOL=/bin/tar
+ARCHIVE_TOOL_FLAGS=-C $(PLATFORM) --strip-components=1 -xf
+JOBS=8
+
+ifneq ($(NATIVE_BUILD),1)
+  export SYSROOT=$(TOOLCHAIN)/sysroot
+  export CROSSTOOLS=$(TOOLCHAIN)/bin/$(HOST)-
+  export LD=$(CROSSTOOLS)ld
+  export CC=$(CROSSTOOLS)gcc
+  export CXX=$(CROSSTOOLS)g++
+  export AR=$(CROSSTOOLS)ar
+  export AS=$(CROSSTOOLS)as
+  export NM=$(CROSSTOOLS)nm
+  export STRIP=$(CROSSTOOLS)strip
+  export RANLIB=$(CROSSTOOLS)ranlib
+  export OBJDUMP=$(CROSSTOOLS)objdump
+  export CFLAGS=$(PLATFORM_FLAGS) -I$(PREFIX)/include -fexceptions
+  export LDFLAGS=$(PLATFORM_FLAGS) -L$(PREFIX)/lib
+  export CPPFLAGS=$(PLATFORM_FLAGS) -I$(PREFIX)/include -fexceptions -frtti
+  export CXXFLAGS=$(PLATFORM_FLAGS) -I$(PREFIX)/include -fexceptions -frtti
+  export LIBS=-lstdc++
+
+  export PKG_CONFIG_PATH=$(PREFIX)/lib/pkgconfig
+  export PKG_CONFIG=$(PREFIX)/bin/pkg-config
+
+  export AUTOMAKE=$(PREFIX)/bin/automake
+  export ACLOCAL=$(PREFIX)/bin/aclocal
+  export LIBTOOLIZE=$(PREFIX)/bin/libtoolize
+  export AUTORECONF=$(PREFIX)/bin/autoreconf
+endif
