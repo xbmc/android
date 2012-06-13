@@ -34,10 +34,10 @@ $(LIBDYLIB): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); $(CONFIGURE_NATIVE)
 	cd $(PLATFORM); $(MAKE) libpython2.6.a
 	cd $(PLATFORM); ranlib libpython2.6.a
-	cd $(PLATFORM); $(MAKE) python Parser/pgen
-	cd $(PLATFORM); $(MAKE) install
+	cd $(PLATFORM); make python Parser/pgen
+	cd $(PLATFORM); make install
 	cd $(PLATFORM); cp Parser/pgen $(HOSTPYTHONDIR)/bin
-	cd $(PLATFORM); $(MAKE) distclean
+	cd $(PLATFORM); make distclean
 	cd $(PLATFORM); patch -Np1 -i ../Python-2.6.5-xcompile.patch
 	cd $(PLATFORM); $(AUTORECONF)
 	cd $(PLATFORM); $(CONFIGURE)
@@ -48,7 +48,7 @@ $(LIBDYLIB): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	$(MAKE) -C $(PLATFORM) HOSTPYTHON=$(HOSTPYTHONDIR)/bin/python HOSTPGEN=$(HOSTPYTHONDIR)/bin/pgen CROSS_COMPILE_TARGET=yes libpython2.6.a
 
 .installed-$(PLATFORM): $(LIBDYLIB)
-	$(MAKE) -C $(PLATFORM) HOSTPYTHON=$(HOSTPYTHONDIR)/bin/python HOSTPGEN=$(HOSTPYTHONDIR)/bin/pgen CROSS_COMPILE_TARGET=yes install
+	make -C $(PLATFORM) HOSTPYTHON=$(HOSTPYTHONDIR)/bin/python HOSTPGEN=$(HOSTPYTHONDIR)/bin/pgen CROSS_COMPILE_TARGET=yes install
 	find $(PREFIX)/lib/python2.6 -type f -name "*.py" -delete
 	find $(PREFIX)/lib/python2.6 -type f -name "*.pyc" -delete
 	#
