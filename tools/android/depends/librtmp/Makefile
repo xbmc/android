@@ -24,10 +24,10 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM)/librtmp; patch -p0 < ../../prefix.patch
 
 $(LIBDYLIB): $(PLATFORM)
-	make -j $(JOBS) -C $(PLATFORM)/librtmp CROSS_COMPILE=$(CROSSTOOLS) PREFIX=$(PREFIX)
+	$(MAKE) -C $(PLATFORM)/librtmp CROSS_COMPILE=$(CROSSTOOLS) PREFIX=$(PREFIX)
 
 .installed-$(PLATFORM): $(LIBDYLIB)
-	make -C $(PLATFORM)/librtmp install PREFIX=$(PREFIX)
+	$(MAKE) -C $(PLATFORM)/librtmp install PREFIX=$(PREFIX)
 	rm -f $(PREFIX)/lib/librtmp.la $(PREFIX)/lib/librtmp.so
 	mv -f $(PREFIX)/lib/librtmp.so.0 $(PREFIX)/lib/librtmp.so
 	rpl -e "librtmp.so.0" "librtmp.so\x00\x00" $(PREFIX)/lib/librtmp.so
@@ -35,7 +35,7 @@ $(LIBDYLIB): $(PLATFORM)
 	touch $@
 
 clean:
-	make -C $(PLATFORM) clean
+	$(MAKE) -C $(PLATFORM) clean
 	rm -f .installed-$(PLATFORM)
 
 distclean::

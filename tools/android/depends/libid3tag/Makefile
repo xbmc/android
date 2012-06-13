@@ -27,10 +27,10 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); $(CONFIGURE)
 
 $(LIBDYLIB): $(PLATFORM)
-	make -j 1 -C $(PLATFORM)
+	$(MAKE) -j 1 -C $(PLATFORM)
 
 .installed-$(PLATFORM): $(LIBDYLIB)
-	make -C $(PLATFORM) install
+	$(MAKE) -C $(PLATFORM) install
 	rm -f $(PREFIX)/lib/libid3tag.la $(PREFIX)/lib/libid3tag.so $(PREFIX)/lib/libid3tag.so.0
 	mv -f $(PREFIX)/lib/libid3tag.so.0.3.0 $(PREFIX)/lib/libid3tag.so
 	rpl -e "libid3tag.so.0" "libid3tag.so\x00\x00" $(PREFIX)/lib/libid3tag.so
@@ -38,7 +38,7 @@ $(LIBDYLIB): $(PLATFORM)
 	touch $@
 
 clean:
-	make -C $(PLATFORM) clean
+	$(MAKE) -C $(PLATFORM) clean
 	rm -f .installed-$(PLATFORM)
 
 distclean::
