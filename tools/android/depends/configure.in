@@ -72,9 +72,14 @@ fi
 
 # Some dumb checks to see if paths might be correct.
 
-if [ ! `mkdir -p $use_staging` ]; then
-  AC_MSG_ERROR(unable to create staging dir. verify that the path and permissions are correct.)
+if [ ! `mkdir -p $use_staging/$use_cpu/include` ]; then
+  AC_MSG_ERROR(unable to create $use_staging/$use_cpu/include. verify that the path and permissions are correct.)
 fi
+
+if [ ! `mkdir -p $use_staging/$use_cpu/lib` ]; then
+  AC_MSG_ERROR(unable to create $use_staging/$use_cpu/lib. verify that the path and permissions are correct.)
+fi
+
 if [ ! `mkdir -p $use_tarballs` ]; then
   AC_MSG_ERROR(unable to create tarballs dir. verify that the path and permissions are correct.)
 fi
