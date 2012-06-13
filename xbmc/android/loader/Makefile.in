@@ -1,5 +1,4 @@
 include @abs_top_srcdir@/tools/android/depends/Makefile.include
-include @abs_top_srcdir@/tools/android/depends/android-sdk.mk
 
 CFLAGS    += -I..
 LDFLAGS += -llog
