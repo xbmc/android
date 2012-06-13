@@ -30,14 +30,14 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); mkdir build; cd build; BUILD_SHARED_LIBRARIES=0 CMAKE_BUILD_TYPE=MinSizeRel $(CMAKE) --debug-output -DCMAKE_INSTALL_PREFIX='$(PREFIX)' ../
 
 $(LIBDYLIB): $(PLATFORM)
-	make -j $(JOBS) -C $(PLATFORM)/build
+	$(MAKE) -C $(PLATFORM)/build
 
 .installed-$(PLATFORM): $(LIBDYLIB)
-	make -C $(PLATFORM)/build install
+	$(MAKE) -C $(PLATFORM)/build install
 	touch $@
 
 clean:
-	make -C $(PLATFORM)/build clean
+	$(MAKE) -C $(PLATFORM)/build clean
 	rm -f .installed-$(PLATFORM)
 
 distclean::

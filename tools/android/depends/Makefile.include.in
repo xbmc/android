@@ -34,7 +34,6 @@ RETRIEVE_TOOL=/usr/bin/curl
 RETRIEVE_TOOL_FLAGS=-Ls --create-dirs -f --output $(TARBALLS_LOCATION)/$(ARCHIVE)
 ARCHIVE_TOOL=/bin/tar
 ARCHIVE_TOOL_FLAGS=-C $(PLATFORM) --strip-components=1 -xf
-JOBS=8
 
 ifneq ($(NATIVE_BUILD),1)
   export SYSROOT=$(TOOLCHAIN)/sysroot

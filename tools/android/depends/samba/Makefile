@@ -76,16 +76,16 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM)/source; $(CONFIGURE)
 
 $(LIBDYLIB): $(PLATFORM)
-	make -j $(JOBS) -C $(PLATFORM)/source headers
+	$(MAKE) -C $(PLATFORM)/source headers
 	mkdir -p $(PLATFORM)/source/bin
-	make -j $(JOBS) -C $(PLATFORM)/source libsmbclient
+	$(MAKE) -C $(PLATFORM)/source libsmbclient
 
 .installed-$(PLATFORM): $(LIBDYLIB)
-	make -C $(PLATFORM)/source installclientlib
+	$(MAKE) -C $(PLATFORM)/source installclientlib
 	touch $@
 
 clean:
-	make -C $(PLATFORM) clean
+	$(MAKE) -C $(PLATFORM) clean
 	rm -f .installed-$(PLATFORM)
 
 distclean::

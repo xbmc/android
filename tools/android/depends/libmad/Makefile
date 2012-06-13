@@ -31,10 +31,10 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); sed -i '/-fforce-mem/d' configure; $(CONFIGURE)
 
 $(LIBDYLIB): $(PLATFORM)
-	make -j $(JOBS) -C $(PLATFORM)
+	$(MAKE) -C $(PLATFORM)
 
 .installed-$(PLATFORM): $(LIBDYLIB)
-	make -C $(PLATFORM) install
+	$(MAKE) -C $(PLATFORM) install
 	rm -f $(PREFIX)/lib/libmad.la $(PREFIX)/lib/libmad.so $(PREFIX)/lib/libmad.so.0
 	mv -f $(PREFIX)/lib/libmad.so.0.2.1 $(PREFIX)/lib/libmad.so
 	rpl -e "libmad.so.0" "libmad.so\x00\x00" $(PREFIX)/lib/libmad.so
@@ -42,7 +42,7 @@ $(LIBDYLIB): $(PLATFORM)
 	touch $@
 
 clean:
-	make -C $(PLATFORM) clean
+	$(MAKE) -C $(PLATFORM) clean
 	rm -f .installed-$(PLATFORM)
 
 distclean::

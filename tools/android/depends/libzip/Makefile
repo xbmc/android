@@ -25,15 +25,15 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); $(CONFIGURE)
 
 $(LIBDYLIB): $(PLATFORM)
-	make -j $(MAKE_JOBS) -C $(PLATFORM)
+	$(MAKE) -C $(PLATFORM)
 
 .installed-$(PLATFORM): $(LIBDYLIB)
-	make -C $(PLATFORM) install
+	$(MAKE) -C $(PLATFORM) install
 	rm -f $(PREFIX)/lib/libzip.la $(PREFIX)/lib/libzip*.so*
 	touch $@
 
 clean:
-	make -C $(PLATFORM) clean
+	$(MAKE) -C $(PLATFORM) clean
 	rm -f .installed-$(PLATFORM)
 
 distclean::

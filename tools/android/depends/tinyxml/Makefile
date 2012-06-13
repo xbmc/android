@@ -25,10 +25,10 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); $(CONFIGURE)
 
 $(LIBDYLIB): $(PLATFORM)
-	make -j 1 -C $(PLATFORM)/src
+	$(MAKE) -j 1 -C $(PLATFORM)/src
 
 .installed-$(PLATFORM): $(LIBDYLIB)
-	make -C $(PLATFORM)/src install
+	$(MAKE) -C $(PLATFORM)/src install
 	touch $@
 
 clean:

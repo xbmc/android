@@ -26,10 +26,10 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); $(CONFIGURE)
 
 $(LIBDYLIB): $(PLATFORM)
-	make -j $(JOBS) -C $(PLATFORM)
+	$(MAKE) -C $(PLATFORM)
 
 .installed-$(PLATFORM): $(LIBDYLIB)
-	make -C $(PLATFORM) install
+	$(MAKE) -C $(PLATFORM) install
 	rm -f $(PREFIX)/lib/libass.la $(PREFIX)/lib/libass.so $(PREFIX)/lib/libass.so.4
 	mv -f $(PREFIX)/lib/libass.so.4.1.0 $(PREFIX)/lib/libass.so
 	rpl -e "libass.so.4" "libass.so\x00\x00" $(PREFIX)/lib/libass.so
@@ -37,7 +37,7 @@ $(LIBDYLIB): $(PLATFORM)
 	touch $@
 
 clean:
-	make -C $(PLATFORM) clean
+	$(MAKE) -C $(PLATFORM) clean
 	rm -f .installed-$(PLATFORM)
 
 distclean::

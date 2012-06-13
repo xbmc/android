@@ -25,15 +25,15 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); $(CONFIGURE)
 
 $(APP): $(PLATFORM)
-	make -j $(JOBS) -C $(PLATFORM)
+	$(MAKE) -C $(PLATFORM)
 
 .installed-$(PLATFORM): $(APP)
-	make -C $(PLATFORM) install
+	$(MAKE) -C $(PLATFORM) install
 	rm -rf $(PREFIX)/lib/libyasm.a
 	touch $@
 
 clean:
-	make -C $(PLATFORM) clean
+	$(MAKE) -C $(PLATFORM) clean
 	rm  .installed-$(PLATFORM)
 
 distclean::

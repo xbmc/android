@@ -29,10 +29,10 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); $(CONFIGURE)
 
 $(LIBDYLIB): $(PLATFORM)
-	make -j $(JOBS) -C $(PLATFORM)
+	$(MAKE) -C $(PLATFORM)
 
 .installed-$(PLATFORM): $(LIBDYLIB)
-	make -C $(PLATFORM) install
+	$(MAKE) -C $(PLATFORM) install
 	rm -f $(PREFIX)/lib/libssh2.la $(PREFIX)/lib/libssh2.so $(PREFIX)/lib/libssh2.so.1
 	mv -f $(PREFIX)/lib/libssh2.so.1.0.1 $(PREFIX)/lib/libssh2.so
 	rpl -e "libssh2.so.1" "libssh2.so\x00\x00" $(PREFIX)/lib/libssh2.so
@@ -40,7 +40,7 @@ $(LIBDYLIB): $(PLATFORM)
 	touch $@
 
 clean:
-	make -C $(PLATFORM) clean
+	$(MAKE) -C $(PLATFORM) clean
 	rm -f .installed-$(PLATFORM)
 
 distclean::

@@ -22,7 +22,7 @@ CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automak
 all: $(SOURCE)/libxbmc.so $(SOURCE)/libxbmcapp.so
 
 $(SOURCE)/libxbmc.so: $(SOURCE)/Makefile
-	cd $(SOURCE); make -j4
+	cd $(SOURCE); $(MAKE)
 
 $(SOURCE)/Makefile: $(SOURCE)/configure
 	cd $(SOURCE); $(CONFIGURE)
@@ -34,7 +34,7 @@ $(SOURCE)/configure:
 	$(error Please run edit and run setup-sdk.sh)
 
 clean:
-	cd $(SOURCE); make clean
+	cd $(SOURCE); $(MAKE) clean
 
 distclean:
-	cd $(SOURCE); make clean
+	cd $(SOURCE); $(MAKE) clean

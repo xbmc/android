@@ -33,12 +33,12 @@ $(LIBDYLIB): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); patch -Np1 -i ../Python-2.6-ctypes.patch
 	cd $(PLATFORM); mkdir -p $(HOSTPYTHONDIR)
 	cd $(PLATFORM); $(CONFIGURE_NATIVE)
-	cd $(PLATFORM); make -j4 libpython2.6.a
+	cd $(PLATFORM); $(MAKE) libpython2.6.a
 	cd $(PLATFORM); ranlib libpython2.6.a
-	cd $(PLATFORM); make -j4 python Parser/pgen
-	cd $(PLATFORM); make install
+	cd $(PLATFORM); $(MAKE) python Parser/pgen
+	cd $(PLATFORM); $(MAKE) install
 	cd $(PLATFORM); cp Parser/pgen $(HOSTPYTHONDIR)/bin
-	cd $(PLATFORM); make distclean
+	cd $(PLATFORM); $(MAKE) distclean
 	cd $(PLATFORM); patch -Np1 -i ../Python-2.6.5-xcompile.patch
 	cd $(PLATFORM); $(AUTORECONF)
 	cd $(PLATFORM); $(CONFIGURE)
@@ -46,10 +46,10 @@ $(LIBDYLIB): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); rm Modules/config.c
 	cd $(PLATFORM); patch -Np1 -i ../Python-2.6.2-android.patch
 	cp modules.setup $(PLATFORM)/Modules/Setup
-	make -j 4 -C $(PLATFORM) HOSTPYTHON=$(HOSTPYTHONDIR)/bin/python HOSTPGEN=$(HOSTPYTHONDIR)/bin/pgen CROSS_COMPILE_TARGET=yes libpython2.6.a
+	$(MAKE) -C $(PLATFORM) HOSTPYTHON=$(HOSTPYTHONDIR)/bin/python HOSTPGEN=$(HOSTPYTHONDIR)/bin/pgen CROSS_COMPILE_TARGET=yes libpython2.6.a
 
 .installed-$(PLATFORM): $(LIBDYLIB)
-	make -C $(PLATFORM) HOSTPYTHON=$(HOSTPYTHONDIR)/bin/python HOSTPGEN=$(HOSTPYTHONDIR)/bin/pgen CROSS_COMPILE_TARGET=yes install
+	$(MAKE) -C $(PLATFORM) HOSTPYTHON=$(HOSTPYTHONDIR)/bin/python HOSTPGEN=$(HOSTPYTHONDIR)/bin/pgen CROSS_COMPILE_TARGET=yes install
 	find $(PREFIX)/lib/python2.6 -type f -name "*.py" -delete
 	find $(PREFIX)/lib/python2.6 -type f -name "*.pyc" -delete
 	#

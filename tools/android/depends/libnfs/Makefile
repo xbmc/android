@@ -32,10 +32,10 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); $(CONFIGURE)
 
 $(LIBDYLIB): $(PLATFORM)
-	make -C $(PLATFORM)
+	$(MAKE) -C $(PLATFORM)
 
 .installed-$(PLATFORM): $(LIBDYLIB)
-	make -C $(PLATFORM) install
+	$(MAKE) -C $(PLATFORM) install
 	rm -f $(PREFIX)/lib/libnfs.la $(PREFIX)/lib/libnfs.so $(PREFIX)/lib/libnfs.so.0
 	mv -f $(PREFIX)/lib/libnfs.so.0.0.0 $(PREFIX)/lib/libnfs.so
 	mkdir -p $(PREFIX)/include/rpc
@@ -44,7 +44,7 @@ $(LIBDYLIB): $(PLATFORM)
 	readelf --dynamic $(PREFIX)/lib/libnfs.so | grep ibrary
 	touch $@
 clean:
-	make -C $(PLATFORM) clean
+	$(MAKE) -C $(PLATFORM) clean
 	rm -r .installed-$(PLATFORM)
 	rm -rf $(PLATFORM)
 
