@@ -14,11 +14,11 @@ CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automak
 	--without-readline --without-libedit \
 	--without-server --without-bench --without-docs --without-man
 
-LIBDYLIB=$(PLATFORM)/$(LIBNAME)/.libs/$(LIBNAME).so
+LIBDYLIB=$(PLATFORM)/lib$(LIBNAME)/.libs/lib$(LIBNAME)client.a
 
 CLEAN_FILES=$(ARCHIVE) $(PLATFORM)
 
-all: $(LIBDYLIB) .installed-$(PLATFORM)
+all: .installed-$(PLATFORM)
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
@@ -37,7 +37,7 @@ $(LIBDYLIB): $(PLATFORM)
 	make -j $(JOBS) -C $(PLATFORM)/include
 	make -j $(JOBS) -C $(PLATFORM)/libmysql
 
-.installed-$(PLATFORM):
+.installed-$(PLATFORM): $(LIBDYLIB)
 	make -C $(PLATFORM)/libmysql install
 	make -j $(JOBS) -C $(PLATFORM)/scripts/ install-binSCRIPTS
 	make -j $(JOBS) -C $(PLATFORM)/include/ install

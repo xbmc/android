@@ -12,7 +12,7 @@ CONFIGURE=./configure --prefix=$(PREFIX) --host=$(HOST)
 
 LIBDYLIB=$(PLATFORM)/src/.libs/libshairport.so.0.0.0
 
-all: $(LIBDYLIB) .installed-$(PLATFORM)
+all: .installed-$(PLATFORM)
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
@@ -38,7 +38,7 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 $(LIBDYLIB): $(PLATFORM)
 	make -j 1 -C $(PLATFORM)
 
-.installed-$(PLATFORM):
+.installed-$(PLATFORM): $(LIBDYLIB)
 	make -C $(PLATFORM) install
 	rm -f $(PREFIX)/lib/libshairport.la $(PREFIX)/lib/libshairport.so $(PREFIX)/lib/libshairport.so.0
 	mv -f $(PREFIX)/lib/libshairport.so.0.0.0 $(PREFIX)/lib/libshairport.so

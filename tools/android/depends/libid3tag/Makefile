@@ -11,11 +11,11 @@ ARCHIVE=$(SOURCE).tar.gz
 CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess .; \
           ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) \
 
-LIBDYLIB=$(PLATFORM)/.libs/libid3tag.so
+LIBDYLIB=$(PLATFORM)/.libs/$(LIBNAME).a
 
 CLEAN_FILES=$(ARCHIVE) $(PLATFORM)
 
-all: $(LIBDYLIB) .installed-$(PLATFORM)
+all: .installed-$(PLATFORM)
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
@@ -29,7 +29,7 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 $(LIBDYLIB): $(PLATFORM)
 	make -j 1 -C $(PLATFORM)
 
-.installed-$(PLATFORM):
+.installed-$(PLATFORM): $(LIBDYLIB)
 	make -C $(PLATFORM) install
 	rm -f $(PREFIX)/lib/libid3tag.la $(PREFIX)/lib/libid3tag.so $(PREFIX)/lib/libid3tag.so.0
 	mv -f $(PREFIX)/lib/libid3tag.so.0.3.0 $(PREFIX)/lib/libid3tag.so

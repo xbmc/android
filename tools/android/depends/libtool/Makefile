@@ -11,11 +11,11 @@ ARCHIVE=$(SOURCE)a.tar.gz
 CONFIGURE=./configure --prefix=$(PREFIX) \
   --disable-shared
 
-LIBDYLIB=$(PLATFORM)/bin/libtool
+LIBDYLIB=$(PLATFORM)/libtool
 
 CLEAN_FILES=$(ARCHIVE) $(PLATFORM)
 
-all: $(LIBDYLIB) .installed-$(PLATFORM)
+all: .installed-$(PLATFORM)
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
@@ -29,7 +29,7 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 $(LIBDYLIB): $(PLATFORM)
 	make -j $(JOBS) -C $(PLATFORM)
 
-.installed-$(PLATFORM):
+.installed-$(PLATFORM): $(LIBDYLIB)
 	make -C $(PLATFORM) install
 	rm -rf $(PREFIX)/lib/libltdl.a $(PREFIX)/lib/libltdl.la
 	touch $@
