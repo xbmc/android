@@ -13,7 +13,7 @@ SUBDIRS = \
 	python26 samba alsa-lib libcdio libnfs afpfs-ng libshairport \
 	libplist libcec libbluray boost tinyxml dummy-libxbmc
 
-.PHONY: buildtools $(BUILDTOOLS) subdirs $(SUBDIRS)
+.PHONY: buildtools $(BUILDTOOLS) subdirs $(SUBDIRS) arm
 
 all: subdirs
 
@@ -59,6 +59,8 @@ clean:
 distclean::
 	for d in $(BUILDTOOLS); do $(MAKE) -C $$d distclean; done
 	for d in $(SUBDIRS); do $(MAKE) -C $$d distclean; done
+
+arm: armeabi-v7a
 
 armeabi-v7a: $(XBMC_ARM_TOOLCHAIN)
 	XBMC_OVERRIDE_PLATFORM=$@ $(ARMOVERRIDES) $(MAKE) all
