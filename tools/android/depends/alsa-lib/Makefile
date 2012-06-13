@@ -41,12 +41,12 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); $(CONFIGURE)
 
 $(LIBDYLIB): $(PLATFORM)
-	make -j $(JOBS) -C $(PLATFORM)/src
+	$(MAKE) -C $(PLATFORM)/src
 
 .installed-$(PLATFORM): $(LIBDYLIB)
-	make -C $(PLATFORM)/src install-libLTLIBRARIES
-	make -C $(PLATFORM)/include install
-	make -C $(PLATFORM)/utils install
+	$(MAKE) -C $(PLATFORM)/src install-libLTLIBRARIES
+	$(MAKE) -C $(PLATFORM)/include install
+	$(MAKE) -C $(PLATFORM)/utils install
 	rm -f $(PREFIX)/lib/libasound.la $(PREFIX)/lib/libasound.so $(PREFIX)/lib/libxbasound.so $(PREFIX)/lib/libasound.so.2
 	mv -f $(PREFIX)/lib/libasound.so.2.0.0 $(PREFIX)/lib/libasound.so
 	rpl -e "libasound.so.2" "libasound.so\x00\x00" $(PREFIX)/lib/libasound.so
@@ -54,7 +54,7 @@ $(LIBDYLIB): $(PLATFORM)
 	touch $@
 
 clean:
-	make -C $(PLATFORM) clean
+	$(MAKE) -C $(PLATFORM) clean
 	rm -f .installed-$(PLATFORM)
 
 distclean::

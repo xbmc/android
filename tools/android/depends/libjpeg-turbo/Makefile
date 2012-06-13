@@ -28,10 +28,10 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); $(CONFIGURE)
 
 $(LIBDYLIB): $(PLATFORM)
-	make -j 1 -C $(PLATFORM)
+	$(MAKE) -j 1 -C $(PLATFORM)
 
 .installed-$(PLATFORM): $(LIBDYLIB)
-	make -C $(PLATFORM) install
+	$(MAKE) -C $(PLATFORM) install
 	rm -f $(PREFIX)/lib/libjpeg.la $(PREFIX)/lib/libjpeg.so $(PREFIX)/lib/libxbjpeg.so $(PREFIX)/lib/libjpeg.so.8
 	mv -f $(PREFIX)/lib/libjpeg.so.8.0.2 $(PREFIX)/lib/libxbjpeg.so
 	ln -s $(PREFIX)/lib/libxbjpeg.so $(PREFIX)/lib/libjpeg.so
@@ -40,7 +40,7 @@ $(LIBDYLIB): $(PLATFORM)
 	touch $@
 
 clean:
-	make -C $(PLATFORM) clean
+	$(MAKE) -C $(PLATFORM) clean
 	rm -f .installed-$(PLATFORM)
 
 distclean::

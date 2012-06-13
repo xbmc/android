@@ -25,10 +25,10 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); $(CONFIGURE)
 
 $(LIBDYLIB): $(PLATFORM)
-	make -j1 -C $(PLATFORM)
+	$(MAKE) -j 1 -C $(PLATFORM)
 
 .installed-$(PLATFORM): $(LIBDYLIB)
-	make -C $(PLATFORM) install_sw
+	$(MAKE) -C $(PLATFORM) install_sw
 	rm -f $(PREFIX)/lib/libssl.so $(PREFIX)/lib/libxbssl.so
 	mv -f $(PREFIX)/lib/libssl.so.0.9.8 $(PREFIX)/lib/libxbssl.so
 	ln -s $(PREFIX)/lib/libxbssl.so $(PREFIX)/lib/libssl.so
@@ -47,7 +47,7 @@ $(LIBDYLIB): $(PLATFORM)
 	touch $@
 
 clean:
-	make -C $(PLATFORM) clean
+	$(MAKE) -C $(PLATFORM) clean
 	rm -f .installed-$(PLATFORM)
 
 distclean::

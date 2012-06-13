@@ -38,11 +38,11 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); $(CONFIGURE)
 
 $(LIBDYLIB): $(PLATFORM)
-	make -j 1 -C $(PLATFORM)/lib
+	$(MAKE) -j 1 -C $(PLATFORM)/lib
 
 .installed-$(PLATFORM): $(LIBDYLIB)
-	make -C $(PLATFORM)/lib install
-	make -C $(PLATFORM)/include install
+	$(MAKE) -C $(PLATFORM)/lib install
+	$(MAKE) -C $(PLATFORM)/include install
 	rm -f $(PREFIX)/lib/libafpclient.la $(PREFIX)/lib/libafpclient.so $(PREFIX)/lib/libafpclient.so.0
 	mv -f $(PREFIX)/lib/libafpclient.so.0.0.0 $(PREFIX)/lib/libafpclient.so
 	rpl -e "libafpclient.so.0" "libafpclient.so\x00\x00" $(PREFIX)/lib/libafpclient.so
@@ -50,7 +50,7 @@ $(LIBDYLIB): $(PLATFORM)
 	touch $@
 
 clean:
-	make -C $(PLATFORM) clean
+	$(MAKE) -C $(PLATFORM) clean
 	rm -f .installed-$(PLATFORM)
 
 distclean::

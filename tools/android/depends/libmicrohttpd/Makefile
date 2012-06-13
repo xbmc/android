@@ -27,16 +27,16 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); $(CONFIGURE)
 
 $(LIBDYLIB): $(PLATFORM)
-	make -j $(JOBS) -C $(PLATFORM)/src/daemon
-	make -j $(JOBS) -C $(PLATFORM)/src/include install
+	$(MAKE) -C $(PLATFORM)/src/daemon
+	$(MAKE) -C $(PLATFORM)/src/include install
 
 .installed-$(PLATFORM): $(LIBDYLIB)
 	rm -f $(PREFIX)/lib/libmicrohttpd.so $(PREFIX)/lib/libmicrohttpd.so.5 $(PREFIX)/lib/libmicrohttpd.so.5.2.1
-	make -C $(PLATFORM)/src/daemon install
+	$(MAKE) -C $(PLATFORM)/src/daemon install
 	touch $@
 
 clean:
-	make -C $(PLATFORM) clean
+	$(MAKE) -C $(PLATFORM) clean
 	rm -f .installed-$(PLATFORM)
 
 distclean::

@@ -34,13 +34,13 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); $(CONFIGURE) 
 
 $(LIBDYLIB): $(PLATFORM)
-	make -j $(JOBS) -C $(PLATFORM)/include
-	make -j $(JOBS) -C $(PLATFORM)/libmysql
+	$(MAKE) -C $(PLATFORM)/include
+	$(MAKE) -C $(PLATFORM)/libmysql
 
 .installed-$(PLATFORM): $(LIBDYLIB)
-	make -C $(PLATFORM)/libmysql install
-	make -j $(JOBS) -C $(PLATFORM)/scripts/ install-binSCRIPTS
-	make -j $(JOBS) -C $(PLATFORM)/include/ install
+	$(MAKE) -C $(PLATFORM)/libmysql install
+	$(MAKE) -C $(PLATFORM)/scripts/ install-binSCRIPTS
+	$(MAKE) -C $(PLATFORM)/include/ install
 	rm -f $(PREFIX)/lib/mysql/libmysqlclient.la $(PREFIX)/lib/mysql/libmysqlclient.so $(PREFIX)/lib/mysql/libmysqlclient.so.16
 	mv -f $(PREFIX)/lib/mysql/libmysqlclient.so.16.0.0 $(PREFIX)/lib/mysql/libmysqlclient.so
 	rpl -e "libmysqlclient.so.16" "libmysqlclient.so\x00\x00\x00" $(PREFIX)/lib/mysql/libmysqlclient.so
@@ -48,7 +48,7 @@ $(LIBDYLIB): $(PLATFORM)
 	touch $@
 
 clean:
-	make -C $(PLATFORM) clean
+	$(MAKE) -C $(PLATFORM) clean
 	rm -f .installed-$(PLATFORM)
 
 distclean::

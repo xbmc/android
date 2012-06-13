@@ -28,10 +28,10 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); $(CONFIGURE)
 
 $(LIBDYLIB): $(PLATFORM)
-	make -j $(JOBS) -C $(PLATFORM)
+	$(MAKE) -C $(PLATFORM)
 
 .installed-$(PLATFORM): $(LIBDYLIB)
-	make -C $(PLATFORM) install
+	$(MAKE) -C $(PLATFORM) install
 	rm -f $(PREFIX)/lib/libvorbis.la $(PREFIX)/lib/libvorbis.so $(PREFIX)/lib/libvorbis.so.0
 	mv -f $(PREFIX)/lib/libvorbis.so.0.4.3 $(PREFIX)/lib/libvorbis.so
 	rpl -e "libvorbis.so.0" "libvorbis.so\x00\x00" $(PREFIX)/lib/libvorbis.so
@@ -52,7 +52,7 @@ $(LIBDYLIB): $(PLATFORM)
 	touch $@
 
 clean:
-	make -C $(PLATFORM) clean
+	$(MAKE) -C $(PLATFORM) clean
 	rm -f .installed-$(PLATFORM)
 
 distclean::

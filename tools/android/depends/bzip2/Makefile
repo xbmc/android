@@ -25,15 +25,15 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); patch -p1 <../Makefile.patch
 
 $(LIBDYLIB): $(PLATFORM)
-	make -j $(JOBS) -C $(PLATFORM) PREFIX=$(PREFIX)
+	$(MAKE) -C $(PLATFORM) PREFIX=$(PREFIX)
 
 .installed-$(PLATFORM): $(LIBDYLIB)
-	make -C $(PLATFORM) install PREFIX=$(PREFIX)
+	$(MAKE) -C $(PLATFORM) install PREFIX=$(PREFIX)
 	rm $(PREFIX)/bin/bzip2
 	touch $@
 
 clean:
-	make -C $(PLATFORM) clean
+	$(MAKE) -C $(PLATFORM) clean
 	rm -f .installed-$(PLATFORM)
 
 distclean::

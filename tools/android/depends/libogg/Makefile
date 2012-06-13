@@ -26,10 +26,10 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); $(CONFIGURE)
 
 $(LIBDYLIB): $(PLATFORM)
-	make -j $(JOBS) -C $(PLATFORM)
+	$(MAKE) -C $(PLATFORM)
 
 .installed-$(PLATFORM): $(LIBDYLIB)
-	make -C $(PLATFORM) install
+	$(MAKE) -C $(PLATFORM) install
 	rm -f $(PREFIX)/lib/libogg.la $(PREFIX)/lib/libogg.so $(PREFIX)/lib/libogg.so.0
 	mv -f $(PREFIX)/lib/libogg.so.0.6.0 $(PREFIX)/lib/libogg.so
 	rpl -e "libogg.so.0" "libogg.so\x00\x00" $(PREFIX)/lib/libogg.so
@@ -37,7 +37,7 @@ $(LIBDYLIB): $(PLATFORM)
 	touch $@
 
 clean:
-	make -C $(PLATFORM) clean
+	$(MAKE) -C $(PLATFORM) clean
 	rm -f .installed-$(PLATFORM)
 
 distclean::

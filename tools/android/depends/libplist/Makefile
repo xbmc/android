@@ -31,10 +31,10 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	  -DCMAKE_FIND_ROOT_PATH=$(platform_sdk_path) ..
 
 $(LIBDYLIB): $(PLATFORM)
-	make -j 1 -C $(PLATFORM)/build
+	$(MAKE) -j 1 -C $(PLATFORM)/build
 
 .installed-$(PLATFORM): $(LIBDYLIB)
-	make -C $(PLATFORM)/build install
+	$(MAKE) -C $(PLATFORM)/build install
 
 	rm -f $(PREFIX)/lib/libplist.la $(PREFIX)/lib/libplist.so $(PREFIX)/lib/libplist.so.1
 	mv -f $(PREFIX)/lib/libplist.so.1.1.6 $(PREFIX)/lib/libplist.so
