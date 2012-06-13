@@ -29,7 +29,6 @@ $(TARBALLS_LOCATION)/$(ARCHIVE):
 $(LIBDYLIB): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	rm -rf $(PLATFORM)/*; mkdir $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
-	echo $(PLATFORM) > .gitignore
 	cd $(PLATFORM); patch -Np1 -i ../Python-2.6-ctypes.patch
 	cd $(PLATFORM); mkdir -p $(HOSTPYTHONDIR)
 	cd $(PLATFORM); $(CONFIGURE_NATIVE)

@@ -20,7 +20,6 @@ $(TARBALLS_LOCATION)/$(ARCHIVE):
 $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	rm -rf $(PLATFORM); mkdir -p $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
-	echo $(PLATFORM) > .gitignore
 	# libbluray has borked Makefile.am with respect to CFLAGS, remove the offending line
 	sed -i -e "s|CFLAGS=|#CFLAGS=|" $(PLATFORM)/src/Makefile.am
 	sed -i -e "s|CFLAGS=|#CFLAGS=|" $(PLATFORM)/src/examples/Makefile.am

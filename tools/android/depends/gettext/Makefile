@@ -30,7 +30,6 @@ $(TARBALLS_LOCATION)/$(ARCHIVE):
 $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	rm -rf $(PLATFORM)/*; mkdir $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
-	echo $(PLATFORM) > .gitignore
 	cd $(PLATFORM); patch -p1 < ../01-gettext_pthread_cancel.patch
 	cd $(PLATFORM); patch -p1 < ../02-gettext_msginit.patch
 	cd $(PLATFORM); $(CONFIGURE)

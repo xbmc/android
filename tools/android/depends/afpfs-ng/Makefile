@@ -22,7 +22,6 @@ $(TARBALLS_LOCATION)/$(ARCHIVE):
 $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	rm -rf $(PLATFORM); mkdir -p $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
-	echo $(PLATFORM) > .gitignore
 	cd $(PLATFORM); patch -p1 <../fix_afpfs-ng_includes.patch
 	cd $(PLATFORM); patch -p1 <../01-gcrypt.patch
 	cd $(PLATFORM); patch -p1 <../02-pointer.patch

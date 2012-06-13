@@ -9,7 +9,6 @@ $(PLATFORM):
 
 $(PLATFORM)/$(LIBDYLIB): $(PLATFORM) dummy-libxbmc.c
 	$(CC) -shared -o $(PLATFORM)/libxbmc.so dummy-libxbmc.c
-	echo $(PLATFORM) > .gitignore
 
 .installed-$(PLATFORM): $(PLATFORM)/$(LIBDYLIB)
 	mkdir -p  $(PREFIX)/lib/dummy-libxbmc

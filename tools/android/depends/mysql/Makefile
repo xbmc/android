@@ -26,7 +26,6 @@ $(TARBALLS_LOCATION)/$(ARCHIVE):
 $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	rm -rf $(PLATFORM)/*; mkdir $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
-	echo $(PLATFORM) > .gitignore
 	cd $(PLATFORM); patch -Np1 -i ../01-mysqlclient-cross-compile.patch
 	cd $(PLATFORM); patch -Np1 -i ../02-mysqlclient-ios.patch
 	cd $(PLATFORM); patch -Np1 -i ../03-mysqlclient-android.patch
