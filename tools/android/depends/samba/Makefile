@@ -53,11 +53,11 @@ CONFIGURE= cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automa
         --without-cifsmount \
         --without-winbind \
 
-LIBDYLIB=$(PLATFORM)/source/bin/libsmbclient.so
+LIBDYLIB=$(PLATFORM)/source/bin/libsmbclient.a
 
 CLEAN_FILES=$(ARCHIVE) $(PLATFORM)
 
-all: $(LIBDYLIB) .installed-$(PLATFORM)
+all: .installed-$(PLATFORM)
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
@@ -80,7 +80,7 @@ $(LIBDYLIB): $(PLATFORM)
 	mkdir -p $(PLATFORM)/source/bin
 	make -j $(JOBS) -C $(PLATFORM)/source libsmbclient
 
-.installed-$(PLATFORM):
+.installed-$(PLATFORM): $(LIBDYLIB)
 	make -C $(PLATFORM)/source installclientlib
 	touch $@
 

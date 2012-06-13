@@ -10,9 +10,9 @@ ARCHIVE=$(SOURCE).tar.gz
 CONFIGURE=./configure --prefix=$(PREFIX) --host=$(HOST) --disable-shared
 
 
-LIBDYLIB=$(PLATFORM)/src/.libs/libtinyxml.so.0.0.0
+LIBDYLIB=$(PLATFORM)/src/.libs/libtinyxml.a
 
-all: $(LIBDYLIB) .installed-$(PLATFORM)
+all: .installed-$(PLATFORM)
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
@@ -27,7 +27,7 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 $(LIBDYLIB): $(PLATFORM)
 	make -j 1 -C $(PLATFORM)/src
 
-.installed-$(PLATFORM):
+.installed-$(PLATFORM): $(LIBDYLIB)
 	make -C $(PLATFORM)/src install
 	touch $@
 

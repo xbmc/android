@@ -10,11 +10,11 @@ ARCHIVE=$(SOURCE).tar.gz
 CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess .; \
           ./configure --prefix=$(PREFIX) --host=$(HOST)
 
-LIBDYLIB=$(PLATFORM)/.libs/$(LIBNAME).so
+LIBDYLIB=$(PLATFORM)/src/.libs/$(LIBNAME).so
 
 CLEAN_FILES=$(ARCHIVE) $(PLATFORM)
 
-all: $(LIBDYLIB) .installed-$(PLATFORM)
+all: .installed-$(PLATFORM)
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
@@ -28,7 +28,7 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 $(LIBDYLIB): $(PLATFORM)
 	make -j $(JOBS) -C $(PLATFORM)
 
-.installed-$(PLATFORM):
+.installed-$(PLATFORM): $(LIBDYLIB)
 	make -C $(PLATFORM) install
 	rm -f $(PREFIX)/lib/libmodplug.la $(PREFIX)/lib/libmodplug.so $(PREFIX)/lib/libmodplug.so.0
 	mv -f $(PREFIX)/lib/libmodplug.so.0.0.0 $(PREFIX)/lib/libmodplug.so

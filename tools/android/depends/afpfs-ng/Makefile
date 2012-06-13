@@ -14,7 +14,7 @@ CONFIGURE=./configure --prefix=$(PREFIX) --host=$(HOST) \
 
 LIBDYLIB=$(PLATFORM)/lib/.libs/libafpclient.so.0.0.0
 
-all: $(LIBDYLIB) .installed-$(PLATFORM)
+all: .installed-$(PLATFORM)
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
@@ -40,7 +40,7 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 $(LIBDYLIB): $(PLATFORM)
 	make -j 1 -C $(PLATFORM)/lib
 
-.installed-$(PLATFORM):
+.installed-$(PLATFORM): $(LIBDYLIB)
 	make -C $(PLATFORM)/lib install
 	make -C $(PLATFORM)/include install
 	rm -f $(PREFIX)/lib/libafpclient.la $(PREFIX)/lib/libafpclient.so $(PREFIX)/lib/libafpclient.so.0

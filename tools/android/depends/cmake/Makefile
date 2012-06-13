@@ -9,11 +9,11 @@ ARCHIVE=$(SOURCE).tar.gz
 # configuration settings
 CONFIGURE=./bootstrap --prefix=$(PREFIX)
 
-APP=$(PLATFORM)/$(APPNAME)
+APP=$(PLATFORM)/bin/$(APPNAME)
 
 CLEAN_FILES=$(ARCHIVE) $(PLATFORM)
 
-all: $(APP) .installed-$(PLATFORM)
+all: .installed-$(PLATFORM)
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
@@ -27,7 +27,7 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 $(APP): $(PLATFORM)
 	make -j $(JOBS) -C $(PLATFORM)
 
-.installed-$(PLATFORM):
+.installed-$(PLATFORM): $(APP)
 	make -C $(PLATFORM) install
 	touch $@
 

@@ -9,7 +9,7 @@ ARCHIVE=$(SOURCE).tar.gz
 
 LIBDYLIB=$(PLATFORM)/build/src/libplist++.so
 
-all: $(LIBDYLIB) .installed-$(PLATFORM)
+all: .installed-$(PLATFORM)
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
@@ -33,7 +33,7 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 $(LIBDYLIB): $(PLATFORM)
 	make -j 1 -C $(PLATFORM)/build
 
-.installed-$(PLATFORM):
+.installed-$(PLATFORM): $(LIBDYLIB)
 	make -C $(PLATFORM)/build install
 
 	rm -f $(PREFIX)/lib/libplist.la $(PREFIX)/lib/libplist.so $(PREFIX)/lib/libplist.so.1
