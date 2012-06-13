@@ -9,11 +9,11 @@ ARCHIVE=$(SOURCE).tar.gz
 # configuration settings
 CONFIGURE=MACHINE=$(HOST) ./config shared zlib shared --openssldir=$(PREFIX)
 
-LIBDYLIB=$(PLATFORM)/src/.libs/lib$(LIBNAME).so
+LIBDYLIB=$(PLATFORM)/libssl.a
 
 CLEAN_FILES=$(ARCHIVE) $(PLATFORM)
 
-all: $(LIBDYLIB) .installed-$(PLATFORM)
+all: .installed-$(PLATFORM)
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
@@ -27,7 +27,7 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 $(LIBDYLIB): $(PLATFORM)
 	make -j1 -C $(PLATFORM)
 
-.installed-$(PLATFORM):
+.installed-$(PLATFORM): $(LIBDYLIB)
 	make -C $(PLATFORM) install_sw
 	rm -f $(PREFIX)/lib/libssl.so $(PREFIX)/lib/libxbssl.so
 	mv -f $(PREFIX)/lib/libssl.so.0.9.8 $(PREFIX)/lib/libxbssl.so

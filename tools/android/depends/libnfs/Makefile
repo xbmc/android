@@ -11,11 +11,11 @@ CONFIGURE=./configure --prefix=$(PREFIX) --host=$(HOST)
 
 RPC_HEADERS=rpcinc/auth.h rpcinc/auth_unix.h rpcinc/clnt.h rpcinc/pmap_clnt.h rpcinc/pmap_prot.h rpcinc/pmap_rmt.h rpcinc/rpc.h rpcinc/rpc_msg.h rpcinc/svc.h rpcinc/svc_auth.h rpcinc/types.h rpcinc/xdr.h
 
-LIBDYLIB=$(PLATFORM)/lib/$(DYLIBNAME)
+LIBDYLIB=$(PLATFORM)/lib/.libs/$(LIBNAME).a
 
 CLEAN_FILES=$(ARCHIVE) $(PLATFORM)
 
-all: $(LIBDYLIB) .installed-$(PLATFORM)
+all: .installed-$(PLATFORM)
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
@@ -34,7 +34,7 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 $(LIBDYLIB): $(PLATFORM)
 	make -C $(PLATFORM)
 
-.installed-$(PLATFORM):
+.installed-$(PLATFORM): $(LIBDYLIB)
 	make -C $(PLATFORM) install
 	rm -f $(PREFIX)/lib/libnfs.la $(PREFIX)/lib/libnfs.so $(PREFIX)/lib/libnfs.so.0
 	mv -f $(PREFIX)/lib/libnfs.so.0.0.0 $(PREFIX)/lib/libnfs.so

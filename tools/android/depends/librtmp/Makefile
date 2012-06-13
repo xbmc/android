@@ -8,11 +8,11 @@ ARCHIVE=$(SOURCE).tgz
 
 # configuration settings
 
-LIBDYLIB=$(PLATFORM)/$(LIBNAME)/.libs/$(LIBNAME).so
+LIBDYLIB=$(PLATFORM)/librtmp/librtmp.a
 
 CLEAN_FILES=$(ARCHIVE) $(PLATFORM)
 
-all: $(LIBDYLIB) .installed-$(PLATFORM)
+all: .installed-$(PLATFORM)
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
@@ -26,7 +26,7 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 $(LIBDYLIB): $(PLATFORM)
 	make -j $(JOBS) -C $(PLATFORM)/librtmp CROSS_COMPILE=$(CROSSTOOLS) PREFIX=$(PREFIX)
 
-.installed-$(PLATFORM):
+.installed-$(PLATFORM): $(LIBDYLIB)
 	make -C $(PLATFORM)/librtmp install PREFIX=$(PREFIX)
 	rm -f $(PREFIX)/lib/librtmp.la $(PREFIX)/lib/librtmp.so
 	mv -f $(PREFIX)/lib/librtmp.so.0 $(PREFIX)/lib/librtmp.so

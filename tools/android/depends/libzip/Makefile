@@ -11,9 +11,9 @@ ARCHIVE=$(SOURCE).tar.gz
 CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess .; \
         ./configure --prefix=$(PREFIX) --host=$(HOST) --disable-shared
 
-LIBDYLIB=$(PLATFORM)/.libs/$(LIBNAME).dylib
+LIBDYLIB=$(PLATFORM)/lib/.libs/$(LIBNAME).a
 
-all: $(LIBDYLIB) .installed-$(PLATFORM)
+all: .installed-$(PLATFORM)
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
@@ -27,7 +27,7 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 $(LIBDYLIB): $(PLATFORM)
 	make -j $(MAKE_JOBS) -C $(PLATFORM)
 
-.installed-$(PLATFORM):
+.installed-$(PLATFORM): $(LIBDYLIB)
 	make -C $(PLATFORM) install
 	rm -f $(PREFIX)/lib/libzip.la $(PREFIX)/lib/libzip*.so*
 	touch $@

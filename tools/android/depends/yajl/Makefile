@@ -8,11 +8,11 @@ ARCHIVE=$(LIBNAME)-$(VERSION).tar.gz
 BASE_URL=http://github.com/lloyd/yajl/tarball/2.0.1
 CMAKE=$(PREFIX)/bin/cmake
 # configuration settings
-LIBDYLIB=$(PLATFORM)/build/$(LIBNAME)-$(VERSION)/lib/libyajl.so
+LIBDYLIB=$(PLATFORM)/build/$(LIBNAME)-$(VERSION)/lib/libyajl.a
 
 CLEAN_FILES=$(ARCHIVE) $(PLATFORM)
 
-all: $(LIBDYLIB) .installed-$(PLATFORM)
+all: .installed-$(PLATFORM)
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)
@@ -32,7 +32,7 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 $(LIBDYLIB): $(PLATFORM)
 	make -j $(JOBS) -C $(PLATFORM)/build
 
-.installed-$(PLATFORM):
+.installed-$(PLATFORM): $(LIBDYLIB)
 	make -C $(PLATFORM)/build install
 	touch $@
 

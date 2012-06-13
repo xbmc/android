@@ -14,11 +14,11 @@ endif
 # configuration settings
 CONFIGURE=rm config.sub config.guess; $(AUTOMAKE) -ac; ./configure --prefix=$(PREFIX) --host=$(HOST)
 
-LIBDYLIB=$(PLATFORM)/.libs/$(LIBNAME).so
+LIBDYLIB=$(PLATFORM)/.libs/$(LIBNAME).a
 
 CLEAN_FILES=$(ARCHIVE) $(PLATFORM)
 
-all: $(LIBDYLIB) .installed-$(PLATFORM)
+all: .installed-$(PLATFORM)
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
@@ -33,7 +33,7 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 $(LIBDYLIB): $(PLATFORM)
 	make -j $(JOBS) -C $(PLATFORM)
 
-.installed-$(PLATFORM):
+.installed-$(PLATFORM): $(LIBDYLIB)
 	make -C $(PLATFORM) install
 	rm -f $(PREFIX)/lib/libmad.la $(PREFIX)/lib/libmad.so $(PREFIX)/lib/libmad.so.0
 	mv -f $(PREFIX)/lib/libmad.so.0.2.1 $(PREFIX)/lib/libmad.so

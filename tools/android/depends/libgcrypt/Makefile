@@ -15,11 +15,11 @@ ifeq ($(PLATFORM),x86)
 CONFIGURE+=--disable-asm
 endif
 
-LIBDYLIB=$(PLATFORM)/$(LIBNAME)/.libs/$(LIBNAME).so
+LIBDYLIB=$(PLATFORM)/src/.libs/$(LIBNAME).a
 
 CLEAN_FILES=$(ARCHIVE) $(PLATFORM)
 
-all: $(LIBDYLIB) .installed-$(PLATFORM)
+all: .installed-$(PLATFORM)
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
@@ -35,7 +35,7 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 $(LIBDYLIB): $(PLATFORM)
 	make -j $(JOBS) -C $(PLATFORM)
 
-.installed-$(PLATFORM):
+.installed-$(PLATFORM): $(LIBDYLIB)
 	make -C $(PLATFORM) install
 	touch $@
 

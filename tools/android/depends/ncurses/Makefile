@@ -9,11 +9,11 @@ ARCHIVE=$(SOURCE).tar.gz
 # configuration settings
 CONFIGURE=./configure --prefix=$(PREFIX) --host=$(HOST) --build=$(BUILD) --without-cxx-binding --without-progs --without-tests --without-manpages --disable-shared
 
-LIBDYLIB=$(PLATFORM)/$(LIBNAME)/.libs/$(LIBNAME).so
+LIBDYLIB=$(PLATFORM)/lib/lib$(LIBNAME).a
 
 CLEAN_FILES=$(ARCHIVE) $(PLATFORM)
 
-all: $(LIBDYLIB) .installed-$(PLATFORM)
+all: .installed-$(PLATFORM)
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) http://ftp.gnu.org/gnu/ncurses/$(ARCHIVE)
@@ -28,7 +28,7 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 $(LIBDYLIB): $(PLATFORM)
 	make -j $(JOBS) -C $(PLATFORM)
 
-.installed-$(PLATFORM):
+.installed-$(PLATFORM): $(LIBDYLIB)
 	make -C $(PLATFORM) install
 	touch $@
 

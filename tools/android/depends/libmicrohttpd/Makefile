@@ -10,11 +10,11 @@ ARCHIVE=$(SOURCE).tar.gz
 CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess .; \
           ./configure --prefix=$(PREFIX) --host=$(HOST) --disable-shared
 
-LIBDYLIB=$(PLATFORM)/.libs/$(LIBNAME).so
+LIBDYLIB=$(PLATFORM)/src/daemon/.libs/$(LIBNAME).a
 
 CLEAN_FILES=$(ARCHIVE) $(PLATFORM)
 
-all: $(LIBDYLIB) .installed-$(PLATFORM)
+all: .installed-$(PLATFORM)
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
@@ -30,7 +30,7 @@ $(LIBDYLIB): $(PLATFORM)
 	make -j $(JOBS) -C $(PLATFORM)/src/daemon
 	make -j $(JOBS) -C $(PLATFORM)/src/include install
 
-.installed-$(PLATFORM):
+.installed-$(PLATFORM): $(LIBDYLIB)
 	rm -f $(PREFIX)/lib/libmicrohttpd.so $(PREFIX)/lib/libmicrohttpd.so.5 $(PREFIX)/lib/libmicrohttpd.so.5.2.1
 	make -C $(PLATFORM)/src/daemon install
 	touch $@

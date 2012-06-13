@@ -11,11 +11,11 @@ CONFIGURE=./configure --prefix=$(PREFIX) --host=$(HOST) \
   --with-freetype-config=$(PREFIX)/bin/freetype-config \
   --disable-libxml2 --disable-docs --with-arch=arm
 
-LIBDYLIB=$(PLATFORM)/.libs/lib$(LIBNAME).so
+LIBDYLIB=$(PLATFORM)/src/.libs/lib$(LIBNAME).a
 
 CLEAN_FILES=$(ARCHIVE) $(PLATFORM)
 
-all: $(LIBDYLIB) .installed-$(PLATFORM)
+all: .installed-$(PLATFORM)
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
@@ -32,7 +32,7 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 $(LIBDYLIB): $(PLATFORM)
 	make -j $(JOBS) -C $(PLATFORM)
 
-.installed-$(PLATFORM):
+.installed-$(PLATFORM): $(LIBDYLIB)
 	make -C $(PLATFORM) install
 	rm -f $(PREFIX)/lib/libfontconfig.la $(PREFIX)/lib/libfontconfig.so $(PREFIX)/lib/libfontconfig.so.1
 	mv -f $(PREFIX)/lib/libfontconfig.so.1.4.4 $(PREFIX)/lib/libfontconfig.so
