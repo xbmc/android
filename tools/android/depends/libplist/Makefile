@@ -17,7 +17,6 @@ $(TARBALLS_LOCATION)/$(ARCHIVE):
 $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	rm -rf $(PLATFORM); mkdir -p $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
-	echo $(PLATFORM) > .gitignore
 	cd $(PLATFORM); patch -p1 < ../0001-dontbuildswig.patch
 	cd $(PLATFORM); patch -p0 < ../missing-libs.patch
 	cd $(PLATFORM); rm -rf build; mkdir -p build

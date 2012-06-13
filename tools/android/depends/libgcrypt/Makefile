@@ -27,7 +27,6 @@ $(TARBALLS_LOCATION)/$(ARCHIVE):
 $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	rm -rf $(PLATFORM)/*; mkdir $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
-	echo $(PLATFORM) > .gitignore
 	cd $(PLATFORM); patch -p1 < ../gcrypt-disable-tests.patch
 	cd $(PLATFORM); $(CONFIGURE)
 	cd $(PLATFORM); patch -p1 < ../01-gcrypt-android-select.patch

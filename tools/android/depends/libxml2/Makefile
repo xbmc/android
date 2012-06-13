@@ -22,7 +22,6 @@ $(TARBALLS_LOCATION)/$(ARCHIVE):
 $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	rm -rf $(PLATFORM)/*; mkdir $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
-	echo $(PLATFORM) > .gitignore
 	sed -ie "s|runtest$$(EXEEXT)||" "$(PLATFORM)/Makefile.in"
 	sed -ie "s|testrecurse$$(EXEEXT)||" "$(PLATFORM)/Makefile.in"
 	cd $(PLATFORM); $(CONFIGURE)

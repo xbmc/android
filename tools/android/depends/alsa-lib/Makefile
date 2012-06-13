@@ -33,7 +33,6 @@ $(TARBALLS_LOCATION)/$(ARCHIVE):
 $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	rm -rf $(PLATFORM)/*; mkdir $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
-	echo $(PLATFORM) > .gitignore
 	cd $(PLATFORM); patch -p1 < ../removeshm-upstream.patch
 	cd $(PLATFORM); patch -p0 < ../removeshm-2.patch
 	cd $(PLATFORM); patch -p0 < ../removeshm-3.patch
