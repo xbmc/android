@@ -23,7 +23,6 @@ $(TARBALLS_LOCATION)/$(ARCHIVE):
 $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	-rm -rf $(PLATFORM); mkdir -p $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
-	echo $(PLATFORM) > .gitignore
 	mkdir -p $(PLATFORM)/include/rpc
 	install -c -m 644  $(RPC_HEADERS) $(PLATFORM)/include/rpc/
 	cd $(PLATFORM); patch -p0 < ../001_fix_hanewin.patch

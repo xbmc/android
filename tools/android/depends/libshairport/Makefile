@@ -20,7 +20,6 @@ $(TARBALLS_LOCATION)/$(ARCHIVE):
 $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	rm -rf $(PLATFORM); mkdir -p $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
-	echo $(PLATFORM) > .gitignore
 	cd $(PLATFORM); patch -p0 < ../001_add_ao.patch
 	cd $(PLATFORM); patch -p0 < ../002_fix_install_header.patch
 	cd $(PLATFORM); patch -p0 < ../003_fix_deadlock.patch

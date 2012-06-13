@@ -14,7 +14,6 @@ $(TARBALLS_LOCATION)/$(ARCHIVE):
 .installed-$(PLATFORM): $(LIBDYLIB) $(TARBALLS_LOCATION)/$(ARCHIVE)
 	rm -rf $(PLATFORM)/*; mkdir $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
-	echo $(PLATFORM) > .gitignore
 	echo 'using gcc : : gcc : ' > $(PLATFORM)/tools/build/v2/user-config.jam
 	echo '	<cflags>"-fvisibility-inlines-hidden -DBOOST_AC_USE_PTHREADS -DBOOST_SP_USE_PTHREADS"' >> $(PLATFORM)/tools/build/v2/user-config.jam
 	echo '  <cxxflags>"-fvisibility-inlines-hidden -DBOOST_AC_USE_PTHREADS -DBOOST_SP_USE_PTHREADS"' >> $(PLATFORM)/tools/build/v2/user-config.jam
