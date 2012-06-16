@@ -2,10 +2,9 @@ include ../depends/Makefile.include
 include ../depends/android-sdk.mk
 
 OBJS = libcurl.so \
-  libxbjpeg.so librtmp.so libmad.so \
+  librtmp.so  libmad.so \
   libnfs.so libafpclient.so  \
-  libshairport.so libfontconfig.so libplist.so \
-  libxbssl.so libxbcrypto.so
+  libshairport.so libplist.so \
 
 XBMCROOT = $(CURDIR)/../../..
 COPYDIRS = system addons language media
@@ -26,9 +25,8 @@ prepare:
 	rm -rf xbmc/assets xbmc/lib tmp
 	mkdir -p xbmc/assets xbmc/res xbmc/lib/$(PLATFORM) images xbmc/assets/python2.6/lib/
 	$(foreach var,$(OBJS),$(STRIP) --strip-unneeded $(PREFIX)/lib/$(var) -o xbmc/lib/$(PLATFORM)/`echo $(var) | sed -e 's/\.so.*/\.so/g'`;)
-	$(STRIP) $(PREFIX)/lib/mysql/libmysqlclient.so -o xbmc/lib/$(PLATFORM)/libmysqlclient.so
 	$(STRIP) --strip-unneeded $(XBMCROOT)/libxbmc.so -o xbmc/lib/$(PLATFORM)/libxbmc.so
-	$(STRIP) --strip-unneeded $(XBMCROOT)/libxbmcapp.so -o xbmc/lib/$(PLATFORM)/libxbmcapp.so
+	-$(STRIP) --strip-unneeded $(XBMCROOT)/libxbmcapp.so -o xbmc/lib/$(PLATFORM)/libxbmcapp.so
 	$(foreach var,$(COPYDIRS), cp -rfp ../../../$(var) ./xbmc/assets/;)
 	cp -rfp $(PREFIX)/lib/python2.6 xbmc/assets/python2.6/lib/
 	cd xbmc/assets/python2.6/lib/python2.6/; rm -rf test config lib-dynload
