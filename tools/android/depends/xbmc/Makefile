@@ -19,7 +19,7 @@ CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automak
   --enable-shared-lib --disable-alsa
 
 
-all: $(SOURCE)/libxbmc.so $(SOURCE)/libxbmcapp.so
+all: $(SOURCE)/libxbmc.so
 
 $(SOURCE)/libxbmc.so: $(SOURCE)/Makefile
 	cd $(SOURCE); $(MAKE)
