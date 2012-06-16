@@ -29,7 +29,7 @@
 int XBMC_Run(bool renderGUI, XBMC_PLATFORM *platform)
 {
   int status = -1;
-
+  setlocale(LC_NUMERIC, "C");
   g_application.PlatformInitialize(platform);
   if (!g_advancedSettings.Initialized())
     g_advancedSettings.Initialize();
