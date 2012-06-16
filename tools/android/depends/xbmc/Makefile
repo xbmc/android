@@ -3,7 +3,7 @@
 SOURCE=../../../../
 
 export PYTHON_VERSION=2.6
-export PYTHON_LDFLAGS=-L$(PREFIX)/lib -lpython$(PYTHON_VERSION) -lc -ldl -lm
+export PYTHON_LDFLAGS=-L$(PREFIX)/lib -lpython$(PYTHON_VERSION) -lc -ldl -lm -lexpat
 export PYTHON_CPPFLAGS=-I$(PREFIX)/include/python$(PYTHON_VERSION)
 export PYTHON_SITE_PKG=$(PREFIX)/lib/python$(PYTHON_VERSION)/site-packages
 export PYTHON_NOVERSIONCHECK=no-check
@@ -16,7 +16,7 @@ CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automak
   --enable-neon --enable-gles --enable-debug \
   --disable-sdl --disable-x11 --disable-xrandr \
   --disable-optical-drive --disable-joystick --disable-optimizations \
-  --enable-shared-lib
+  --enable-shared-lib --disable-alsa
 
 
 all: $(SOURCE)/libxbmc.so $(SOURCE)/libxbmcapp.so
