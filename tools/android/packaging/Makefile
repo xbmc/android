@@ -1,5 +1,4 @@
 include ../depends/Makefile.include
-include ../depends/android-sdk.mk
 
 OBJS = libcurl.so \
   libxbjpeg.so librtmp.so libmad.so \
