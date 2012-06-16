@@ -12,7 +12,7 @@ CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automak
 	--enable-thread-safe-client --with-extra-charsets=complex \
 	--with-named-thread-libs=-lc --with-named-curses-libs=-lncurses \
 	--without-readline --without-libedit \
-	--without-server --without-bench --without-docs --without-man
+	--without-server --without-bench --without-docs --without-man --disable-shared
 
 LIBDYLIB=$(PLATFORM)/lib$(LIBNAME)/.libs/lib$(LIBNAME)client.a
 
@@ -40,10 +40,6 @@ $(LIBDYLIB): $(PLATFORM)
 	$(MAKE) -C $(PLATFORM)/libmysql install
 	$(MAKE) -C $(PLATFORM)/scripts/ install-binSCRIPTS
 	$(MAKE) -C $(PLATFORM)/include/ install
-	rm -f $(PREFIX)/lib/mysql/libmysqlclient.la $(PREFIX)/lib/mysql/libmysqlclient.so $(PREFIX)/lib/mysql/libmysqlclient.so.16
-	mv -f $(PREFIX)/lib/mysql/libmysqlclient.so.16.0.0 $(PREFIX)/lib/mysql/libmysqlclient.so
-	rpl -e "libmysqlclient.so.16" "libmysqlclient.so\x00\x00\x00" $(PREFIX)/lib/mysql/libmysqlclient.so
-	readelf --dynamic $(PREFIX)/lib/mysql/libmysqlclient.so | grep ibrary
 	touch $@
 
 clean:

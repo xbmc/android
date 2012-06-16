@@ -8,7 +8,7 @@ ARCHIVE=$(LIBNAME)-$(VERSION).tar.gz
 BASE_URL=http://sourceforge.net/projects/libjpeg-turbo/files/$(VERSION)
 # configuration settings
 CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess .; \
-          ./configure --prefix=$(PREFIX) --host=$(HOST) --with-jpeg8
+          ./configure --prefix=$(PREFIX) --host=$(HOST) --with-jpeg8 --disable-shared
 
 CFLAGS+=-O3
 
@@ -31,11 +31,6 @@ $(LIBDYLIB): $(PLATFORM)
 
 .installed-$(PLATFORM): $(LIBDYLIB)
 	$(MAKE) -C $(PLATFORM) install
-	rm -f $(PREFIX)/lib/libjpeg.la $(PREFIX)/lib/libjpeg.so $(PREFIX)/lib/libxbjpeg.so $(PREFIX)/lib/libjpeg.so.8
-	mv -f $(PREFIX)/lib/libjpeg.so.8.0.2 $(PREFIX)/lib/libxbjpeg.so
-	ln -s $(PREFIX)/lib/libxbjpeg.so $(PREFIX)/lib/libjpeg.so
-	rpl -e "libjpeg.so.8" "libxbjpeg.so" $(PREFIX)/lib/libxbjpeg.so
-	readelf --dynamic $(PREFIX)/lib/libxbjpeg.so | grep ibrary
 	touch $@
 
 clean:
