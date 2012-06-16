@@ -18,6 +18,8 @@ all: $(SOLIB)
 
 
 $(SOLIB): $(SRCS)
+	$(CXX) $(CFLAGS) $(LDFLAGS) -c $(SRCS) $(SRCS)
+	$(AR) cr activity.a *.o
 	$(CXX) $(CFLAGS) $(LDFLAGS) -lz -Wl,--whole-archive -lzip -Wl,--no-whole-archive -o $@ -shared $(SRCS) $(LOADER_LIB)
 
 install: $(SOLIB)
