@@ -23,7 +23,7 @@
 #include <fcntl.h>
 #include <utime.h>
 #include <zip.h>
-#include "xbmc_log.h"
+#include "android/xbmc_log.h"
 
 typedef struct stat Stat;
 
