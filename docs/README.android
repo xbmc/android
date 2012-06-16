@@ -90,8 +90,7 @@ the Android NDK which you earlier extracted to <android-ndk>.
    # ls platforms
    # cd build/tools
    # ./make-standalone-toolchain.sh --ndk-dir=<android-ndk> \
-     --platform=android-<x> --install-dir=<android-toolchain>/android-<x> \
-     --toolchain=arm-linux-androideabi-4.4.3
+     --platform=android-<x> --install-dir=<android-toolchain>/android-<x>
 
 The output of "ls platforms" gives you a list of available platforms
 which you can pass to the --platform option of the
