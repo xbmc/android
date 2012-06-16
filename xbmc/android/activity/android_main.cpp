@@ -25,7 +25,7 @@
 #include <android_native_app_glue.h>
 #include <jni.h>
 
-#include "xbmc_log.h"
+#include "android/xbmc_log.h"
 #include "EventLoop.h"
 #include "XBMCApp.h"
 #include "unzip.h"
