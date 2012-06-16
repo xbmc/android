@@ -27,7 +27,7 @@
 #include <dlfcn.h>
 #include <fcntl.h>
 #include "xb_dlopen.h"
-#include "xbmc_log.h"
+#include "android/xbmc_log.h"
 
 
 using namespace std;
