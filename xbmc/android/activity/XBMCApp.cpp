@@ -23,10 +23,10 @@
 #include <dlfcn.h>
 
 #include <android/native_window.h>
-#include "loader/xb_dlopen.h"
+#include "android/loader/xb_dlopen.h"
 
 #include "XBMCApp.h"
-#include "xbmc_log.h"
+#include "android/xbmc_log.h"
 
 #include "input/MouseStat.h"
 #include "input/XBMC_keysym.h"
