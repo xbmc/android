@@ -9,6 +9,7 @@ export PYTHON_SITE_PKG=$(PREFIX)/lib/python$(PYTHON_VERSION)/site-packages
 export PYTHON_NOVERSIONCHECK=no-check
 export USE_TEXTUREPACKER_NATIVE_ROOT=/usr
 export MYSQL_CONFIG=$(PREFIX)/bin/mysql_config
+export LIBS+=-lcrystax
 
 # configuration settings
 CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess build-aux/ ;\
