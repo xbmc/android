@@ -19,7 +19,7 @@
  */
 
 #include "EventLoop.h"
-#include "xbmc_log.h"
+#include "android/xbmc_log.h"
 
 CEventLoop::CEventLoop(android_app* application)
   : m_enabled(false),

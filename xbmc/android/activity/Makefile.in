@@ -1,29 +1,15 @@
 include @abs_top_srcdir@/tools/android/depends/Makefile.include
 
+GLUEPATH   = $(NDKROOT)/sources/android/native_app_glue
 SRCS       = $(GLUEPATH)/android_native_app_glue.c \
              android_main.cpp \
              EventLoop.cpp \
              XBMCApp.cpp \
              unzip.cpp
-SOLIB      = @abs_top_srcdir@/libxbmcapp.so
 
-LOADER     = ../loader
-LOADER_LIB = $(LOADER)/xb_dlopen.a
+LIB        = activity.a
 
-GLUEPATH   = $(NDKROOT)/sources/android/native_app_glue
-CFLAGS    += -I@abs_top_srcdir@/xbmc -I$(GLUEPATH) -I$(PREFIX)/lib/libzip/include -I.. -I$(LOADER)
-LDFLAGS   += -llog -landroid -Wl,--no-undefined
+CXXFLAGS    += -I$(GLUEPATH)
 
-all: $(SOLIB)
-
-
-$(SOLIB): $(SRCS)
-	$(CXX) $(CFLAGS) $(LDFLAGS) -c $(SRCS) $(SRCS)
-	$(AR) cr activity.a *.o
-	$(CXX) $(CFLAGS) $(LDFLAGS) -lz -Wl,--whole-archive -lzip -Wl,--no-whole-archive -o $@ -shared $(SRCS) $(LOADER_LIB)
-
-install: $(SOLIB)
-	install $(SOLIB) $(PREFIX)/lib/$(SOLIB)
-
-clean:
-	-@rm -f $(SOLIB) *.o 2>/dev/null || true
+include @abs_top_srcdir@/Makefile.include
+-include $(patsubst %.cpp,%.P,$(patsubst %.c,%.P,$(SRCS)))
