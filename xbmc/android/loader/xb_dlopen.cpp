@@ -208,6 +208,8 @@ void *xb_dlopen(const char * path)
   if (handle)
     return handle;
 
+  if (getfilename(path) == "libxbmc.so")
+    return (dlopen(path,RTLD_LOCAL));
   needs(path, &results);
   for (strings::iterator j = results.begin(); j != results.end(); ++j)
   {
