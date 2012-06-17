@@ -78,47 +78,12 @@ CXBMCApp::CXBMCApp(ANativeActivity *nativeActivity)
 
   m_state.appState = Uninitialized;
   m_state.platform = NULL;
-  m_state.xbmcRun = NULL;
-  m_state.xbmcPause = NULL;
-  m_state.xbmcStop = NULL;
-  m_state.xbmcKey = NULL;
-  m_state.xbmcTouch = NULL;
-  m_state.xbmcTouchGesture = NULL;
-  m_state.xbmcSetupDisplay = NULL;
-  m_state.xbmcDestroyDisplay = NULL;
 
   if (pthread_mutex_init(&m_state.mutex, NULL) != 0)
   {
     android_printf("CXBMCApp: pthread_mutex_init() failed");
     m_state.appState = Error;
     exit(1);
-    return;
-  }
-
-  void* soHandle = xb_dlopen("/data/data/org.xbmc/lib/libxbmc.so");
-  if (soHandle == NULL)
-  {
-    android_printf("CXBMCApp: could not load libxbmc.so. Error: %s", dlerror());
-    m_state.appState = Error;
-    return;
-  }
-
-  // fetch xbmc entry points
-  m_state.xbmcRun = (XBMC_Run_t)dlsym(soHandle, "XBMC_Run");
-  m_state.xbmcPause = (XBMC_Pause_t)dlsym(soHandle, "XBMC_Pause");
-  m_state.xbmcStop = (XBMC_Stop_t)dlsym(soHandle, "XBMC_Stop");
-  m_state.xbmcKey = (XBMC_Key_t)dlsym(soHandle, "XBMC_Key");
-  m_state.xbmcTouch = (XBMC_Touch_t)dlsym(soHandle, "XBMC_Touch");
-  m_state.xbmcTouchGesture = (XBMC_TouchGesture_t)dlsym(soHandle, "XBMC_TouchGesture");
-  m_state.xbmcSetupDisplay = (XBMC_SetupDisplay_t)dlsym(soHandle, "XBMC_SetupDisplay");
-  m_state.xbmcDestroyDisplay = (XBMC_DestroyDisplay_t)dlsym(soHandle, "XBMC_DestroyDisplay");
-  if (m_state.xbmcRun == NULL ||
-      m_state.xbmcPause == NULL || m_state.xbmcStop == NULL || m_state.xbmcKey == NULL ||
-      m_state.xbmcTouch == NULL || m_state.xbmcTouchGesture == NULL ||
-      m_state.xbmcSetupDisplay == NULL || m_state.xbmcDestroyDisplay == NULL)
-  {
-    android_printf("CXBMCApp: could not find XBMC_* functions. Error: %s", dlerror());
-    m_state.appState = Error;
     return;
   }
 
@@ -167,15 +132,15 @@ ActivityResult CXBMCApp::onActivate()
       break;
       
     case Unfocused:
-      m_state.xbmcPause(false);
+      XBMC_Pause(false);
       setAppState(Rendering);
       break;
       
     case Paused:
       acquireWakeLock();
       
-      m_state.xbmcSetupDisplay();
-      m_state.xbmcPause(false);
+      XBMC_SetupDisplay();
+      XBMC_Pause(false);
       setAppState(Rendering);
       break;
 
@@ -271,7 +236,7 @@ void CXBMCApp::onDestroyWindow()
 
   if (m_state.appState < Paused)
   {
-    m_state.xbmcDestroyDisplay();
+    XBMC_DestroyDisplay();
     setAppState(Paused);
     releaseWakeLock();
   }
@@ -290,7 +255,7 @@ void CXBMCApp::onLostFocus()
   {
     case Initialized:
     case Rendering:
-      m_state.xbmcPause(true);
+      XBMC_Pause(true);
       setAppState(Unfocused);
       break;
 
@@ -346,7 +311,7 @@ bool CXBMCApp::onKeyboardEvent(AInputEvent* event)
                       (state & AMETA_ALT_ON) ? "yes" : "no",
                       (state & AMETA_SHIFT_ON) ? "yes" : "no",
                       (state & AMETA_SYM_ON) ? "yes" : "no");
-      m_state.xbmcKey((uint8_t)keycode, sym, modifiers, false);
+      XBMC_Key((uint8_t)keycode, sym, modifiers, false);
       return true;
 
     case AKEY_EVENT_ACTION_UP:
@@ -355,7 +320,7 @@ bool CXBMCApp::onKeyboardEvent(AInputEvent* event)
                       (state & AMETA_ALT_ON) ? "yes" : "no",
                       (state & AMETA_SHIFT_ON) ? "yes" : "no",
                      (state & AMETA_SYM_ON) ? "yes" : "no");
-      m_state.xbmcKey((uint8_t)keycode, sym, modifiers, true);
+      XBMC_Key((uint8_t)keycode, sym, modifiers, true);
       return true;
 
     case AKEY_EVENT_ACTION_MULTIPLE:
@@ -429,7 +394,7 @@ bool CXBMCApp::onTouchEvent(AInputEvent* event)
         m_touchGestureState = TouchGestureSingleTouch;
         
         // Send a mouse motion event for getting the current guiitem selected
-        m_state.xbmcTouch(XBMC_MOUSEMOTION, 0, (uint16_t)x, (uint16_t)y);
+        XBMC_Touch(XBMC_MOUSEMOTION, 0, (uint16_t)x, (uint16_t)y);
       }
       // Otherwise it's the down event of another pointer
       else if (numPointers > 1)
@@ -465,10 +430,10 @@ bool CXBMCApp::onTouchEvent(AInputEvent* event)
       if (m_touchGestureState == TouchGestureSingleTouch)
       {
         android_printf(" => a single tap");
-        m_state.xbmcTouch(XBMC_MOUSEBUTTONDOWN, XBMC_BUTTON_LEFT,
+        XBMC_Touch(XBMC_MOUSEBUTTONDOWN, XBMC_BUTTON_LEFT,
                           (uint16_t)m_touchPointers[touchPointer].down.x,
                           (uint16_t)m_touchPointers[touchPointer].down.y);
-        m_state.xbmcTouch(XBMC_MOUSEBUTTONUP, XBMC_BUTTON_LEFT,
+        XBMC_Touch(XBMC_MOUSEBUTTONUP, XBMC_BUTTON_LEFT,
                           (uint16_t)m_touchPointers[touchPointer].down.x,
                           (uint16_t)m_touchPointers[touchPointer].down.y);
       }
@@ -484,7 +449,7 @@ bool CXBMCApp::onTouchEvent(AInputEvent* event)
           velocityX = ((x - m_touchPointers[touchPointer].down.x) * 1000000000) / timeDiff;
           velocityY = ((y - m_touchPointers[touchPointer].down.y) * 1000000000) / timeDiff;
         }
-        m_state.xbmcTouchGesture(ACTION_GESTURE_END, velocityX, velocityY, x, y);
+        XBMC_TouchGesture(ACTION_GESTURE_END, velocityX, velocityY, x, y);
       }
       // A single tap with multiple pointers
       else if (m_touchGestureState == TouchGestureMultiTouchStart)
@@ -492,10 +457,10 @@ bool CXBMCApp::onTouchEvent(AInputEvent* event)
         android_printf(" => a single tap with multiple pointers");
         // we send a right-click for this and always use the coordinates
         // of the primary pointer
-        m_state.xbmcTouch(XBMC_MOUSEBUTTONDOWN, XBMC_BUTTON_RIGHT,
+        XBMC_Touch(XBMC_MOUSEBUTTONDOWN, XBMC_BUTTON_RIGHT,
                           (uint16_t)m_touchPointers[0].down.x,
                           (uint16_t)m_touchPointers[0].down.y);
-        m_state.xbmcTouch(XBMC_MOUSEBUTTONUP, XBMC_BUTTON_RIGHT,
+        XBMC_Touch(XBMC_MOUSEBUTTONUP, XBMC_BUTTON_RIGHT,
                           (uint16_t)m_touchPointers[0].down.x,
                           (uint16_t)m_touchPointers[0].down.y);
       }
@@ -508,7 +473,7 @@ bool CXBMCApp::onTouchEvent(AInputEvent* event)
       {
         // Send a mouse motion event pointing off the screen
         // to deselect the selected gui item
-        m_state.xbmcTouch(XBMC_MOUSEMOTION, 0, -1, -1);
+        XBMC_Touch(XBMC_MOUSEMOTION, 0, -1, -1);
       }
 
       // If we were in multi touch mode and lifted the only secondary pointer
@@ -550,7 +515,7 @@ bool CXBMCApp::onTouchEvent(AInputEvent* event)
         }
         
         android_printf(" => a pan gesture starts");
-        m_state.xbmcTouchGesture(ACTION_GESTURE_BEGIN, 
+        XBMC_TouchGesture(ACTION_GESTURE_BEGIN, 
                                  m_touchPointers[touchPointer].down.x,
                                  m_touchPointers[touchPointer].down.y,
                                  0.0f, 0.0f);
@@ -571,7 +536,7 @@ bool CXBMCApp::onTouchEvent(AInputEvent* event)
       if (m_touchGestureState == TouchGesturePan)
       {
         android_printf(" => a pan gesture");
-        m_state.xbmcTouchGesture(ACTION_GESTURE_PAN, x, y,
+        XBMC_TouchGesture(ACTION_GESTURE_PAN, x, y,
                                  x - m_touchPointers[touchPointer].last.x,
                                  y - m_touchPointers[touchPointer].last.y);
         m_touchPointers[touchPointer].last.x = x;
@@ -622,7 +587,7 @@ void CXBMCApp::handleMultiTouchGesture(AInputEvent *event)
 
     float zoom = curDiffLength / baseDiffLength;
 
-    m_state.xbmcTouchGesture(ACTION_GESTURE_ZOOM, centerX, centerY, zoom, 0);
+    XBMC_TouchGesture(ACTION_GESTURE_ZOOM, centerX, centerY, zoom, 0);
   }
 }
 
@@ -704,7 +669,7 @@ void CXBMCApp::run()
     try
     {
       setAppState(Rendering);
-      status = m_state.xbmcRun(true, m_state.platform);
+      status = XBMC_Run(true, m_state.platform);
       android_printf(" => XBMC_Run finished with %d", status);
     }
     catch(...)
@@ -737,7 +702,7 @@ void CXBMCApp::stop()
     pthread_mutex_unlock(&m_state.mutex);
     
     android_printf(" => executing XBMC_Stop");
-    m_state.xbmcStop();
+    XBMC_Stop();
     android_printf(" => waiting for XBMC to finish");
     pthread_join(m_state.thread, NULL);
     android_printf(" => XBMC finished");
