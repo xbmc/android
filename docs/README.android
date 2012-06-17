@@ -252,33 +252,25 @@ Caveats:
 8. Architecture
 --------------------------------------------------------------------
 
-!!Warning!!
-This is an early port with an emphasis on getting up and running. There are
-several ugly hacks and a few methods that are flat-out disgusting. These need
-to be cleaned up over time as we actually start running on devices.
+During the early days of the android port, xbmc was launched via a stub lib
+that then dlopen'd libxbmc. This was done to get around bionic's poor handling
+of shared libs. We now compile everything into libxbmc itself so that it has
+no runtime dependencies beyond system libs. Done this way, we're able to launch
+into libxbmc directly.
 
-The life of xbmcapp:
-Android can not run native applications (in any supported fashion anyway), but
-does allow for a purely c/c++ library to be loaded as a "native activity". This
-This library has an android_main() entry point. Thus, we split xbmc into
-libxbmc.so and a small main stub that calls it so that it can be run as an
-application or a lib.
+But we still hit Bionic's loader's deficiencies when we dlopen a lib. There are
+two main issues to overcome for loading:
 
-However, due to the flimsy nature of the android lib loader, we cannot just
-stick android_main() directly into this lib and let it call in. The loader does
-not load deps recursively, so it simply throws an error when trying to load the
-native activity. Instead, we create a stub library that dlopens all of our deps
-in reverse order, then finally libxbmc.so itself. From there we can call the
-entry function and we're up and running as usual. There are probably many ways
-to do this much cleaner, but this was the first that worked. This MUST be
-re-evaluated.
+1. Bionic imports all symbols for a lib as soon as it is loaded, and it will
+refuse to open a lib if it has a single unresolved symbol
 
-So execution looks like this
-Android calls into libxbmcapp.so directly which contains android_main(). It
-loads our deps, loads libxbmc.so, calls XBMC_Init(), and we're into xbmc.
+2. It does not search recursively during the resolve. So if liba depends on
+libb, dlopen'ing liba will _not_ pull in missing symbols from libb. This is
+particularly nasty considering #1.
 
-See here for a thorough explanation:
-http://groups.google.com/group/android-ndk/browse_thread/thread/976136aa1d7b43a2
+To work-around these problems we use our own recursive loader in place of
+dlopen. This loader mimics expected behavior. Using the example above, loading
+libb before liba will mean that everything will resolve correctly.
 
 Additionally, Android does not use versioned solibs. libfoo.so.1 which is
 typical on linux would not be found by the loader. This means that we must
@@ -286,10 +278,13 @@ strip the SONAME and NEEDED values out of the libs as well as changing the
 filenames themselves. The cleaner solution would be to patch libtool/cmake/etc
 to not add versioning in the first place. For now, we use the brute-force
 approach of modifying the binary and blanking out the versions.
-See the gory details in tools/android/packaging/fixsolib.sh.
 
 See here for more info:
 http://www.bernawebdesign.ch/byteblog/2011/11/23/creating-non-versioned-shared-libraries-for-android/
+
+As a final gotcha, all libs must be in the form of ^lib*.so$ with no
+exceptions (they won't even install otherwise), and the soname must match.
+So we have to do some renaming to get some of our self-built libs loaded.
 
 Development:
 Typical android native activities are built with ndk-build which is a wrapper
@@ -298,14 +293,8 @@ instead we build as usual then package ourselves. It may be beneficial to use
 ndk-build to do the actual packaging, but for now its behavior is emulated.
 
 ABI:
-Presently we are targeting armv5te as the android emulator is known to be
-unstable with newer ABIs. This meant removing some of our asm (MathUtils and
-Atomics). This is a temporary hack until we are able to run cleanly on native
-hardware, at which point we should switch back to armv7a+neon as our minimum
-supported hardware. Note that zero effort was made to disable these functions
-gracefully. If it is desired to run XBMC fully in the emulator, these functions
-will need to be fixed up to work properly.
-
+Presently we are targeting armv7a+neon for arm, and i686 for x86. Note that x86
+builds successfully but has not been tested.
 
 --------------------------------------------------------------------
 9. Useful Commands
