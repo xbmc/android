@@ -38,8 +38,7 @@ public:
   virtual ~CXBMCApp();
 
   bool isValid() { return m_activity != NULL &&
-                          m_state.platform != NULL &&
-                          m_state.xbmcRun != NULL; }
+                          m_state.platform != NULL; }
 
   ActivityResult onActivate();
   void onDeactivate();
@@ -100,14 +99,6 @@ private:
     AppState appState;
 
     XBMC_PLATFORM* platform;
-    XBMC_Run_t xbmcRun;
-    XBMC_Pause_t xbmcPause;
-    XBMC_Stop_t xbmcStop;
-    XBMC_Key_t xbmcKey;
-    XBMC_Touch_t xbmcTouch;
-    XBMC_TouchGesture_t xbmcTouchGesture;
-    XBMC_SetupDisplay_t xbmcSetupDisplay;
-    XBMC_DestroyDisplay_t xbmcDestroyDisplay;
   } State;
 
   State m_state;
