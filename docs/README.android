@@ -152,7 +152,17 @@ on with the Android toolchain and creating an Android Application Package
    give it a 'make -j20' or so.
 
 --------------------------------------------------------------------
-5.2. Building the APK
+5.2. Building XBMC
+--------------------------------------------------------------------
+
+   # cd $HOME/xbmc-android
+   # make -C tools/android/depends/xbmc
+
+   After the first build (assuming bootstrap and configure are successful),
+   subsequent builds can be run with a simple 'make'.
+
+--------------------------------------------------------------------
+5.3. Building the APK
 --------------------------------------------------------------------
 
    # cd $HOME/xbmc-android/tools/android/packaging
