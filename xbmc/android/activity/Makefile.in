@@ -1,15 +1,23 @@
 include @abs_top_srcdir@/tools/android/depends/Makefile.include
 
 GLUEPATH   = $(NDKROOT)/sources/android/native_app_glue
-SRCS       = $(GLUEPATH)/android_native_app_glue.c \
-             android_main.cpp \
+APP_GLUE   = android_native_app_glue.o
+
+SRCS       = android_main.cpp \
              EventLoop.cpp \
              XBMCApp.cpp \
              unzip.cpp
 
 LIB        = activity.a
 
-CXXFLAGS    += -I$(GLUEPATH)
+OBJS      += $(APP_GLUE)
+
+CXXFLAGS  += -I$(GLUEPATH)
+
+$(LIB): $(OBJS)
+
+$(APP_GLUE):
+	$(CC) -c -I$(GLUEPATH) -o $@ $(GLUEPATH)/$(APP_GLUE:.o=.c)
 
 include @abs_top_srcdir@/Makefile.include
 -include $(patsubst %.cpp,%.P,$(patsubst %.c,%.P,$(SRCS)))
