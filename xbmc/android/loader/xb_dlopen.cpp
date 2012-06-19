@@ -31,13 +31,6 @@
 
 
 using namespace std;
-struct solib
-{
-  string filename;
-  void* handle;
-};
-typedef vector<solib> loaded;
-typedef vector<string> strings;
 
 string getdirname(const string &path)
 {
@@ -112,12 +105,12 @@ string finddep(const string &filename, const string &extrapath)
   return "";
 }
 
-void *findinlibs(const string &search, const loaded &libs)
+solib* findinlibs(const string &search)
 {
-  for(loaded::const_iterator i = libs.begin(); i!=libs.end(); ++i)
+  for(loaded::const_iterator i = m_xblibs.begin(); i!= m_xblibs.end(); ++i)
   {
     if (i->filename == getfilename(search))
-      return i->handle;
+      return (solib *)&*i;
   }
   return NULL;
 }
@@ -174,7 +167,7 @@ void needs(string filename, strings *results)
 
     if (sheader.sh_type == SHT_DYNAMIC)
     {
-      int j;
+      unsigned int j;
 
       lseek(fd, sheader.sh_offset, SEEK_SET);
       for(j = 0; j < sheader.sh_size / sizeof(Elf32_Dyn); j++)
@@ -192,59 +185,93 @@ void needs(string filename, strings *results)
   return;
 }
 
-
-void *xb_dlopen(const char * path)
+void* xb_dlopen_internal(const char * path, solib *lib)
 {
-
-  strings results;
-  string filename = path;
-  string xbfilename;
+  strings deps;
   string deppath;
-  solib lib;
   void *handle;
-  static loaded libs;
 
-  handle = (findinlibs(getfilename(path), libs));
-  if (handle)
-    return handle;
+  CSingleLock lock(xb_CritSection);
 
-  if (getfilename(path) == "libxbmc.so")
-    return (dlopen(path,RTLD_LOCAL));
-  needs(path, &results);
-  for (strings::iterator j = results.begin(); j != results.end(); ++j)
+  deps.clear();
+
+  // Don't traverse into libxbmc's deps, they're guaranteed to be loaded.
+  if (getfilename(path) != "libxbmc.so")
+    needs(path, &deps);
+
+  for (strings::iterator j = deps.begin(); j != deps.end(); ++j)
   {
-
-    if (findinlibs(*j, libs) != NULL)
+    if (findinlibs(*j) != NULL)
       continue;
 
     deppath = finddep(*j, getdirname(path));
-/*
-    if (getdirname(deppath) == "/system/lib")
-    {
-      // Anything that exists here is preloaded before we launch
-      android_printf("skipping system dep: %s\n",j->c_str());
-      lib.filename = getfilename(*j);
-      lib.handle = NULL;
-      libs.push_back(lib);
-      continue;
-    }
-*/
+
     // Recurse for each needed lib
-    android_printf("loading dep: %s\n",deppath.c_str());
-    xb_dlopen(deppath.c_str());
+    xb_dlopen_internal(deppath.c_str(), lib);
   }
 
   handle = dlopen(path, RTLD_LOCAL);
 
-  lib.filename = getfilename(path);
-  lib.handle = handle;
-  libs.push_back(lib);
-
   if (handle == NULL)
     android_printf("xb_dlopen: Error from dlopen(%s): %s", path, dlerror());
-  else
-    android_printf("dlopened: %s\n", path);
+
+  lib->dephandles.push_back(handle);
 
   return handle;
 }
 
+void* xb_dlopen(const char * path)
+{
+  solib *lib;
+  void *handle;
+
+  CSingleLock lock(xb_CritSection);
+  lib = findinlibs(getfilename(path));
+  if (lib)
+  {
+    lib->refcount++;
+    return lib->handle;
+  }
+
+  lib = new solib;
+  lib->filename = getfilename(path);
+  lib->refcount = 1;
+  handle = xb_dlopen_internal(path, lib);
+  if (handle != NULL)
+  {
+    lib->handle = handle;
+    m_xblibs.push_back(*lib);
+    delete lib;
+    return handle;
+  }
+
+  android_printf("xb_dlopen: failed to open: %s", path);
+  delete lib;
+  return NULL;
+}
+
+int xb_dlclose(void* handle)
+{
+  CSingleLock lock(xb_CritSection);
+  for (loaded::iterator i = m_xblibs.begin(); i != m_xblibs.end(); i++)
+  {
+    if (i->handle == handle)
+    {
+      if (--(i->refcount) > 0 )
+        return 0;
+      for (handles::iterator j = i->dephandles.begin(); j != i->dephandles.end(); j++)
+      {
+        if (dlclose(*j))
+        {
+          android_printf("could not close dep for: %s\n", i->filename.c_str());
+          return 1;
+        }
+      }
+      m_xblibs.erase(i);
+      return 0;
+    }
+  }
+
+  android_printf("xb_dlclose: unable to locate handle");
+  return 1;
+}
