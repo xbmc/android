@@ -10,7 +10,7 @@ HOSTPYTHONDIR=$(CWD)/$(PLATFORM)/hostpython
 
 # configuration settings
 CONFIGURE=OPT=-Os ./configure --prefix=$(PREFIX) --host=$(HOST) --build=x86_64-linux-gnu \
-	  --disable-toolbox-glue --disable-framework
+	  --disable-toolbox-glue --disable-framework --with-system-ffi
 
 CONFIGURE_NATIVE= CFLAGS="" CXXFLAGS="" LDFLAGS="" CPPFLAGS="" \
   CPP="cpp" \
