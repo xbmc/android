@@ -18,5 +18,25 @@
  *  http://www.gnu.org/copyleft/gpl.html
  *
  */
+#pragma once
+#include <stdlib.h>
+#include <vector>
+#include <string>
+#include "threads/SingleLock.h"
+
+typedef std::vector<std::string> strings;
+typedef std::vector<void *> handles;
+struct solib
+{
+  std::string filename;
+  void* handle;
+  int refcount;
+  handles dephandles;
+};
+
+typedef std::vector<solib> loaded;
 
 void *xb_dlopen(const char *library);
+int xb_dlclose(void *handle);
+static loaded m_xblibs;
+static CCriticalSection xb_CritSection;
