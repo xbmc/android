@@ -3,7 +3,7 @@
 SOURCE=../../../../
 
 export PYTHON_VERSION=2.6
-export PYTHON_LDFLAGS=-L$(PREFIX)/lib -lpython$(PYTHON_VERSION) -lc -ldl -lm -lexpat
+export PYTHON_LDFLAGS=-L$(PREFIX)/lib -lpython$(PYTHON_VERSION) -lc -ldl -lm -lexpat -lffi
 export PYTHON_CPPFLAGS=-I$(PREFIX)/include/python$(PYTHON_VERSION)
 export PYTHON_SITE_PKG=$(PREFIX)/lib/python$(PYTHON_VERSION)/site-packages
 export PYTHON_NOVERSIONCHECK=no-check
