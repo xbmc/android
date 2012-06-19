@@ -9,7 +9,7 @@ SUBDIRS = \
 	libjpeg-turbo tiff jasper libpng \
 	libogg libvorbis libflac libid3tag libmad fribidi libmpeg2 \
 	libass libsamplerate \
-	libmodplug librtmp libxml2 yajl libmicrohttpd mysql \
+	libmodplug librtmp libxml2 yajl libmicrohttpd mysql libffi \
 	python26 samba alsa-lib libcdio libnfs afpfs-ng libshairport \
 	libplist libcec libbluray boost tinyxml dummy-libxbmc
 
@@ -33,7 +33,7 @@ libass: fontconfig libpng freetype2 expat libiconv
 librtmp: openssl
 libxml2: libiconv
 libmicrohttpd: openssl libgpg-error libgcrypt
-python26: sqlite3 expat libxml2 openssl
+python26: sqlite3 expat libxml2 openssl libffi
 libcdio: libiconv
 afpfs-ng: libgcrypt readline libiconv
 libshairport: openssl
