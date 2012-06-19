@@ -14,7 +14,7 @@ use_tarballs=$XBMC_ANDROID_TARBALLS
 
 AC_ARG_WITH([toolchain],
   [AS_HELP_STRING([--with-toolchain],
-  [specify path to android toolchain. required if env var is not set.])],
+  [specify path to android toolchain. required.])],
   [use_toolchain=$withval],AC_MSG_ERROR([No toolchain defined]))
 
 AC_ARG_WITH([cpu],
