@@ -9,8 +9,9 @@ CWD=$(shell pwd)
 HOSTPYTHONDIR=$(CWD)/$(PLATFORM)/hostpython
 
 # configuration settings
-CONFIGURE=OPT=-Os ./configure --prefix=$(PREFIX) --host=$(HOST) --build=x86_64-linux-gnu \
-	  --disable-toolbox-glue --disable-framework --with-system-ffi
+CONFIGURE=OPT=-Os ./configure --prefix=$(PREFIX) --host=$(HOST) \
+	  --disable-toolbox-glue --disable-framework --with-system-ffi \
+          ac_cv_func_gethostbyname_r=no ac_cv_header_sys_un_h=yes
 
 CONFIGURE_NATIVE= CFLAGS="" CXXFLAGS="" LDFLAGS="" CPPFLAGS="" \
   CPP="cpp" \
@@ -39,11 +40,9 @@ $(LIBDYLIB): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); cp Parser/pgen $(HOSTPYTHONDIR)/bin
 	cd $(PLATFORM); make distclean
 	cd $(PLATFORM); patch -Np1 -i ../Python-2.6.5-xcompile.patch
+	cd $(PLATFORM); patch -Np1 -i ../Python-2.6.2-android.patch
 	cd $(PLATFORM); $(AUTORECONF)
 	cd $(PLATFORM); $(CONFIGURE)
-	cd $(PLATFORM); rm pyconfig.h
-	cd $(PLATFORM); rm Modules/config.c
-	cd $(PLATFORM); patch -Np1 -i ../Python-2.6.2-android.patch
 	cp modules.setup $(PLATFORM)/Modules/Setup
 	$(MAKE) -C $(PLATFORM) HOSTPYTHON=$(HOSTPYTHONDIR)/bin/python HOSTPGEN=$(HOSTPYTHONDIR)/bin/pgen CROSS_COMPILE_TARGET=yes libpython2.6.a
 
