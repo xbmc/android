@@ -190,7 +190,7 @@ _bisect _bisectmodule.c	# Bisection algorithms
 unicodedata unicodedata.c    # static Unicode character database
 
 # access to ISO C locale support
-_locale _localemodule.c  # -lintl
+_locale _localemodule.c   -lintl -liconv
 
 
 # Modules with some UNIX dependencies -- on by default:
