@@ -49,7 +49,7 @@ ifneq ($(NATIVE_BUILD),1)
   export OBJDUMP=$(CROSSTOOLS)objdump
   export CFLAGS=$(PLATFORM_FLAGS) -I$(PREFIX)/include -fexceptions
   export LDFLAGS=$(PLATFORM_FLAGS) -L$(PREFIX)/lib
-  export CPPFLAGS=$(PLATFORM_FLAGS) -I$(PREFIX)/include -fexceptions -frtti
+  export CPPFLAGS=$(PLATFORM_FLAGS) -I$(PREFIX)/include -fexceptions
   export CXXFLAGS=$(PLATFORM_FLAGS) -I$(PREFIX)/include -fexceptions -frtti
 
   export PKG_CONFIG_PATH=$(PREFIX)/lib/pkgconfig
