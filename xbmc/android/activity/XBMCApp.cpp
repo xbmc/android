@@ -29,7 +29,7 @@
 
 #include "input/MouseStat.h"
 #include "input/XBMC_keysym.h"
-#include "guilib/guilib_defines.h"
+#include "guilib/Key.h"
 #include "windowing/XBMC_events.h"
 
 template<class T, void(T::*fn)()>
