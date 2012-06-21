@@ -19,7 +19,7 @@
  */
 
 #include "EventLoop.h"
-#include "android/xbmc_log.h"
+#include "XBMCApp.h"
 
 CEventLoop::CEventLoop(android_app* application)
   : m_enabled(false),
@@ -43,7 +43,7 @@ void CEventLoop::run(IActivityHandler &activityHandler, IInputHandler &inputHand
   m_activityHandler = &activityHandler;
   m_inputHandler = &inputHandler;
 
-  android_printf("CEventLoop: starting event loop");
+  CXBMCApp::android_printf("CEventLoop: starting event loop");
   while (1)
   {
     // We will block forever waiting for events.
@@ -56,7 +56,7 @@ void CEventLoop::run(IActivityHandler &activityHandler, IInputHandler &inputHand
       // Check if we are exiting.
       if (m_application->destroyRequested)
       {
-        android_printf("CEventLoop: we are being destroyed");
+        CXBMCApp::android_printf("CEventLoop: we are being destroyed");
         return;
       }
     }
@@ -71,7 +71,7 @@ void CEventLoop::activate()
   m_enabled = true;
   if (m_activityHandler->onActivate() != ActivityOK)
   {
-    android_printf("CEventLoop: IActivityHandler::onActivate() failed");
+    CXBMCApp::android_printf("CEventLoop: IActivityHandler::onActivate() failed");
     ANativeActivity_finish(m_application->activity);
   }
 }
