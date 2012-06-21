@@ -23,7 +23,7 @@
 #include <fcntl.h>
 #include <utime.h>
 #include <zip.h>
-#include "android/xbmc_log.h"
+#include "XBMCApp.h"
 
 typedef struct stat Stat;
 
@@ -88,12 +88,12 @@ int extract_to_cache(const char *archive, const char *cache_path)
   char *dir_name;
   Stat localfile;
   utimbuf modified;
-  android_printf("unzip: Preparing to cache. This could take a while...");
+  CXBMCApp::android_printf("unzip: Preparing to cache. This could take a while...");
 
   if ((ziparchive = zip_open(archive, 0, &err)) == NULL)
   {
     zip_error_to_str(buf, sizeof(buf), err, errno);
-    android_printf("unzip error: can't open archive %s/n",archive);
+    CXBMCApp::android_printf("unzip error: can't open archive %s/n",archive);
     return 1;
   }
 
@@ -103,7 +103,7 @@ int extract_to_cache(const char *archive, const char *cache_path)
   {
     if (zip_stat_index(ziparchive, i, 0, &zipstat) != 0)
     {
-      android_printf("unzip error: can't open entry: %i/n",i);
+      CXBMCApp::android_printf("unzip error: can't open entry: %i/n",i);
       continue;
     }
 
@@ -128,7 +128,7 @@ int extract_to_cache(const char *archive, const char *cache_path)
     zipfile = zip_fopen_index(ziparchive, i, 0);
     if (!zipfile)
     {
-      android_printf("unzip error: can't open index");
+      CXBMCApp::android_printf("unzip error: can't open index");
       free(full_path);
       continue;
     }
@@ -151,7 +151,7 @@ int extract_to_cache(const char *archive, const char *cache_path)
     fd = open(full_path, O_RDWR | O_TRUNC | O_CREAT, 0644);
     if(fd < 0)
     {
-      android_printf("unzip error: could not open %s",full_path);
+      CXBMCApp::android_printf("unzip error: could not open %s",full_path);
       free(full_path);
       continue;
     }
@@ -162,7 +162,7 @@ int extract_to_cache(const char *archive, const char *cache_path)
       len = zip_fread(zipfile, buf, 4096);
       if (len < 0)
       {
-        android_printf("unzip error: no data in %s",full_path);
+        CXBMCApp::android_printf("unzip error: no data in %s",full_path);
         free(full_path);
         continue;
       }
@@ -179,14 +179,14 @@ int extract_to_cache(const char *archive, const char *cache_path)
     }
     else
     {
-      android_printf("unzip error: failed to extract %s",full_path);
+      CXBMCApp::android_printf("unzip error: failed to extract %s",full_path);
     }
 
     free(full_path);
   }
 
   if (zip_close(ziparchive) == -1)
-    android_printf("unzip error: can't close zip archive `%s'/n", archive);
+    CXBMCApp::android_printf("unzip error: can't close zip archive `%s'/n", archive);
 
   return 0;
 }

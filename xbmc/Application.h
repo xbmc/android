@@ -22,7 +22,6 @@
  */
 
 #include "system.h" // for HAS_DVD_DRIVE et. al.
-#include "xbmc.h"
 #include "XBApplicationEx.h"
 
 #include "guilib/IMsgTargetCallback.h"
@@ -111,7 +110,6 @@ class CApplication : public CXBApplicationEx, public IPlayerCallback, public IMs
 public:
   CApplication(void);
   virtual ~CApplication(void);
-  virtual void PlatformInitialize(XBMC_PLATFORM *platform);
   virtual bool Initialize();
   virtual void FrameMove(bool processEvents, bool processGUI = true);
   virtual void Render();
@@ -339,10 +337,7 @@ public:
   bool ToggleDPMS(bool manual);
 
   float GetDimScreenSaverLevel() const;
-
 protected:
-  CStdString m_sLogName;
-
   bool LoadSkin(const CStdString& skinID);
   void LoadSkin(const boost::shared_ptr<ADDON::CSkinInfo>& skin);
 
