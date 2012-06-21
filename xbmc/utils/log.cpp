@@ -28,7 +28,7 @@
 #include "threads/Thread.h"
 #include "utils/StdString.h"
 #if defined(TARGET_ANDROID)
-#include "PlatformUtils.h"
+#include "android/activity/XBMCApp.h"
 #endif
 
 #define critSec XBMC_GLOBAL_USE(CLog::CLogGlobals).critSec
@@ -124,8 +124,7 @@ void CLog::Log(int loglevel, const char *format, ... )
 
 //print to adb
 #if defined(TARGET_ANDROID) && defined(_DEBUG)
-    if (CPlatformUtils::GetPlatform()->android_printf)
-      CPlatformUtils::GetPlatform()->android_printf("%s%s",strPrefix.c_str(), strData.c_str());
+  CXBMCApp::android_printf("%s%s",strPrefix.c_str(), strData.c_str());
 #endif
 
     fputs(strPrefix.c_str(), m_file);
