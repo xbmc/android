@@ -20,7 +20,7 @@ all: subdirs
 release: armeabi-v7a x86
 
 # Dependency layout for parallel builds
-gettext: libiconv
+gettext: libiconv ncurses
 libgcrypt: libgpg-error
 fontconfig: freetype2 expat libiconv
 libssh2: libgcrypt openssl
