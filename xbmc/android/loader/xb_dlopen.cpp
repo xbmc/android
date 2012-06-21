@@ -27,7 +27,7 @@
 #include <dlfcn.h>
 #include <fcntl.h>
 #include "xb_dlopen.h"
-#include "android/xbmc_log.h"
+#include "android/activity/XBMCApp.h"
 
 
 using namespace std;
@@ -124,13 +124,13 @@ void needs(string filename, strings *results)
   fd = open(filename.c_str(), O_RDONLY);
   if(fd < 0)
   {
-    android_printf("Cannot open %s: %s\n", filename.c_str(), strerror(errno));
+    CXBMCApp::android_printf("Cannot open %s: %s\n", filename.c_str(), strerror(errno));
     return;
   }
 
   if(read(fd, &header, sizeof(header)) < 0)
   {
-    android_printf("Cannot read elf header: %s\n", strerror(errno));
+    CXBMCApp::android_printf("Cannot read elf header: %s\n", strerror(errno));
     return;
   }
 
@@ -213,7 +213,7 @@ void* xb_dlopen_internal(const char * path, solib *lib)
   handle = dlopen(path, RTLD_LOCAL);
 
   if (handle == NULL)
-    android_printf("xb_dlopen: Error from dlopen(%s): %s", path, dlerror());
+    CXBMCApp::android_printf("xb_dlopen: Error from dlopen(%s): %s", path, dlerror());
 
   lib->dephandles.push_back(handle);
 
@@ -245,7 +245,7 @@ void* xb_dlopen(const char * path)
     return handle;
   }
 
-  android_printf("xb_dlopen: failed to open: %s", path);
+  CXBMCApp::android_printf("xb_dlopen: failed to open: %s", path);
   delete lib;
   return NULL;
 }
@@ -263,7 +263,7 @@ int xb_dlclose(void* handle)
       {
         if (dlclose(*j))
         {
-          android_printf("could not close dep for: %s\n", i->filename.c_str());
+          CXBMCApp::android_printf("could not close dep for: %s\n", i->filename.c_str());
           return 1;
         }
       }
@@ -272,6 +272,6 @@ int xb_dlclose(void* handle)
     }
   }
 
-  android_printf("xb_dlclose: unable to locate handle");
+  CXBMCApp::android_printf("xb_dlclose: unable to locate handle");
   return 1;
 }

@@ -25,12 +25,18 @@
 #include <android/native_window.h>
 
 #include "XBMCApp.h"
-#include "android/xbmc_log.h"
 
 #include "input/MouseStat.h"
 #include "input/XBMC_keysym.h"
 #include "guilib/Key.h"
 #include "windowing/XBMC_events.h"
+#include <android/log.h>
+
+#include "Application.h"
+#include "settings/AdvancedSettings.h"
+#include "xbmc.h"
+#include "windowing/WinEvents.h"
+#include "guilib/GUIWindowManager.h"
 
 template<class T, void(T::*fn)()>
 void* thread_run(void* obj)
@@ -62,6 +68,8 @@ static KeyMap keyMap[] = {
   { AKEYCODE_MENU         , XBMCK_MENU }
 };
 
+ANativeWindow* CXBMCApp::m_window = NULL;
+
 CXBMCApp::CXBMCApp(ANativeActivity *nativeActivity)
   : m_wakeLock(NULL),
     m_touchGestureState(TouchGestureUnknown)
@@ -76,7 +84,6 @@ CXBMCApp::CXBMCApp(ANativeActivity *nativeActivity)
   }
 
   m_state.appState = Uninitialized;
-  m_state.platform = NULL;
 
   if (pthread_mutex_init(&m_state.mutex, NULL) != 0)
   {
@@ -86,20 +93,6 @@ CXBMCApp::CXBMCApp(ANativeActivity *nativeActivity)
     return;
   }
 
-  m_state.platform = new XBMC_PLATFORM;
-  if (m_state.platform == NULL)
-  {
-    android_printf("CXBMCApp: could not initialize a new platform");
-    m_state.appState = Error;
-    return;
-  }
-
-  // stardard platform stuff
-  m_state.platform->log_name = "XBMC";
-  // android specific
-  m_state.platform->window = NULL;
-  m_state.platform->android_printf = &android_printf;
-  m_state.platform->android_setBuffersGeometry = &ANativeWindow_setBuffersGeometry;
 }
 
 CXBMCApp::~CXBMCApp()
@@ -112,11 +105,6 @@ CXBMCApp::~CXBMCApp()
 ActivityResult CXBMCApp::onActivate()
 {
   android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
-  if (m_state.platform->window == NULL)
-  {
-    android_printf("no valid ANativeWindow instance available");
-    return ActivityError;
-  }
 
   switch (m_state.appState)
   {
@@ -219,8 +207,7 @@ void CXBMCApp::onCreateWindow(ANativeWindow* window)
     android_printf(" => invalid ANativeWindow object");
     return;
   }
-
-  m_state.platform->window = window;
+  m_window = window;
 }
 
 void CXBMCApp::onResizeWindow()
@@ -668,7 +655,7 @@ void CXBMCApp::run()
     try
     {
       setAppState(Rendering);
-      status = XBMC_Run(true, m_state.platform);
+      status = XBMC_Run(true);
       android_printf(" => XBMC_Run finished with %d", status);
     }
     catch(...)
@@ -715,4 +702,102 @@ void CXBMCApp::setAppState(AppState state)
   pthread_mutex_lock(&m_state.mutex);
   m_state.appState = state;
   pthread_mutex_unlock(&m_state.mutex);
+}
+
+
+void CXBMCApp::XBMC_Pause(bool pause)
+{
+  android_printf("XBMC_Pause(%s)", pause ? "true" : "false");
+  // Only send the PAUSE action if we are pausing XBMC and something is currently playing
+  if (pause && g_application.IsPlaying() && !g_application.IsPaused())
+    g_application.getApplicationMessenger().SendAction(CAction(ACTION_PAUSE), WINDOW_INVALID, true);
+
+  g_application.m_AppActive = g_application.m_AppFocused = !pause;
+}
+
+void CXBMCApp::XBMC_Stop()
+{
+  g_application.getApplicationMessenger().Quit();
+}
+
+void CXBMCApp::XBMC_Key(uint8_t code, uint16_t key, uint16_t modifiers, bool up)
+{
+  XBMC_Event newEvent;
+  memset(&newEvent, 0, sizeof(newEvent));
+
+  unsigned char type = up ? XBMC_KEYUP : XBMC_KEYDOWN;
+  newEvent.type = type;
+  newEvent.key.type = type;
+  newEvent.key.keysym.scancode = code;
+  newEvent.key.keysym.sym = (XBMCKey)key;
+  newEvent.key.keysym.unicode = key;
+  newEvent.key.keysym.mod = (XBMCMod)modifiers;
+
+  android_printf("XBMC_Key(%u, %u, 0x%04X, %d)", code, key, modifiers, up);
+  CWinEvents::MessagePush(&newEvent);
+}
+
+void CXBMCApp::XBMC_Touch(uint8_t type, uint8_t button, uint16_t x, uint16_t y)
+{
+  XBMC_Event newEvent;
+  memset(&newEvent, 0, sizeof(newEvent));
+
+  newEvent.type = type;
+  newEvent.button.type = type;
+  newEvent.button.button = button;
+  newEvent.button.x = x;
+  newEvent.button.y = y;
+
+  android_printf("XBMC_Touch(%u, %u, %u, %u)", type, button, x, y);
+  CWinEvents::MessagePush(&newEvent);
+}
+
+void CXBMCApp::XBMC_TouchGesture(int32_t action, float posX, float posY, float offsetX, float offsetY)
+{
+  android_printf("XBMC_TouchGesture(%d, %f, %f, %f, %f)", action, posX, posY, offsetX, offsetY);
+  if (action == ACTION_GESTURE_BEGIN)
+    g_application.getApplicationMessenger().SendAction(CAction(action, 0, posX, posY, 0, 0), WINDOW_INVALID, false);
+  else if (action == ACTION_GESTURE_PAN)
+    g_application.getApplicationMessenger().SendAction(CAction(action, 0, posX, posY, offsetX, offsetY), WINDOW_INVALID, false);
+  else if (action == ACTION_GESTURE_END)
+    g_application.getApplicationMessenger().SendAction(CAction(action, 0, posX, posY, offsetX, offsetY), WINDOW_INVALID, false);
+  else if (action == ACTION_GESTURE_ZOOM)
+    g_application.getApplicationMessenger().SendAction(CAction(action, 0, posX, posY, offsetX, 0), WINDOW_INVALID, false);
+}
+
+int CXBMCApp::XBMC_TouchGestureCheck(float posX, float posY)
+{
+  android_printf("XBMC_TouchGestureCheck(%f, %f)", posX, posY);
+  CGUIMessage message(GUI_MSG_GESTURE_NOTIFY, 0, 0, posX, posY);
+  if (g_windowManager.SendMessage(message))
+    return message.GetParam1();
+
+  return EVENT_RESULT_UNHANDLED;
+}
+
+bool CXBMCApp::XBMC_SetupDisplay()
+{
+  android_printf("XBMC_SetupDisplay()");
+  return g_application.getApplicationMessenger().SetupDisplay();
+}
+
+bool CXBMCApp::XBMC_DestroyDisplay()
+{
+  android_printf("XBMC_DestroyDisplay()");
+  return g_application.getApplicationMessenger().DestroyDisplay();
+}
+
+int CXBMCApp::SetBuffersGeometry(int width, int height, int format)
+{
+  return ANativeWindow_setBuffersGeometry(m_window, width, height, format);
+}
+
+int CXBMCApp::android_printf(const char *format, ...)
+{
+  // For use before CLog is setup by XBMC_Run()
+  va_list args;
+  va_start(args, format);
+  int result = __android_log_vprint(ANDROID_LOG_VERBOSE, "XBMC", format, args);
+  va_end(args);
+  return result;
 }

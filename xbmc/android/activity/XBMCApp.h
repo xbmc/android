@@ -37,8 +37,7 @@ public:
   CXBMCApp(ANativeActivity *nativeActivity);
   virtual ~CXBMCApp();
 
-  bool isValid() { return m_activity != NULL &&
-                          m_state.platform != NULL; }
+  bool isValid() { return m_activity != NULL; }
 
   ActivityResult onActivate();
   void onDeactivate();
@@ -61,6 +60,10 @@ public:
 
   bool onKeyboardEvent(AInputEvent* event);
   bool onTouchEvent(AInputEvent* event);
+
+  static ANativeWindow* GetNativeWindow() { return m_window; };
+  static int SetBuffersGeometry(int width, int height, int format);
+  static int android_printf(const char *format, ...);
 
 private:
   jobject getWakeLock();
@@ -97,8 +100,6 @@ private:
     pthread_t thread;
     pthread_mutex_t mutex;
     AppState appState;
-
-    XBMC_PLATFORM* platform;
   } State;
 
   State m_state;
@@ -171,8 +172,17 @@ private:
   } TouchGestureState;
   
   TouchGestureState m_touchGestureState;
+  static ANativeWindow* m_window;
   
   void handleMultiTouchGesture(AInputEvent *event);
   void updateTouches(AInputEvent *event, bool saveLast = true);
-};
 
+  void XBMC_Pause(bool pause);
+  void XBMC_Stop();
+  bool XBMC_DestroyDisplay();
+  bool XBMC_SetupDisplay();
+  int  XBMC_TouchGestureCheck(float posX, float posY);
+  void XBMC_TouchGesture(int32_t action, float posX, float posY, float offsetX, float offsetY);
+  void XBMC_Touch(uint8_t type, uint8_t button, uint16_t x, uint16_t y);
+  void XBMC_Key(uint8_t code, uint16_t key, uint16_t modifiers, bool up);
+};
