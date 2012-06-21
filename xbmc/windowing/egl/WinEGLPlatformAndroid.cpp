@@ -28,12 +28,11 @@
 #include <sys/ioctl.h>
 
 #include "WinEGLPlatformAndroid.h"
-#include "utils/PlatformUtils.h"
-
+#include "android/activity/XBMCApp.h"
 ////////////////////////////////////////////////////////////////////////////////////////////
 EGLNativeWindowType CWinEGLPlatformAndroid::InitWindowSystem(EGLNativeDisplayType nativeDisplay, int width, int height, int bpp)
 {
-  if (CPlatformUtils::GetPlatform() == NULL || CPlatformUtils::GetPlatform()->window == NULL)
+  if (CXBMCApp::GetNativeWindow() == NULL)
     return 0;
 
   CWinEGLPlatformGeneric::InitWindowSystem(nativeDisplay, width, height, bpp);
@@ -60,15 +59,12 @@ bool CWinEGLPlatformAndroid::CreateWindow()
   // ANativeWindow buffers to match, using EGL_NATIVE_VISUAL_ID.
   eglGetConfigAttrib(m_display, m_config, EGL_NATIVE_VISUAL_ID, &format);
 
-  CPlatformUtils::GetPlatform()->android_setBuffersGeometry(CPlatformUtils::GetPlatform()->window, 0, 0, format);
+  CXBMCApp::SetBuffersGeometry(0, 0, format);
   
   CWinEGLPlatformGeneric::CreateWindow();
 }
 
 EGLNativeWindowType CWinEGLPlatformAndroid::getNativeWindow()
 {
-  if (CPlatformUtils::GetPlatform() == NULL || CPlatformUtils::GetPlatform()->window == NULL)
-    return 0;
-
-  return (EGLNativeWindowType)CPlatformUtils::GetPlatform()->window;
+  return (EGLNativeWindowType)CXBMCApp::GetNativeWindow();
 }

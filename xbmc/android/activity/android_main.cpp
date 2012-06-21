@@ -25,7 +25,6 @@
 #include <android_native_app_glue.h>
 #include <jni.h>
 
-#include "android/xbmc_log.h"
 #include "EventLoop.h"
 #include "XBMCApp.h"
 #include "unzip.h"
@@ -148,9 +147,9 @@ extern void android_main(struct android_app* state)
   if (xbmcApp.isValid())
     eventLoop.run(xbmcApp, xbmcApp);
   else
-    android_printf("android_main: setup failed");
+    CXBMCApp::android_printf("android_main: setup failed");
 
-  android_printf("android_main: Exiting");
+  CXBMCApp::android_printf("android_main: Exiting");
   state->activity->vm->DetachCurrentThread();
   // We need to call exit() so that all loaded libraries are properly unloaded
   // otherwise on the next start of the Activity android will simple re-use
