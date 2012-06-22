@@ -20,7 +20,7 @@ $(TARBALLS_LOCATION)/$(ARCHIVE):
 $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	rm -rf $(PLATFORM)/*; mkdir $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
-	cd $(PLATFORM)/librtmp; patch -p0 < ../../prefix.patch
+	cd $(PLATFORM); patch -p0 < ../prefix.patch
 
 $(LIBDYLIB): $(PLATFORM)
 	$(MAKE) -C $(PLATFORM)/librtmp CROSS_COMPILE=$(CROSSTOOLS) PREFIX=$(PREFIX)
