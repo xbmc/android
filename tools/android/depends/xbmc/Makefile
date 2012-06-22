@@ -22,14 +22,11 @@ CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automak
 
 all: $(SOURCE)/libxbmc.so
 
-$(SOURCE)/libxbmc.so: $(SOURCE)/Makefile
-	cd $(SOURCE); $(MAKE)
 
-$(SOURCE)/Makefile: $(SOURCE)/configure
-	cd $(SOURCE); $(CONFIGURE)
-
-$(SOURCE)/configure:
+$(SOURCE)/libxbmc.so:
 	cd $(SOURCE); ./bootstrap
+	cd $(SOURCE); $(CONFIGURE)
+	cd $(SOURCE); $(MAKE)
 
 ../Makefile.include:
 	$(error Please run edit and run setup-sdk.sh)
