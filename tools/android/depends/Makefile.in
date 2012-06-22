@@ -33,7 +33,7 @@ libass: fontconfig libpng freetype2 expat libiconv
 librtmp: openssl
 libxml2: libiconv
 libmicrohttpd: openssl libgpg-error libgcrypt
-python26: sqlite3 expat libxml2 openssl libffi
+python26: expat gettext libxml2 sqlite3 openssl libffi
 libcdio: libiconv
 afpfs-ng: libgcrypt readline libiconv
 libshairport: openssl
