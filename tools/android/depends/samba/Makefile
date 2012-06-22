@@ -1,4 +1,9 @@
 include ../Makefile.include
+DEPS= ../Makefile.include Makefile samba30-3.0.37-configure.in.patch \
+      samba30-3.0.37-CVE-2010-2063.patch \
+      samba30-3.0.37-silence-receive-warning.patch \
+      samba30-3.0.37-vfs_default.c.patch samba30-3.0.37-wle-fix.patch \
+      samba_android.patch
 
 # lib name, version
 LIBNAME=samba
@@ -62,7 +67,7 @@ all: .installed-$(PLATFORM)
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
 
-$(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
+$(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE) $(DEPS)
 	rm -rf $(PLATFORM); mkdir -p $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); patch -p1 < ../samba30-3.0.37-configure.in.patch

@@ -1,4 +1,5 @@
 include ../Makefile.include
+DEPS= ../Makefile.include add-arm-mem-barrier.patch fix-deprecated-swp.patch Makefile
 
 #Headers Only!
 LIBNAME=boost

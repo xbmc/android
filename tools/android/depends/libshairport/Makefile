@@ -1,4 +1,8 @@
 include ../Makefile.include
+DEPS= ../Makefile.include 001_add_ao.patch 002_fix_install_header.patch 003_fix_deadlock.patch \
+      004_fix_bad_access.patch 005_fix_shutdown.patch 006_no_printf.patch \
+      007_fix_syslog_defines.patch 008-add-missing-libs.patch \
+      009_fix_ipv6.patch 010_handle_metadata.patch android.patch Makefile
 
 # lib name, version
 LIBNAME=libshairport
@@ -17,7 +21,7 @@ all: .installed-$(PLATFORM)
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
 
-$(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
+$(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE) $(DEPS)
 	rm -rf $(PLATFORM); mkdir -p $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); patch -p0 < ../001_add_ao.patch

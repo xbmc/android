@@ -1,4 +1,5 @@
 include ../Makefile.include
+DEPS= ../Makefile.include Makefile
 
 # lib name, version
 LIBNAME=dbus
@@ -19,7 +20,7 @@ all: $(LIBDYLIB) .installed-$(PLATFORM)
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
 
-$(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
+$(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE) $(DEPS)
 	rm -rf $(PLATFORM)/*; mkdir $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); $(CONFIGURE)

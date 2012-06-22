@@ -1,4 +1,7 @@
 include ../Makefile.include
+DEPS= ../Makefile.include Makefile Python-2.6.2-android.patch \
+      Python-2.6.5-xcompile.patch Python-2.6-ctypes.patch \
+      Python-no-modules.patch modules.setup
 
 # lib name, version
 LIBNAME=Python

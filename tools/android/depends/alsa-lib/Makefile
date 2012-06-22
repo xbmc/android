@@ -1,4 +1,5 @@
 include ../Makefile.include
+DEPS= ../Makefile.include Makefile removeshm-2.patch removeshm-3.patch removeshm-upstream.patch timeval.patch
 
 # lib name, version
 LIBNAME=libasound
@@ -30,7 +31,7 @@ all: .installed-$(PLATFORM)
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
 
-$(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
+$(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE) $(DEPS)
 	rm -rf $(PLATFORM)/*; mkdir $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); patch -p1 < ../removeshm-upstream.patch

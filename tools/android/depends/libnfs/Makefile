@@ -1,4 +1,5 @@
 include ../Makefile.include
+DEPS= ../Makefile.include 001_fix_hanewin.patch libnfs_android.patch Makefile rpcinc/*
 
 # lib name, version
 LIBNAME=libnfs
@@ -20,7 +21,7 @@ all: .installed-$(PLATFORM)
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
 
-$(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
+$(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE) $(DEPS)
 	-rm -rf $(PLATFORM); mkdir -p $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
 	mkdir -p $(PLATFORM)/include/rpc
