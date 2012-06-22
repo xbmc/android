@@ -13,7 +13,7 @@ $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
 
 .installed-$(PLATFORM): $(LIBDYLIB) $(TARBALLS_LOCATION)/$(ARCHIVE)
-	rm -rf $(PLATFORM)/*; mkdir $(PLATFORM)
+	rm -rf $(PLATFORM)/*; mkdir -p $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
 	echo 'using gcc : : gcc : ' > $(PLATFORM)/tools/build/v2/user-config.jam
 	echo '	<cflags>"-fvisibility-inlines-hidden -DBOOST_AC_USE_PTHREADS -DBOOST_SP_USE_PTHREADS"' >> $(PLATFORM)/tools/build/v2/user-config.jam
