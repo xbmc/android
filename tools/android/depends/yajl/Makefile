@@ -24,9 +24,13 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	sed -ie "s|./run_tests.sh|#./run_tests.sh|g" "$(PLATFORM)/CMakeLists.txt"
 	sed -ie "s|WORKING_DIRECTORY|#WORKING_DIRECTORY|g" "$(PLATFORM)/CMakeLists.txt"
 	sed -ie "s|ADD_SUBDIRECTORY(reformatter)|#ADD_SUBDIRECTORY(reformatter)|g" "$(PLATFORM)/CMakeLists.txt"
-	cd $(PLATFORM); patch -p0 < ../libmath.patch
+	sed -ie "s|ADD_SUBDIRECTORY(test)|#ADD_SUBDIRECTORY(test)|g" "$(PLATFORM)/CMakeLists.txt"
+	sed -ie "s|ADD_SUBDIRECTORY(example)|#ADD_SUBDIRECTORY(example)|g" "$(PLATFORM)/CMakeLists.txt"
+	sed -ie "s|ADD_SUBDIRECTORY(perf)|#ADD_SUBDIRECTORY(perf)|g" "$(PLATFORM)/CMakeLists.txt"
+	sed -ie "s|ADD_SUBDIRECTORY(verify)|#ADD_SUBDIRECTORY(verify)|g" "$(PLATFORM)/CMakeLists.txt"
 	cd $(PLATFORM); patch -p0 < ../static.patch
-	cd $(PLATFORM); mkdir build; cd build; BUILD_SHARED_LIBRARIES=0 CMAKE_BUILD_TYPE=MinSizeRel $(CMAKE) --debug-output -DCMAKE_INSTALL_PREFIX='$(PREFIX)' ../
+	cd $(PLATFORM); patch -p0 < ../shared.patch
+	cd $(PLATFORM); mkdir build; cd build; CMAKE_BUILD_TYPE=MinSizeRel $(CMAKE) --debug-output -DCMAKE_INSTALL_PREFIX='$(PREFIX)' ../
 
 $(LIBDYLIB): $(PLATFORM)
 	$(MAKE) -C $(PLATFORM)/build
