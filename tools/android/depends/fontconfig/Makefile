@@ -22,7 +22,7 @@ $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
 
 $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE) $(DEPS)
-	rm -rf $(PLATFORM)/*; mkdir $(PLATFORM)
+	rm -rf $(PLATFORM)/*; mkdir -p $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); patch -p1 < ../01-fontconfig-cross-compile-fix.patch
 	cd $(PLATFORM); patch -p1 < ../lconv.patch 

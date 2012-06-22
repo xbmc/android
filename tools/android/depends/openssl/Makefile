@@ -20,7 +20,7 @@ $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
 
 $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE) $(DEPS)
-	rm -rf $(PLATFORM)/*; mkdir $(PLATFORM)
+	rm -rf $(PLATFORM)/*; mkdir -p $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
 	#when compiled on darwin it just won't realise that we do crosscompiling
 	#so it would stick in -arch i386 or -arch x86_64 into the cflags
