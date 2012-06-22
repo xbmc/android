@@ -1,4 +1,5 @@
 include ../Makefile.include
+DEPS= ../Makefile.include 01-mysqlclient-cross-compile.patch 02-mysqlclient-ios.patch 03-mysqlclient-android.patch Makefile
 
 # lib name, version
 LIBNAME=mysql
@@ -23,7 +24,7 @@ all: .installed-$(PLATFORM)
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
 
-$(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
+$(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE) $(DEPS)
 	rm -rf $(PLATFORM)/*; mkdir $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); patch -Np1 -i ../01-mysqlclient-cross-compile.patch

@@ -1,4 +1,5 @@
 include ../Makefile.include
+DEPS= ../Makefile.include Makefile dummy-libxbmc.c
 
 LIBDYLIB=libxbmc.so
 
@@ -7,7 +8,7 @@ all: $(PLATFORM)/$(LIBDYLIB) .installed-$(PLATFORM)
 $(PLATFORM):
 	mkdir -p $(PLATFORM)
 
-$(PLATFORM)/$(LIBDYLIB): $(PLATFORM) dummy-libxbmc.c
+$(PLATFORM)/$(LIBDYLIB): $(PLATFORM) $(DEPS)
 	$(CC) -shared -o $(PLATFORM)/libxbmc.so dummy-libxbmc.c
 
 .installed-$(PLATFORM): $(PLATFORM)/$(LIBDYLIB)

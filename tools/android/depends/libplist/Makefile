@@ -1,4 +1,6 @@
 include ../Makefile.include
+DEPS= ../Makefile.include 0001-dontbuildswig.patch 0002-missing-libs.patch \
+      0003-no-so-version.patch Makefile
 
 # lib name, version
 LIBNAME=libplist
@@ -14,7 +16,7 @@ all: .installed-$(PLATFORM)
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
 
-$(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
+$(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE) $(DEPS)
 	rm -rf $(PLATFORM); mkdir -p $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); patch -p1 < ../0001-dontbuildswig.patch
