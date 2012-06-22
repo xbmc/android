@@ -32,12 +32,12 @@ $(LIBDYLIB): $(PLATFORM)
 	rm -f $(PREFIX)/lib/libmpeg2.la $(PREFIX)/lib/libmpeg2.so $(PREFIX)/lib/libmpeg2.so.0
 	mv -f $(PREFIX)/lib/libmpeg2.so.0.1.0 $(PREFIX)/lib/libmpeg2.so
 	rpl -e "libmpeg2.so.0" "libmpeg2.so\x00\x00" $(PREFIX)/lib/libmpeg2.so
-	readelf --dynamic $(PREFIX)/lib/libmpeg2.so | grep ibrary
+	-$(READELF) --dynamic $(PREFIX)/lib/libmpeg2.so | grep ibrary
 	#
 	rm -f $(PREFIX)/lib/libmpeg2convert.la $(PREFIX)/lib/libmpeg2convert.so $(PREFIX)/lib/libmpeg2convert.so.0
 	mv -f $(PREFIX)/lib/libmpeg2convert.so.0.0.0 $(PREFIX)/lib/libmpeg2convert.so
 	rpl -e "libmpeg2convert.so.0" "libmpeg2convert.so\x00\x00" $(PREFIX)/lib/libmpeg2convert.so
-	readelf --dynamic $(PREFIX)/lib/libmpeg2convert.so | grep ibrary
+	-$(READELF) --dynamic $(PREFIX)/lib/libmpeg2convert.so | grep ibrary
 	#
 	touch $@
 
