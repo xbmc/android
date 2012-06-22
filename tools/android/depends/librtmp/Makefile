@@ -30,7 +30,7 @@ $(LIBDYLIB): $(PLATFORM)
 	rm -f $(PREFIX)/lib/librtmp.la $(PREFIX)/lib/librtmp.so
 	mv -f $(PREFIX)/lib/librtmp.so.0 $(PREFIX)/lib/librtmp.so
 	rpl -e "librtmp.so.0" "librtmp.so\x00\x00" $(PREFIX)/lib/librtmp.so
-	readelf --dynamic $(PREFIX)/lib/librtmp.so | grep ibrary
+	-$(READELF) --dynamic $(PREFIX)/lib/librtmp.so | grep ibrary
 	touch $@
 
 clean:

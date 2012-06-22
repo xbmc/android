@@ -32,7 +32,7 @@ $(LIBDYLIB): $(PLATFORM)
 	rm -f $(PREFIX)/lib/libcec.la $(PREFIX)/lib/libcec.so $(PREFIX)/lib/libcec.so.1
 	mv -f $(PREFIX)/lib/libcec.so.1.0.5 $(PREFIX)/lib/libcec.so
 	rpl -e "libcec.so.1" "libcec.so\x00\x00" $(PREFIX)/lib/libcec.so
-	readelf --dynamic $(PREFIX)/lib/libcec.so | grep ibrary
+	-$(READELF) --dynamic $(PREFIX)/lib/libcec.so | grep ibrary
 	touch $@
 
 clean:

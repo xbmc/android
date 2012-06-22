@@ -35,7 +35,7 @@ $(LIBDYLIB): $(PLATFORM)
 	rm -f $(PREFIX)/lib/libcurl.la $(PREFIX)/lib/libcurl.so $(PREFIX)/lib/libcurl.so.5
 	mv -f $(PREFIX)/lib/libcurl.so.5.2.0 $(PREFIX)/lib/libcurl.so
 	rpl -e "libcurl.so.5" "libcurl.so\x00\x00" $(PREFIX)/lib/libcurl.so
-	readelf --dynamic $(PREFIX)/lib/libcurl.so | grep ibrary
+	-$(READELF) --dynamic $(PREFIX)/lib/libcurl.so | grep ibrary
 	touch $@
 
 clean:

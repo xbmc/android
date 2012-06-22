@@ -40,7 +40,7 @@ $(LIBDYLIB): $(PLATFORM)
 	mkdir -p $(PREFIX)/include/rpc
 	cp -f rpcinc/* $(PREFIX)/include/rpc 
 	rpl -e "libnfs.so.0" "libnfs.so\x00\x00" $(PREFIX)/lib/libnfs.so
-	readelf --dynamic $(PREFIX)/lib/libnfs.so | grep ibrary
+	-$(READELF) --dynamic $(PREFIX)/lib/libnfs.so | grep ibrary
 	touch $@
 clean:
 	$(MAKE) -C $(PLATFORM) clean

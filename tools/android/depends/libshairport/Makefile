@@ -42,7 +42,7 @@ $(LIBDYLIB): $(PLATFORM)
 	rm -f $(PREFIX)/lib/libshairport.la $(PREFIX)/lib/libshairport.so $(PREFIX)/lib/libshairport.so.0
 	mv -f $(PREFIX)/lib/libshairport.so.0.0.0 $(PREFIX)/lib/libshairport.so
 	rpl -e "libshairport.so.0" "libshairport.so\x00\x00" $(PREFIX)/lib/libshairport.so
-	readelf --dynamic $(PREFIX)/lib/libshairport.so | grep ibrary
+	-$(READELF) --dynamic $(PREFIX)/lib/libshairport.so | grep ibrary
 	touch $@
 
 clean:
