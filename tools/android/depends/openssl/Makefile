@@ -21,6 +21,11 @@ $(TARBALLS_LOCATION)/$(ARCHIVE):
 $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	rm -rf $(PLATFORM)/*; mkdir $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
+	#when compiled on darwin it just won't realise that we do crosscompiling
+	#so it would stick in -arch i386 or -arch x86_64 into the cflags
+	#that would break the cross compile so we have to get rid of these
+	sed -ie 's/-arch i386//' $(PLATFORM)/Configure
+	sed -ie 's/-arch x86_64//' $(PLATFORM)/Configure
 	cd $(PLATFORM); $(CONFIGURE)
 
 $(LIBDYLIB): $(PLATFORM)
