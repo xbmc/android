@@ -34,7 +34,7 @@ $(LIBDYLIB): $(PLATFORM)
 	rm -f $(PREFIX)/lib/libbluray.la $(PREFIX)/lib/libbluray.so $(PREFIX)/lib/libbluray.so.1
 	mv -f $(PREFIX)/lib/libbluray.so.1.0.0 $(PREFIX)/lib/libbluray.so
 	rpl -e "libbluray.so.1" "libbluray.so\x00\x00" $(PREFIX)/lib/libbluray.so
-	readelf --dynamic $(PREFIX)/lib/libbluray.so | grep ibrary
+	-$(READELF) --dynamic $(PREFIX)/lib/libbluray.so | grep ibrary
 	touch $@
 
 clean:

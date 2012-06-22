@@ -49,7 +49,7 @@ $(LIBDYLIB): $(PLATFORM)
 	rm -f $(PREFIX)/lib/libasound.la $(PREFIX)/lib/libasound.so $(PREFIX)/lib/libxbasound.so $(PREFIX)/lib/libasound.so.2
 	mv -f $(PREFIX)/lib/libasound.so.2.0.0 $(PREFIX)/lib/libasound.so
 	rpl -e "libasound.so.2" "libasound.so\x00\x00" $(PREFIX)/lib/libasound.so
-	readelf --dynamic $(PREFIX)/lib/libasound.so | grep ibrary
+	-$(READELF) --dynamic $(PREFIX)/lib/libasound.so | grep ibrary
 	touch $@
 
 clean:

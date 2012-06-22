@@ -45,7 +45,7 @@ $(LIBDYLIB): $(PLATFORM)
 	rm -f $(PREFIX)/lib/libafpclient.la $(PREFIX)/lib/libafpclient.so $(PREFIX)/lib/libafpclient.so.0
 	mv -f $(PREFIX)/lib/libafpclient.so.0.0.0 $(PREFIX)/lib/libafpclient.so
 	rpl -e "libafpclient.so.0" "libafpclient.so\x00\x00" $(PREFIX)/lib/libafpclient.so
-	readelf --dynamic $(PREFIX)/lib/libafpclient.so | grep ibrary
+	-$(READELF) --dynamic $(PREFIX)/lib/libafpclient.so | grep ibrary
 	touch $@
 
 clean:

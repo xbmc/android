@@ -33,7 +33,7 @@ $(LIBDYLIB): $(PLATFORM)
 	rm -f $(PREFIX)/lib/libFLAC.la $(PREFIX)/lib/libFLAC.so $(PREFIX)/lib/libFLAC.so.8
 	mv -f $(PREFIX)/lib/libFLAC.so.8.2.0 $(PREFIX)/lib/libFLAC.so
 	rpl -e "libFLAC.so.8" "libFLAC.so\x00\x00" $(PREFIX)/lib/libFLAC.so
-	readelf --dynamic $(PREFIX)/lib/libFLAC.so | grep ibrary
+	-$(READELF) --dynamic $(PREFIX)/lib/libFLAC.so | grep ibrary
 	touch $@
 
 clean:

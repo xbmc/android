@@ -37,7 +37,7 @@ $(LIBDYLIB): $(PLATFORM)
 	rm -f $(PREFIX)/lib/libmad.la $(PREFIX)/lib/libmad.so $(PREFIX)/lib/libmad.so.0
 	mv -f $(PREFIX)/lib/libmad.so.0.2.1 $(PREFIX)/lib/libmad.so
 	rpl -e "libmad.so.0" "libmad.so\x00\x00" $(PREFIX)/lib/libmad.so
-	readelf --dynamic $(PREFIX)/lib/libmad.so | grep ibrary
+	-$(READELF) --dynamic $(PREFIX)/lib/libmad.so | grep ibrary
 	touch $@
 
 clean:
