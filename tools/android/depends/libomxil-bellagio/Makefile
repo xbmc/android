@@ -1,4 +1,5 @@
 include ../Makefile.include
+DEPS= ../Makefile.include android-fix-build.patch Makefile oscl/*
 
 # lib name, version
 LIBNAME=libomxil-bellagio
@@ -21,7 +22,7 @@ all: .installed-$(PLATFORM)
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) "$(BASE_URL)/$(ARCHIVE)"
 
-$(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
+$(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE) $(DEPS)
 	rm -rf $(PLATFORM)/*; mkdir $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); patch -p1 < ../android-fix-build.patch

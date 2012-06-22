@@ -1,4 +1,8 @@
 include ../Makefile.include
+DEPS= ../Makefile.include 01-gcrypt.patch 02-pointer.patch 04-boxee1.patch \
+      05-boxee2.patch 06-boxee3.patch 07-boxee4.patch \
+      08-boxee5.patch 10-fix-errno.patch 11-fix-stat.patch \
+      android.patch fix_afpfs-ng_includes.patch Makefile
 
 # lib name, version
 LIBNAME=afpfs-ng
@@ -19,7 +23,7 @@ all: .installed-$(PLATFORM)
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
 
-$(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
+$(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE) $(DEPS)
 	rm -rf $(PLATFORM); mkdir -p $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); patch -p1 <../fix_afpfs-ng_includes.patch
