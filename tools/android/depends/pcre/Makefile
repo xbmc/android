@@ -8,7 +8,7 @@ SOURCE=$(LIBNAME)-$(VERSION)
 ARCHIVE=$(SOURCE).tar.gz
 
 # configuration settings
-CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess .; ./configure --prefix=$(PREFIX) --host=$(HOST) --disable-stack-for-recursion --disable-shared
+CONFIGURE=cp -f $(CONFIG_SUB) $(CONFIG_GUESS) .; ./configure --prefix=$(PREFIX) --host=$(HOST) --disable-stack-for-recursion --disable-shared
 
 
 LIBDYLIB=$(PLATFORM)/.libs/lib$(LIBNAME).a

@@ -8,7 +8,7 @@ SOURCE=$(LIBNAME)-$(VERSION)
 ARCHIVE=$(SOURCE).tar.gz
 
 # configuration settings
-CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess .auto/ ; \
+CONFIGURE=cp -f $(CONFIG_SUB) $(CONFIG_GUESS) .auto/ ; \
           ./configure --prefix=$(PREFIX) --host=$(HOST) --disable-sdl
 
 LIBDYLIB=$(PLATFORM)/$(LIBNAME)/.libs/$(LIBNAME).a

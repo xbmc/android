@@ -8,8 +8,8 @@ SOURCE=$(LIBNAME)-$(VERSION)
 ARCHIVE=$(SOURCE).tar.gz
 
 # configuration settings
-CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess .; \
-          cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess Cfg; \
+CONFIGURE=cp -f $(CONFIG_SUB) $(CONFIG_GUESS) .; \
+          cp -f $(CONFIG_SUB) $(CONFIG_GUESS) Cfg; \
           ./configure --prefix=$(PREFIX) --host=$(HOST) --disable-sndfile --disable-fftw --disable-shared
 
 LIBDYLIB=$(PLATFORM)/src/.libs/$(LIBNAME).a

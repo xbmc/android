@@ -8,7 +8,7 @@ SOURCE=$(LIBNAME)-$(VERSION)
 ARCHIVE=$(SOURCE).tar.gz
 
 # configuration settings
-CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess config/; \
+CONFIGURE=cp -f $(CONFIG_SUB) $(CONFIG_GUESS) config/; \
           ./configure --prefix=$(PREFIX) --host=$(HOST) --disable-shared
 
 LIBDYLIB=$(PLATFORM)/libtiff/.libs/lib$(LIBNAME).a

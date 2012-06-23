@@ -9,7 +9,7 @@ ARCHIVE=$(SOURCE).tar.gz
 
 export LIBS=-lm
 # configuration settings
-CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess .; \
+CONFIGURE=cp -f $(CONFIG_SUB) $(CONFIG_GUESS) .; \
           ./configure --prefix=$(PREFIX) --host=$(HOST) --disable-oggtest --disable-docs --disable-examples
 
 LIBDYLIB=$(PLATFORM)/lib/.libs/$(LIBNAME).a
