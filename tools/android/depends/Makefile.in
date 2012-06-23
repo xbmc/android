@@ -29,7 +29,7 @@ curl: openssl libssh2
 tiff: libjpeg-turbo
 jasper: libjpeg-turbo
 libvorbis: libogg
-libflac: libogg
+libflac: libogg gettext
 libass: fontconfig libpng freetype2 expat libiconv
 librtmp: openssl
 libxml2: libiconv
