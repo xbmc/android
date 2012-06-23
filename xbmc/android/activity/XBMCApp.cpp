@@ -473,7 +473,7 @@ bool CXBMCApp::onTouchEvent(AInputEvent* event)
       // Otherwise abort
       else
       {
-        m_touchGestureState == TouchGestureUnknown;
+        m_touchGestureState = TouchGestureUnknown;
       }
       
       m_touchPointers[touchPointer].reset();
