@@ -633,7 +633,7 @@ void CXBMCApp::acquireWakeLock()
   
   jclass wakeLockClass = m_activity->env->GetObjectClass(wakeLock);
   jmethodID midAcquire = m_activity->env->GetMethodID(wakeLockClass, "acquire", "()V");
-  m_activity->env->CallObjectMethod(wakeLock, midAcquire);
+  m_activity->env->CallVoidMethod(wakeLock, midAcquire);
 }
 
 void CXBMCApp::releaseWakeLock()
@@ -643,7 +643,7 @@ void CXBMCApp::releaseWakeLock()
   
   jclass wakeLockClass = m_activity->env->GetObjectClass(wakeLock);
   jmethodID midRelease = m_activity->env->GetMethodID(wakeLockClass, "release", "()V");
-  m_activity->env->CallObjectMethod(wakeLock, midRelease);
+  m_activity->env->CallVoidMethod(wakeLock, midRelease);
 }
 
 void CXBMCApp::run()
