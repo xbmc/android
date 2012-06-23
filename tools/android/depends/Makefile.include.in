@@ -34,7 +34,6 @@ RETRIEVE_TOOL=$(shell which curl)
 RETRIEVE_TOOL_FLAGS=-Ls --create-dirs -f --output $(TARBALLS_LOCATION)/$(ARCHIVE)
 ARCHIVE_TOOL=$(shell which tar)
 ARCHIVE_TOOL_FLAGS=-C $(PLATFORM) --strip-components=1 -xf
-READELF=$(shell which readelf)
 
 ifneq ($(NATIVE_BUILD),1)
   export SYSROOT=$(TOOLCHAIN)/sysroot
@@ -48,6 +47,7 @@ ifneq ($(NATIVE_BUILD),1)
   export STRIP=$(CROSSTOOLS)strip
   export RANLIB=$(CROSSTOOLS)ranlib
   export OBJDUMP=$(CROSSTOOLS)objdump
+  export READELF=$(CROSSTOOLS)readelf
   export CFLAGS=$(PLATFORM_FLAGS) -I$(PREFIX)/include -fexceptions
   export LDFLAGS=$(PLATFORM_FLAGS) -L$(PREFIX)/lib
   export CPPFLAGS=$(PLATFORM_FLAGS) -I$(PREFIX)/include -fexceptions
