@@ -24,13 +24,18 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	sed -ie "s|./run_tests.sh|#./run_tests.sh|g" "$(PLATFORM)/CMakeLists.txt"
 	sed -ie "s|WORKING_DIRECTORY|#WORKING_DIRECTORY|g" "$(PLATFORM)/CMakeLists.txt"
 	sed -ie "s|ADD_SUBDIRECTORY(reformatter)|#ADD_SUBDIRECTORY(reformatter)|g" "$(PLATFORM)/CMakeLists.txt"
-	sed -ie "s|ADD_SUBDIRECTORY(test)|#ADD_SUBDIRECTORY(test)|g" "$(PLATFORM)/CMakeLists.txt"
-	sed -ie "s|ADD_SUBDIRECTORY(example)|#ADD_SUBDIRECTORY(example)|g" "$(PLATFORM)/CMakeLists.txt"
-	sed -ie "s|ADD_SUBDIRECTORY(perf)|#ADD_SUBDIRECTORY(perf)|g" "$(PLATFORM)/CMakeLists.txt"
-	sed -ie "s|ADD_SUBDIRECTORY(verify)|#ADD_SUBDIRECTORY(verify)|g" "$(PLATFORM)/CMakeLists.txt"
 	cd $(PLATFORM); patch -p0 < ../static.patch
 	cd $(PLATFORM); patch -p0 < ../shared.patch
-	cd $(PLATFORM); mkdir build; cd build; CMAKE_BUILD_TYPE=MinSizeRel $(CMAKE) --debug-output -DCMAKE_INSTALL_PREFIX='$(PREFIX)' ../
+	cd $(PLATFORM); rm -rf build; mkdir -p build
+	cd $(PLATFORM)/build; CC=$(CC) CXX=$(CXX) cmake        \
+          -DCMAKE_C_FLAGS:STRING="$(CPPFLAGS) $(CFLAGS)"     \
+          -DCMAKE_CXX_FLAGS:STRING="$(CPPFLAGS) $(CXXFLAGS)" \
+          -DCMAKE_INCLUDE_PATH=$(PREFIX)/include             \
+          -DCMAKE_LIBRARY_PATH=$(PREFIX)/lib                 \
+          -DCMAKE_INSTALL_NAME_DIR=$(PREFIX)/lib             \
+          -DCMAKE_INSTALL_PREFIX=$(PREFIX)                   \
+          -DCMAKE_SYSTEM_NAME=Linux                          \
+          -DCMAKE_FIND_ROOT_PATH=$(platform_sdk_path) ..
 
 $(LIBDYLIB): $(PLATFORM)
 	$(MAKE) -C $(PLATFORM)/build
@@ -45,4 +50,3 @@ clean:
 
 distclean::
 	rm -rf $(PLATFORM) .installed-$(PLATFORM)
-
