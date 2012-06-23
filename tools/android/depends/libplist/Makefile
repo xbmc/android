@@ -18,7 +18,8 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	rm -rf $(PLATFORM); mkdir -p $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); patch -p1 < ../0001-dontbuildswig.patch
-	cd $(PLATFORM); patch -p0 < ../missing-libs.patch
+	cd $(PLATFORM); patch -p0 < ../0002-missing-libs.patch
+	cd $(PLATFORM); patch -p0 < ../0003-nosoversion.patch
 	cd $(PLATFORM); rm -rf build; mkdir -p build
 	cd $(PLATFORM)/build; CC=$(CC) CXX=$(CXX) cmake        \
 	  -DCMAKE_C_FLAGS:STRING="$(CPPFLAGS) $(CFLAGS)"     \
@@ -27,6 +28,7 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	  -DCMAKE_LIBRARY_PATH=$(PREFIX)/lib                 \
 	  -DCMAKE_INSTALL_NAME_DIR=$(PREFIX)/lib             \
 	  -DCMAKE_INSTALL_PREFIX=$(PREFIX)                   \
+	  -DCMAKE_SYSTEM_NAME=Linux                          \
 	  -DCMAKE_FIND_ROOT_PATH=$(platform_sdk_path) ..
 
 $(LIBDYLIB): $(PLATFORM)
@@ -35,15 +37,10 @@ $(LIBDYLIB): $(PLATFORM)
 .installed-$(PLATFORM): $(LIBDYLIB)
 	$(MAKE) -C $(PLATFORM)/build install
 
-	rm -f $(PREFIX)/lib/libplist.la $(PREFIX)/lib/libplist.so $(PREFIX)/lib/libplist.so.1
-	mv -f $(PREFIX)/lib/libplist.so.1.1.6 $(PREFIX)/lib/libplist.so
-	rpl -e "libplist.so.1" "libplist.so\x00\x00" $(PREFIX)/lib/libplist.so
+	rm -f $(PREFIX)/lib/libplist.la
 	-$(READELF) --dynamic $(PREFIX)/lib/libplist.so | grep ibrary
 
-	rm -f $(PREFIX)/lib/libplist++.la $(PREFIX)/lib/libplist++.so $(PREFIX)/lib/libplist++.so.1
-	mv -f $(PREFIX)/lib/libplist++.so.1.1.6 $(PREFIX)/lib/libplist++.so
-	rpl -e "libplist++.so.1" "libplist++.so\x00\x00" $(PREFIX)/lib/libplist++.so
-	rpl -e "libplist.so.1" "libplist.so\x00\x00" $(PREFIX)/lib/libplist++.so
+	rm -f $(PREFIX)/lib/libplist++.la
 	-$(READELF) --dynamic $(PREFIX)/lib/libplist++.so | grep ibrary
 	touch $@
 
