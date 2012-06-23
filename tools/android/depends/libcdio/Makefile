@@ -9,7 +9,7 @@ ARCHIVE=$(SOURCE).tar.gz
 BASE_URL=http://ftp.gnu.org/gnu/libcdio
 
 # configuration settings
-CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess .; \
+CONFIGURE=cp -f $(CONFIG_SUB) $(CONFIG_GUESS) .; \
           ./configure --prefix=$(PREFIX) --host=$(HOST)  --without-cd-drive --without-cd-info --without-cd-paranoia \
           --without-cdda-player --without-cd-read --without-iso-info --without-iso-read --disable-example-progs \
           --disable-cpp-progs --without-cd-drive --without-cd-info --without-cd-paranoia --without-cdda-player \

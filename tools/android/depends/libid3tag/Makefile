@@ -9,7 +9,7 @@ ARCHIVE=$(SOURCE).tar.gz
 
 # configuration settings
 
-CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess .; \
+CONFIGURE=cp -f $(CONFIG_SUB) $(CONFIG_GUESS) .; \
           ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) \
 
 LIBDYLIB=$(PLATFORM)/.libs/$(LIBNAME).a

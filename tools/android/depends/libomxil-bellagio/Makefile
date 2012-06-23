@@ -9,7 +9,7 @@ ARCHIVE=$(LIBNAME)-$(VERSION).tar.gz
 BASE_URL=http://sourceforge.net/projects/omxil/files/omxil/Bellagio $(VERSION)/
 # configuration settings
 CFLAGS+=-I$(CURDIR)/oscl
-CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess .; \
+CONFIGURE=cp -f $(CONFIG_SUB) $(CONFIG_GUESS) .; \
           ./configure --prefix=$(PREFIX) --host=$(HOST) --disable-shared \
            --enable-android ac_cv_func_malloc_0_nonnull=yes
 

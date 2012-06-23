@@ -37,6 +37,8 @@ RETRIEVE_TOOL=$(shell which curl)
 RETRIEVE_TOOL_FLAGS=-Ls --create-dirs -f --output $(TARBALLS_LOCATION)/$(ARCHIVE)
 ARCHIVE_TOOL=$(shell which tar)
 ARCHIVE_TOOL_FLAGS=-C $(PLATFORM) --strip-components=1 -xf
+CONFIG_SUB=$(NATIVEPREFIX)/share/automake-1.11/config.sub
+CONFIG_GUESS=$(NATIVEPREFIX)/share/automake-1.11/config.guess
 
 ifneq ($(NATIVE_BUILD),1)
   export SYSROOT=$(TOOLCHAIN)/sysroot
