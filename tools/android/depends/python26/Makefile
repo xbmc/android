@@ -9,15 +9,19 @@ CWD=$(shell pwd)
 HOSTPYTHONDIR=$(CWD)/$(PLATFORM)/hostpython
 
 # configuration settings
-CONFIGURE=OPT=-Os ./configure --prefix=$(PREFIX) --host=$(HOST) \
-	  --disable-toolbox-glue --disable-framework --with-system-ffi \
-          ac_cv_func_gethostbyname_r=no ac_cv_header_sys_un_h=yes
+CONFIGURE=OPT=-Os \
+  LIBS=-lm \
+  ./configure --prefix=$(PREFIX) --host=$(HOST) \
+  --disable-toolbox-glue --disable-framework --with-system-ffi \
+  ac_cv_func_gethostbyname_r=no ac_cv_header_sys_un_h=yes
 
 CONFIGURE_NATIVE= CFLAGS="" CXXFLAGS="" LDFLAGS="" CPPFLAGS="" \
   CPP="cpp" \
   CC="gcc" \
   CXX="g++" \
   LD="ld" \
+  RANLIB="ranlib" \
+  AR="ar" \
   ./configure --prefix=$(HOSTPYTHONDIR) --disable-shared --disable-toolbox-glue --disable-framework
 
 LIBDYLIB=$(PLATFORM)/libpython2.6.a
@@ -41,6 +45,8 @@ $(LIBDYLIB): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); make distclean
 	cd $(PLATFORM); patch -Np1 -i ../Python-2.6.5-xcompile.patch
 	cd $(PLATFORM); patch -Np1 -i ../Python-2.6.2-android.patch
+	cd $(PLATFORM); patch -p0 < ../Python-no-modules.patch
+	cd $(PLATFORM); sed -ie 's|-framework CoreFoundation||' configure.in
 	cd $(PLATFORM); $(AUTORECONF)
 	cd $(PLATFORM); $(CONFIGURE)
 	cp modules.setup $(PLATFORM)/Modules/Setup
