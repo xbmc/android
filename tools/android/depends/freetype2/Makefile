@@ -10,7 +10,7 @@ ARCHIVE=$(SOURCE).tar.bz2
 # configuration settings
 # force using internal libtool
 export LIBTOOL=builds/unix/libtool
-CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess builds/unix; \
+CONFIGURE=cp -f $(CONFIG_SUB) $(CONFIG_GUESS) builds/unix; \
           ./configure --prefix=$(PREFIX) --host=$(HOST) --disable-shared
 
 LIBDYLIB=$(PLATFORM)/objs/.libs/lib$(LIBNAME).a

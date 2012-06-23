@@ -12,7 +12,7 @@ BASE_URL=http://www.sqlite.org
 export CXXFLAGS+=-DSQLITE_ENABLE_COLUMN_METADATA=1
 export CFLAGS+=-DSQLITE_TEMP_STORE=3
 export TCLLIBDIR=/dev/null
-CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess .; \
+CONFIGURE=cp -f $(CONFIG_SUB) $(CONFIG_GUESS) .; \
           ./configure --prefix=$(PREFIX) --host=$(HOST) --disable-shared \
   --enable-threadsafe --disable-tcl --disable-readline \
 

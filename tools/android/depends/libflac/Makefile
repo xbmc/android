@@ -8,7 +8,7 @@ SOURCE=$(LIBNAME)-$(VERSION)
 ARCHIVE=$(SOURCE).tar.gz
 export NASM=
 # configuration settings
-CONFIGURE=cp -f $(PREFIX)/share/automake-1.11/config.sub $(PREFIX)/share/automake-1.11/config.guess .; \
+CONFIGURE=cp -f $(CONFIG_SUB) $(CONFIG_GUESS) .; \
           ./autogen.sh --prefix=$(PREFIX) --host=$(HOST) --disable-xmms-plugin --disable-cpplibs
 
 LIBDYLIB=$(PLATFORM)/src/libFLAC/.libs/libFLAC.a
