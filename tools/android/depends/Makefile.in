@@ -11,7 +11,8 @@ SUBDIRS = \
 	libass libsamplerate \
 	libmodplug librtmp libxml2 yajl libmicrohttpd mysql libffi \
 	python26 samba alsa-lib libcdio afpfs-ng libshairport \
-	libplist libcec libbluray boost tinyxml dummy-libxbmc
+	libplist libcec libbluray boost tinyxml dummy-libxbmc libsdl \
+        libsdl_image
 
 .PHONY: buildtools $(BUILDTOOLS) subdirs $(SUBDIRS) arm
 
@@ -40,6 +41,7 @@ libshairport: openssl
 libplist: libxml2 cmake
 libbluray: libiconv libxml2
 yajl: cmake
+libsdl_image: libsdl
 
 X86OVERRIDES=XBMC_OVERRIDE_HOST=i686-android-linux XBMC_OVERRIDE_TOOLCHAIN=$(XBMC_X86_TOOLCHAIN)
 ARMOVERRIDES=XBMC_OVERRIDE_HOST=arm-linux-androideabi XBMC_OVERRIDE_TOOLCHAIN=$(XBMC_ARM_TOOLCHAIN)
