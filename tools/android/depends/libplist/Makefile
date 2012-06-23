@@ -19,7 +19,7 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); patch -p1 < ../0001-dontbuildswig.patch
 	cd $(PLATFORM); patch -p0 < ../0002-missing-libs.patch
-	cd $(PLATFORM); patch -p0 < ../0003-nosoversion.patch
+	cd $(PLATFORM); patch -p0 < ../0003-no-so-version.patch
 	cd $(PLATFORM); rm -rf build; mkdir -p build
 	cd $(PLATFORM)/build; CC=$(CC) CXX=$(CXX) cmake        \
 	  -DCMAKE_C_FLAGS:STRING="$(CPPFLAGS) $(CFLAGS)"     \
