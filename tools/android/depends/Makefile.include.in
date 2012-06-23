@@ -5,6 +5,7 @@ XBMCPREFIX=@use_staging@
 TARBALLS_LOCATION=@use_tarballs@
 HOST=@use_host@
 PLATFORM=@use_cpu@
+NATIVEPLATFORM=@use_cpu@-native
 
 ifneq ($(XBMC_OVERRIDE_TOOLCHAIN),)
 TOOLCHAIN=$(XBMC_OVERRIDE_TOOLCHAIN)
@@ -12,6 +13,7 @@ endif
 
 ifneq ($(XBMC_OVERRIDE_PLATFORM),)
 PLATFORM=$(XBMC_OVERRIDE_PLATFORM)
+NATIVEPLATFORM=$(XBMC_OVERRIDE_PLATFORM)-native
 endif
 
 ifneq ($(XBMC_OVERRIDE_HOST),)
@@ -19,6 +21,7 @@ HOST=$(XBMC_OVERRIDE_HOST)
 endif
 
 PREFIX=$(XBMCPREFIX)/$(PLATFORM)
+NATIVEPREFIX=$(XBMCPREFIX)/$(NATIVEPLATFORM)
 
 PLATFORM_FLAGS=-DANDROID -Os
 ifeq ($(PLATFORM),armeabi-v7a)
@@ -54,10 +57,20 @@ ifneq ($(NATIVE_BUILD),1)
   export CXXFLAGS=$(PLATFORM_FLAGS) -I$(PREFIX)/include -fexceptions -frtti
 
   export PKG_CONFIG_PATH=$(PREFIX)/lib/pkgconfig
-  export PKG_CONFIG=$(PREFIX)/bin/pkg-config
+  export PKG_CONFIG=$(NATIVEPREFIX)/bin/pkg-config
 
-  export AUTOMAKE=$(PREFIX)/bin/automake
-  export ACLOCAL=$(PREFIX)/bin/aclocal
-  export LIBTOOLIZE=$(PREFIX)/bin/libtoolize
-  export AUTORECONF=$(PREFIX)/bin/autoreconf
+  export AUTOMAKE=$(NATIVEPREFIX)/bin/automake
+  export ACLOCAL=$(NATIVEPREFIX)/bin/aclocal
+  export ACLOCAL_PATH=$(PREFIX)/share/aclocal:$(NATIVEPREFIX)/share/aclocal
+  export LIBTOOLIZE=$(NATIVEPREFIX)/bin/libtoolize
+  export AUTORECONF=$(NATIVEPREFIX)/bin/autoreconf
+else
+  PLATFORM=$(NATIVEPLATFORM)
+  PREFIX=$(NATIVEPREFIX)
+
+  export CFLAGS=-I$(PREFIX)/include
+  export LDFLAGS=-L$(PREFIX)/lib
+  export CPPFLAGS=-I$(PREFIX)/include
+  export CXXFLAGS=-I$(PREFIX)/include
 endif
+  export PATH:=$(NATIVEPREFIX)/bin:$(PATH)
