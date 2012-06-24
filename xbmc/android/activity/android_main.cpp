@@ -47,6 +47,9 @@ void setup_env(struct android_app* state)
   temp = env->GetStringUTFChars(jSystemLib, NULL);
   setenv("XBMC_ANDROID_SYSTEM_LIBS", temp, 0);
   env->ReleaseStringUTFChars(jSystemLib, temp);
+  env->DeleteLocalRef(jSystemLib);
+  env->DeleteLocalRef(jSystem);
+  env->DeleteLocalRef(jSystemProperty);
 
   // get the path to XBMC's data directory (usually /data/data/<app-name>)
   jmethodID getApplicationInfo = env->GetMethodID(activityClass, "getApplicationInfo", "()Landroid/content/pm/ApplicationInfo;");
@@ -57,6 +60,7 @@ void setup_env(struct android_app* state)
   temp = env->GetStringUTFChars(jDataDir, NULL);
   setenv("XBMC_ANDROID_DATA", temp, 0);
   env->ReleaseStringUTFChars(jDataDir, temp);
+  env->DeleteLocalRef(jDataDir);
   
   // get the path to where android extracts native libraries to
   jfieldID nativeLibraryDir = env->GetFieldID(applicationInfoClass, "nativeLibraryDir", "Ljava/lang/String;");
@@ -64,6 +68,9 @@ void setup_env(struct android_app* state)
   temp = env->GetStringUTFChars(jNativeLibraryDir, NULL);
   setenv("XBMC_ANDROID_LIBS", temp, 0);
   env->ReleaseStringUTFChars(jNativeLibraryDir, temp);
+  env->DeleteLocalRef(jNativeLibraryDir);
+  env->DeleteLocalRef(applicationInfoClass);
+  env->DeleteLocalRef(jApplicationInfo);
 
   // get the path to the APK
   char apkPath[PATH_MAX];
@@ -71,8 +78,9 @@ void setup_env(struct android_app* state)
   jstring jApkPath = (jstring)env->CallObjectMethod(activity, getPackageResourcePath);
   temp = env->GetStringUTFChars(jApkPath, NULL);
   strcpy(apkPath, temp);
-  env->ReleaseStringUTFChars(jApkPath, temp);
   setenv("XBMC_ANDROID_APK", apkPath, 0);
+  env->ReleaseStringUTFChars(jApkPath, temp);
+  env->DeleteLocalRef(jApkPath);
   
   // Get the path to the temp/cache directory
   char cacheDir[PATH_MAX];
@@ -82,12 +90,15 @@ void setup_env(struct android_app* state)
 
   jclass fileClass = env->GetObjectClass(jCacheDir);
   jmethodID getAbsolutePath = env->GetMethodID(fileClass, "getAbsolutePath", "()Ljava/lang/String;");
+  env->DeleteLocalRef(fileClass);
 
   jstring jCachePath = (jstring)env->CallObjectMethod(jCacheDir, getAbsolutePath);
   temp = env->GetStringUTFChars(jCachePath, NULL);
   strcpy(cacheDir, temp);
   strcpy(tempDir, temp);
   env->ReleaseStringUTFChars(jCachePath, temp);
+  env->DeleteLocalRef(jCachePath);
+  env->DeleteLocalRef(jCacheDir);
 
   strcat(tempDir, "/temp");
   setenv("XBMC_TEMP", tempDir, 0);
@@ -113,6 +124,8 @@ void setup_env(struct android_app* state)
   temp = env->GetStringUTFChars(jExternalPath, NULL);
   strcpy(storagePath, temp);
   env->ReleaseStringUTFChars(jExternalPath, temp);
+  env->DeleteLocalRef(jExternalPath);
+  env->DeleteLocalRef(jExternalDir);
 
   // Check if we don't have a valid path yet
   if (strlen(storagePath) <= 0)
@@ -122,12 +135,17 @@ void setup_env(struct android_app* state)
     jstring jstrName = env->NewStringUTF("org.xbmc");
     jmethodID getDir = env->GetMethodID(activityClass, "getDir", "(Ljava/lang/String;I)Ljava/io/File;");
     jobject jInternalDir = env->CallObjectMethod(activity, getDir, jstrName, 1 /* MODE_WORLD_READABLE */);
+    env->DeleteLocalRef(jstrName);
 
     jstring jInternalPath = (jstring)env->CallObjectMethod(jInternalDir, getAbsolutePath);
     temp = env->GetStringUTFChars(jInternalPath, NULL);
     strcpy(storagePath, temp);
     env->ReleaseStringUTFChars(jInternalPath, temp);
+    env->DeleteLocalRef(jInternalPath);
+    env->DeleteLocalRef(jInternalDir);
   }
+  
+  env->DeleteLocalRef(activityClass);
 
   // Check if we have a valid home path
   if (strlen(storagePath) > 0)
