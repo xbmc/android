@@ -34,6 +34,10 @@
 #include "settings/GUISettings.h"
 #include "guilib/LocalizeStrings.h"
 
+#if defined(TARGET_ANDROID)
+#include "android/activity/XBMCApp.h"
+#endif
+
 using namespace std;
 using namespace XFILE;
 
@@ -219,8 +223,21 @@ void CGUIDialogMediaSource::OnPathBrowse(int item)
     m_bNameChanged=true;
 
   if (m_type == "music")
-  { // add the music playlist location
+  {
     CMediaSource share1;
+#if defined(TARGET_ANDROID)
+    // add the default android music directory
+    std::string path;
+    if (CXBMCApp::GetExternalStorage(path, "music") && !path.empty())
+    {
+      share1.strPath = path;
+      share1.strName = g_localizeStrings.Get(20240);
+      share1.m_ignore = true;
+      extraShares.push_back(share1);
+    }
+#endif
+
+    // add the music playlist location
     share1.strPath = "special://musicplaylists/";
     share1.strName = g_localizeStrings.Get(20011);
     share1.m_ignore = true;
@@ -245,8 +262,21 @@ void CGUIDialogMediaSource::OnPathBrowse(int item)
     }
  }
   else if (m_type == "video")
-  { // add the music playlist location
+  {
     CMediaSource share1;
+#if defined(TARGET_ANDROID)
+    // add the default android video directory
+    std::string path;
+    if (CXBMCApp::GetExternalStorage(path, "videos") && !path.empty())
+    {
+      share1.strPath = path;
+      share1.strName = g_localizeStrings.Get(20241);
+      share1.m_ignore = true;
+      extraShares.push_back(share1);
+    }
+#endif
+
+    // add the video playlist location
     share1.m_ignore = true;
     share1.strPath = "special://videoplaylists/";
     share1.strName = g_localizeStrings.Get(20012);
@@ -267,6 +297,27 @@ void CGUIDialogMediaSource::OnPathBrowse(int item)
   else if (m_type == "pictures")
   {
     CMediaSource share1;
+#if defined(TARGET_ANDROID)
+    // add the default android music directory
+    std::string path;
+    if (CXBMCApp::GetExternalStorage(path, "pictures") && !path.empty())
+    {
+      share1.strPath = path;
+      share1.strName = g_localizeStrings.Get(20242);
+      share1.m_ignore = true;
+      extraShares.push_back(share1);
+    }
+
+    path.clear();
+    if (CXBMCApp::GetExternalStorage(path, "photos") && !path.empty())
+    {
+      share1.strPath = path;
+      share1.strName = g_localizeStrings.Get(20243);
+      share1.m_ignore = true;
+      extraShares.push_back(share1);
+    }
+#endif
+
     share1.m_ignore = true;
     if (g_guiSettings.GetString("debug.screenshotpath",false)!= "")
     {

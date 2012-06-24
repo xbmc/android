@@ -21,6 +21,7 @@
 
 #include <math.h>
 #include <pthread.h>
+#include <string>
 
 #include <android/native_activity.h>
 
@@ -66,6 +67,15 @@ public:
   static int android_printf(const char *format, ...);
   
   static int GetBatteryLevel();
+  
+  /*!
+   * \brief If external storage is available, it returns the path for the external storage (for the specified type)
+   * \param path will contain the path of the external storage (for the specified type)
+   * \param type optional type. Possible values are "", "files", "music", "videos", "pictures", "photos, "downloads"
+   * \return true if external storage is available and a valid path has been stored in the path parameter
+   */
+  static bool GetExternalStorage(std::string &path, const std::string type = "");
+  static bool GetStorageUsage(const std::string &path, std::string &usage);
 
 private:
   bool getWakeLock();
