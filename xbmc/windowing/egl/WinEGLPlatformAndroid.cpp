@@ -62,6 +62,7 @@ bool CWinEGLPlatformAndroid::CreateWindow()
   CXBMCApp::SetBuffersGeometry(0, 0, format);
   
   CWinEGLPlatformGeneric::CreateWindow();
+  return true;
 }
 
 EGLNativeWindowType CWinEGLPlatformAndroid::getNativeWindow()
