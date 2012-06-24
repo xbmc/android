@@ -39,6 +39,7 @@ ARCHIVE_TOOL=$(shell which tar)
 ARCHIVE_TOOL_FLAGS=-C $(PLATFORM) --strip-components=1 -xf
 CONFIG_SUB=$(NATIVEPREFIX)/share/automake-1.11/config.sub
 CONFIG_GUESS=$(NATIVEPREFIX)/share/automake-1.11/config.guess
+RPL=$(NATIVEPREFIX)/bin/python $(NATIVEPREFIX)/bin/rpl
 
 ifneq ($(NATIVE_BUILD),1)
   export SYSROOT=$(TOOLCHAIN)/sysroot
