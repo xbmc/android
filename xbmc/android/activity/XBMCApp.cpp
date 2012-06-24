@@ -843,3 +843,47 @@ int CXBMCApp::android_printf(const char *format, ...)
   va_end(args);
   return result;
 }
+
+int CXBMCApp::GetBatteryLevel()
+{
+  if (m_activity == NULL)
+    return -1;
+  
+  JNIEnv *env = NULL;
+  m_activity->vm->AttachCurrentThread(&env, NULL);
+  jobject oActivity = m_activity->clazz;
+  
+  // IntentFilter oIntentFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+  jclass cIntentFilter = env->FindClass("android/content/IntentFilter");
+  jmethodID midIntentFilterCtor = env->GetMethodID(cIntentFilter, "<init>", "(Ljava/lang/String;)V");
+  jstring sIntentBatteryChanged = env->NewStringUTF("android.intent.action.BATTERY_CHANGED"); // Intent.ACTION_BATTERY_CHANGED
+  jobject oIntentFilter = env->NewObject(cIntentFilter, midIntentFilterCtor, sIntentBatteryChanged);
+  env->DeleteLocalRef(cIntentFilter);
+  env->DeleteLocalRef(sIntentBatteryChanged);
+
+  // Intent oBatteryStatus = activity.registerReceiver(null, oIntentFilter);
+  jclass cActivity = env->GetObjectClass(oActivity);
+  jmethodID midActivityRegisterReceiver = env->GetMethodID(cActivity, "registerReceiver", "(Landroid/content/BroadcastReceiver;Landroid/content/IntentFilter;)Landroid/content/Intent;");
+  env->DeleteLocalRef(cActivity);
+  jobject oBatteryStatus = env->CallObjectMethod(oActivity, midActivityRegisterReceiver, NULL, oIntentFilter);
+
+  jclass cIntent = env->GetObjectClass(oBatteryStatus);
+  jmethodID midIntentGetIntExtra = env->GetMethodID(cIntent, "getIntExtra", "(Ljava/lang/String;I)I");
+  env->DeleteLocalRef(cIntent);
+  
+  // int iLevel = oBatteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+  jstring sBatteryManagerExtraLevel = env->NewStringUTF("level"); // BatteryManager.EXTRA_LEVEL
+  jint iLevel = env->CallIntMethod(oBatteryStatus, midIntentGetIntExtra, sBatteryManagerExtraLevel, (jint)-1);
+  env->DeleteLocalRef(sBatteryManagerExtraLevel);
+  // int iScale = oBatteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+  jstring sBatteryManagerExtraScale = env->NewStringUTF("scale"); // BatteryManager.EXTRA_SCALE
+  jint iScale = env->CallIntMethod(oBatteryStatus, midIntentGetIntExtra, sBatteryManagerExtraScale, (jint)-1);
+  env->DeleteLocalRef(sBatteryManagerExtraScale);
+  env->DeleteLocalRef(oBatteryStatus);
+  env->DeleteLocalRef(oIntentFilter);
+  
+  if (iLevel <= 0 || iScale < 0)
+    return iLevel;
+
+  return ((int)iLevel * 100) / (int)iScale;
+}
