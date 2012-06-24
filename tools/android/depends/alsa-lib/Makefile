@@ -49,7 +49,7 @@ $(LIBDYLIB): $(PLATFORM)
 	$(MAKE) -C $(PLATFORM)/utils install
 	rm -f $(PREFIX)/lib/libasound.la $(PREFIX)/lib/libasound.so $(PREFIX)/lib/libxbasound.so $(PREFIX)/lib/libasound.so.2
 	mv -f $(PREFIX)/lib/libasound.so.2.0.0 $(PREFIX)/lib/libasound.so
-	rpl -e "libasound.so.2" "libasound.so\x00\x00" $(PREFIX)/lib/libasound.so
+	$(RPL) -e "libasound.so.2" "libasound.so\x00\x00" $(PREFIX)/lib/libasound.so
 	-$(READELF) --dynamic $(PREFIX)/lib/libasound.so | grep ibrary
 	touch $@
 

@@ -40,7 +40,7 @@ $(LIBDYLIB): $(PLATFORM)
 	mv -f $(PREFIX)/lib/libnfs.so.0.0.0 $(PREFIX)/lib/libnfs.so
 	mkdir -p $(PREFIX)/include/rpc
 	cp -f rpcinc/* $(PREFIX)/include/rpc 
-	rpl -e "libnfs.so.0" "libnfs.so\x00\x00" $(PREFIX)/lib/libnfs.so
+	$(RPL) -e "libnfs.so.0" "libnfs.so\x00\x00" $(PREFIX)/lib/libnfs.so
 	-$(READELF) --dynamic $(PREFIX)/lib/libnfs.so | grep ibrary
 	touch $@
 clean:
