@@ -9,7 +9,7 @@ ARCHIVE=$(LIBNAME)-$(VERSION).tar.gz
 BASE_URL=http://sourceforge.net/projects/libjpeg-turbo/files/$(VERSION)
 # configuration settings
 CONFIGURE=cp -f $(CONFIG_SUB) $(CONFIG_GUESS) .; \
-          NASM=$(NASM) ./configure --prefix=$(PREFIX) --host=$(HOST) --with-jpeg8 --disable-shared
+          NASM=$(YASM) ./configure --prefix=$(PREFIX) --host=$(HOST) --with-jpeg8 --disable-shared
 
 CFLAGS+=-O3
 
