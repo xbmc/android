@@ -33,7 +33,7 @@ $(LIBDYLIB): $(PLATFORM)
 	$(MAKE) -C $(PLATFORM) install
 	rm -f $(PREFIX)/lib/libid3tag.la $(PREFIX)/lib/libid3tag.so $(PREFIX)/lib/libid3tag.so.0
 	mv -f $(PREFIX)/lib/libid3tag.so.0.3.0 $(PREFIX)/lib/libid3tag.so
-	rpl -e "libid3tag.so.0" "libid3tag.so\x00\x00" $(PREFIX)/lib/libid3tag.so
+	$(RPL) -e "libid3tag.so.0" "libid3tag.so\x00\x00" $(PREFIX)/lib/libid3tag.so
 	-$(READELF) --dynamic $(PREFIX)/lib/libid3tag.so | grep ibrary
 	touch $@
 

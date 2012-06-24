@@ -32,7 +32,7 @@ $(LIBDYLIB): $(PLATFORM)
 	$(MAKE) -C $(PLATFORM) install
 	rm -f $(PREFIX)/lib/libass.la $(PREFIX)/lib/libass.so $(PREFIX)/lib/libass.so.4
 	mv -f $(PREFIX)/lib/libass.so.4.1.0 $(PREFIX)/lib/libass.so
-	rpl -e "libass.so.4" "libass.so\x00\x00" $(PREFIX)/lib/libass.so
+	$(RPL) -e "libass.so.4" "libass.so\x00\x00" $(PREFIX)/lib/libass.so
 	-$(READELF) --dynamic $(PREFIX)/lib/libass.so | grep ibrary
 	touch $@
 
