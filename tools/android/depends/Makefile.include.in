@@ -29,7 +29,7 @@ ifeq ($(PLATFORM),armeabi-v7a)
 endif
 
 ifeq ($(PLATFORM),x86)
-  PLATFORM_FLAGS+=
+  PLATFORM_FLAGS+=-fomit-frame-pointer
 endif
 
 BASE_URL=http://mirrors.xbmc.org/build-deps/darwin-libs
