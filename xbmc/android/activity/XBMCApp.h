@@ -66,13 +66,13 @@ public:
   static int android_printf(const char *format, ...);
 
 private:
-  jobject getWakeLock();
+  bool getWakeLock();
   void acquireWakeLock();
   void releaseWakeLock();
   void run();
   void stop();
   
-  ANativeActivity *m_activity;
+  static ANativeActivity *m_activity;
   jobject m_wakeLock;
   
   typedef enum {
