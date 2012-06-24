@@ -64,6 +64,8 @@ public:
   static ANativeWindow* GetNativeWindow() { return m_window; };
   static int SetBuffersGeometry(int width, int height, int format);
   static int android_printf(const char *format, ...);
+  
+  static int GetBatteryLevel();
 
 private:
   bool getWakeLock();
