@@ -18,9 +18,12 @@
  *
  */
 
+#include <sstream>
+
 #include <unistd.h>
 #include <stdlib.h>
 #include <dlfcn.h>
+#include <string.h>
 
 #include <android/native_window.h>
 #include <jni.h>
@@ -38,6 +41,10 @@
 #include "xbmc.h"
 #include "windowing/WinEvents.h"
 #include "guilib/GUIWindowManager.h"
+
+#define GIGABYTES       1073741824
+
+using namespace std;
 
 template<class T, void(T::*fn)()>
 void* thread_run(void* obj)
@@ -886,4 +893,135 @@ int CXBMCApp::GetBatteryLevel()
     return iLevel;
 
   return ((int)iLevel * 100) / (int)iScale;
+}
+
+bool CXBMCApp::GetExternalStorage(std::string &path, const std::string type /* = "" */)
+{
+  if (m_activity == NULL)
+    return false;
+
+  JNIEnv *env = NULL;
+  m_activity->vm->AttachCurrentThread(&env, NULL);
+
+  // check if external storage is available
+  // String sStorageState = android.os.Environment.getExternalStorageState();
+  jclass cEnvironment = env->FindClass("android/os/Environment");
+  jmethodID midEnvironmentGetExternalStorageState = env->GetStaticMethodID(cEnvironment, "getExternalStorageState", "()Ljava/lang/String;");
+  jstring sStorageState = (jstring)env->CallStaticObjectMethod(cEnvironment, midEnvironmentGetExternalStorageState);
+  // if (sStorageState != Environment.MEDIA_MOUNTED && sStorageState != Environment.MEDIA_MOUNTED_READ_ONLY) return false;
+  const char* storageState = env->GetStringUTFChars(sStorageState, NULL);
+  bool mounted = strcmp(storageState, "mounted") == 0 || strcmp(storageState, "mounted_ro") == 0;
+  env->ReleaseStringUTFChars(sStorageState, storageState);
+  env->DeleteLocalRef(sStorageState);
+
+  if (mounted)
+  {
+    jobject oExternalStorageDirectory = NULL;
+    if (type.empty() || type == "files")
+    {
+      // File oExternalStorageDirectory = Environment.getExternalStorageDirectory();
+      jmethodID midEnvironmentGetExternalStorageDirectory = env->GetStaticMethodID(cEnvironment, "getExternalStorageDirectory", "()Ljava/io/File;");
+      oExternalStorageDirectory = env->CallStaticObjectMethod(cEnvironment, midEnvironmentGetExternalStorageDirectory);
+    }
+    else if (type == "music" || type == "videos" || type == "pictures" || type == "photos" || type == "downloads")
+    {
+      jstring sType = NULL;
+      if (type == "music")
+        sType = env->NewStringUTF("Music"); // Environment.DIRECTORY_MUSIC
+      else if (type == "videos")
+        sType = env->NewStringUTF("Movies"); // Environment.DIRECTORY_MOVIES
+      else if (type == "pictures")
+        sType = env->NewStringUTF("Pictures"); // Environment.DIRECTORY_PICTURES
+      else if (type == "photos")
+        sType = env->NewStringUTF("DCIM"); // Environment.DIRECTORY_DCIM
+      else if (type == "downloads")
+        sType = env->NewStringUTF("Download"); // Environment.DIRECTORY_DOWNLOADS
+
+      // File oExternalStorageDirectory = Environment.getExternalStoragePublicDirectory(sType);
+      jmethodID midEnvironmentGetExternalStoragePublicDirectory = env->GetStaticMethodID(cEnvironment, "getExternalStoragePublicDirectory", "(Ljava/lang/String;)Ljava/io/File;");
+      oExternalStorageDirectory = env->CallStaticObjectMethod(cEnvironment, midEnvironmentGetExternalStoragePublicDirectory, sType);
+      env->DeleteLocalRef(sType);
+    }
+
+    if (oExternalStorageDirectory != NULL)
+    {
+      // path = oExternalStorageDirectory.getAbsolutePath();
+      jclass cFile = env->GetObjectClass(oExternalStorageDirectory);
+      jmethodID midFileGetAbsolutePath = env->GetMethodID(cFile, "getAbsolutePath", "()Ljava/lang/String;");
+      env->DeleteLocalRef(cFile);
+      jstring sPath = (jstring)env->CallObjectMethod(oExternalStorageDirectory, midFileGetAbsolutePath);
+      const char* cPath = env->GetStringUTFChars(sPath, NULL);
+      path = cPath;
+      env->ReleaseStringUTFChars(sPath, cPath);
+      env->DeleteLocalRef(sPath);
+      env->DeleteLocalRef(oExternalStorageDirectory);
+    }
+    else
+      mounted = false;
+  }
+
+  env->DeleteLocalRef(cEnvironment);
+
+  return mounted && !path.empty();
+}
+
+bool CXBMCApp::GetStorageUsage(const std::string &path, std::string &usage)
+{
+  if (path.empty())
+  {
+    ostringstream fmt;
+    fmt.width(24);  fmt << left  << "Filesystem";
+    fmt.width(12);  fmt << right << "Size";
+    fmt.width(12);  fmt << "Used";
+    fmt.width(12);  fmt << "Avail";
+    fmt.width(12);  fmt << "Use %";
+    
+    usage = fmt.str();
+    return false;
+  }
+
+  JNIEnv *env = NULL;
+  m_activity->vm->AttachCurrentThread(&env, NULL);
+  
+  // android.os.StatFs oStats = new android.os.StatFs(sPath);
+  jclass cStatFs = env->FindClass("android/os/StatFs");
+  jmethodID midStatFsCtor = env->GetMethodID(cStatFs, "<init>", "(Ljava/lang/String;)V");
+  jstring sPath = env->NewStringUTF(path.c_str());
+  jobject oStats = env->NewObject(cStatFs, midStatFsCtor, sPath);
+  env->DeleteLocalRef(sPath);
+
+  // int iBlockSize = oStats.getBlockSize();
+  jmethodID midStatFsGetBlockSize = env->GetMethodID(cStatFs, "getBlockSize", "()I");
+  jint iBlockSize = env->CallIntMethod(oStats, midStatFsGetBlockSize);
+  
+  // int iBlocksTotal = oStats.getBlockCount();
+  jmethodID midStatFsGetBlockCount = env->GetMethodID(cStatFs, "getBlockCount", "()I");
+  jint iBlocksTotal = env->CallIntMethod(oStats, midStatFsGetBlockCount);
+  
+  // int iBlocksFree = oStats.getFreeBlocks();
+  jmethodID midStatFsGetFreeBlocks = env->GetMethodID(cStatFs, "getFreeBlocks", "()I");
+  jint iBlocksFree = env->CallIntMethod(oStats, midStatFsGetFreeBlocks);
+
+  env->DeleteLocalRef(oStats);
+  env->DeleteLocalRef(cStatFs);
+  
+  if (iBlockSize <= 0 || iBlocksTotal <= 0 || iBlocksFree < 0)
+    return false;
+  
+  float totalSize = (float)iBlockSize * iBlocksTotal / GIGABYTES;
+  float freeSize = (float)iBlockSize * iBlocksFree / GIGABYTES;
+  float usedSize = totalSize - freeSize;
+
+  ostringstream fmt;
+  fmt << fixed;
+  fmt.precision(1);
+  fmt.width(24);  fmt << left  << path;
+  fmt.width(12);  fmt << right << totalSize << "G"; // size in GB
+  fmt.width(12);  fmt << usedSize << "G"; // used in GB
+  fmt.width(12);  fmt << freeSize << "G"; // free
+  fmt.precision(0);
+  fmt.width(12);  fmt << (usedSize / freeSize) << "%"; // percentage used
+  
+  usage = fmt.str();
+  return true;
 }
