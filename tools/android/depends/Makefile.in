@@ -12,7 +12,7 @@ SUBDIRS = \
 	libmodplug librtmp libxml2 yajl libmicrohttpd mysql libffi \
 	python26-native python26 samba alsa-lib libcdio afpfs-ng libshairport \
 	libplist libcec libbluray boost tinyxml dummy-libxbmc libsdl \
-        libsdl_image
+        libsdl_image rpl
 
 .PHONY: buildtools $(BUILDTOOLS) subdirs $(SUBDIRS) arm
 
@@ -24,26 +24,35 @@ release: armeabi-v7a x86
 gettext: libiconv ncurses
 libgcrypt: libgpg-error
 fontconfig: freetype2 expat libiconv
-libssh2: libgcrypt openssl
-curl: openssl libssh2
+libssh2: libgcrypt openssl rpl
+curl: openssl libssh2 rpl
 tiff: libjpeg-turbo
 jasper: libjpeg-turbo
-libvorbis: libogg
-libflac: libogg gettext
-libass: fontconfig libpng freetype2 expat libiconv
-librtmp: openssl
+libvorbis: libogg rpl
+libflac: libogg gettext rpl
+libass: fontconfig libpng freetype2 expat libiconv rpl
+librtmp: openssl rpl
 libxml2: libiconv
 libmicrohttpd: openssl libgpg-error libgcrypt
 python26: python26-native expat gettext libxml2 sqlite3 openssl libffi
 libcdio: libiconv
-afpfs-ng: libgcrypt readline libiconv
-libshairport: openssl
+afpfs-ng: libgcrypt readline libiconv rpl
+libshairport: openssl rpl
 libplist: libxml2 cmake
-libbluray: libiconv libxml2
+libbluray: libiconv libxml2 rpl
 yajl: cmake
 libsdl_image: buildtools libsdl
 python26-native: buildtools
 libsdl: buildtools
+alsa-lib: rpl
+libcec: rpl
+libid3tag: rpl
+libmad: rpl
+libmodplug: rpl
+libmpeg2: rpl
+libogg: rpl
+rpl: python26-native
+
 
 X86OVERRIDES=XBMC_OVERRIDE_HOST=i686-android-linux XBMC_OVERRIDE_TOOLCHAIN=$(XBMC_X86_TOOLCHAIN)
 ARMOVERRIDES=XBMC_OVERRIDE_HOST=arm-linux-androideabi XBMC_OVERRIDE_TOOLCHAIN=$(XBMC_ARM_TOOLCHAIN)
