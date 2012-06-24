@@ -41,8 +41,9 @@ libshairport: openssl
 libplist: libxml2 cmake
 libbluray: libiconv libxml2
 yajl: cmake
-libsdl_image: libsdl
+libsdl_image: buildtools libsdl
 python26-native: buildtools
+libsdl: buildtools
 
 X86OVERRIDES=XBMC_OVERRIDE_HOST=i686-android-linux XBMC_OVERRIDE_TOOLCHAIN=$(XBMC_X86_TOOLCHAIN)
 ARMOVERRIDES=XBMC_OVERRIDE_HOST=arm-linux-androideabi XBMC_OVERRIDE_TOOLCHAIN=$(XBMC_ARM_TOOLCHAIN)
