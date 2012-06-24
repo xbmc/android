@@ -10,9 +10,9 @@ ARCHIVE=$(SOURCE).tar.gz
 
 # configuration settings
 CONFIGURE=./configure --prefix=$(PREFIX) \
-  --without-x --disable-video-x11 --disable-shared --disable-video-directfb
+  --without-x --disable-video-x11 --disable-video-directfb
 
-LIBDYLIB=$(PLATFORM)/build/.libs/lib$(LIBNAME).a
+LIBDYLIB=$(PLATFORM)/build/.libs/lib$(LIBNAME).so
 
 all: .installed-$(PLATFORM)
 
