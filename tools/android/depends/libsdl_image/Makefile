@@ -10,10 +10,9 @@ ARCHIVE=$(SOURCE).tar.gz
 
 # configuration settings
 CONFIGURE=./configure --prefix=$(PREFIX) \
-   --disable-jpg-shared --disable-png-shared --disable-tif-shared --disable-sdltest \
-   --disable-shared --enable-static
+   --disable-jpg-shared --disable-png-shared --disable-tif-shared --disable-sdltest
 
-LIBDYLIB=$(PLATFORM)/.libs/lib$(LIBNAME).a
+LIBDYLIB=$(PLATFORM)/.libs/lib$(LIBNAME).so
 
 all: .installed-$(PLATFORM)
 
