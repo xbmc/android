@@ -12,6 +12,13 @@ SOURCE=$(LIBNAME)-$(VERSION)
 ARCHIVE=$(SOURCE).tar.gz
 
 # configuration settings
+# android does not really support LFS but we can force it
+# in libsmbclient by defining off_t to off64_t and changing
+# libsmbclient.h to match. Defining _OFF_T_DEFINED_ allows
+# us to change the typedef of off_t in android's sys/type.h.
+# Then xbmc will correctly access smb shares with LFS enabled
+# using the altered libsmbclient.h.
+export CFLAGS+=-D_FILE_OFFSET_BITS=64 -D_OFF_T_DEFINED_ -Doff_t=off64_t -Dlseek=lseek64
 CONFIGURE= cp -f $(CONFIG_SUB) $(CONFIG_GUESS) .; \
           ./configure --prefix=$(PREFIX) --host=$(HOST) \
         SMB_BUILD_CC_NEGATIVE_ENUM_VALUES=yes \
@@ -76,6 +83,7 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE) $(DEPS)
 	cd $(PLATFORM); patch -p1 < ../samba30-3.0.37-vfs_default.c.patch
 	cd $(PLATFORM); patch -p1 < ../samba30-3.0.37-wle-fix.patch
 	cd $(PLATFORM); patch -p0 < ../samba_android.patch
+	sed -ie "s|off_t|off64_t|g" "$(PLATFORM)/source/include/libsmbclient.h"
 	cd $(PLATFORM)/source && ./autogen.sh
 	cd $(PLATFORM)/source; $(CONFIGURE)
 
