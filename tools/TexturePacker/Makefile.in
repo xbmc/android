@@ -42,7 +42,7 @@ all: $(TARGET)
 ifeq (@USE_TEXTUREPACKER_NATIVE@,1)
 # TexturePacker run native on build system, build it with native tools
 $(TARGET): $(SRCS)
-	g++ $(DEFINES) $(NATIVE_ARCH) $(CXXFLAGS) $(SRCS) $(LIBS) -o $(TARGET)
+	g++ $(DEFINES) $(NATIVE_ARCH) $(CXXFLAGS) $(SRCS) $(LIBS) -Wl,-rpath=$(NATIVE_ROOT_PATH)/lib -o $(TARGET)
 clean:
 	rm -f $(TARGET)
 else
