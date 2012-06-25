@@ -2,7 +2,7 @@ include ../depends/Makefile.include
 
 OBJS = libcurl.so \
   librtmp.so  libmad.so \
-  libnfs.so libafpclient.so  \
+  libafpclient.so  \
   libshairport.so libplist.so \
 
 XBMCROOT = $(CURDIR)/../../..
