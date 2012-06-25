@@ -23,7 +23,7 @@ $(LIBDYLIB): $(TARBALLS_LOCATION)/$(ARCHIVE) $(DEPS)
 	rm -rf $(PLATFORM)/*; mkdir -p $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); $(CONFIGURE)
-	cd $(PLATFORM); $(MAKE) libpython2.6.a
+	cd $(PLATFORM); make libpython2.6.a
 	cd $(PLATFORM); ranlib libpython2.6.a
 	cd $(PLATFORM); make python Parser/pgen
 
