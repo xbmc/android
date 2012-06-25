@@ -626,7 +626,7 @@ bool CXBMCApp::getWakeLock()
 
     jobject activity = m_activity->clazz;
     jclass activityClass = env->GetObjectClass(activity);
-    jstring jXbmcPackage = env->NewStringUTF("org.xbmc");
+    jstring jXbmcPackage = env->NewStringUTF("org.xbmc.xbmc");
 
     // get the wake lock
     jmethodID midGetSystemService = env->GetMethodID(activityClass, "getSystemService", "(Ljava/lang/String;)Ljava/lang/Object;");
