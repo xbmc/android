@@ -8,6 +8,7 @@ OBJS = libcurl.so \
 XBMCROOT = $(CURDIR)/../../..
 COPYDIRS = system addons language media
 AAPT = $(SDKROOT)/platform-tools/aapt
+GCC_VERSION=$(shell $(CC) -dumpversion)
 all: debug
 
 debug: prepare
@@ -22,18 +23,20 @@ debug: prepare
 	@echo "images/xbmcapp-debug.apk created"
 
 prepare:
-	rm -rf xbmc/assets xbmc/lib tmp
-	mkdir -p xbmc/assets xbmc/res xbmc/lib/$(PLATFORM) images xbmc/assets/python2.6/lib/
-	$(foreach var,$(OBJS),$(STRIP) --strip-unneeded $(PREFIX)/lib/$(var) -o xbmc/lib/$(PLATFORM)/`echo $(var) | sed -e 's/\.so.*/\.so/g'`;)
-	$(STRIP) --strip-unneeded $(XBMCROOT)/libxbmc.so -o xbmc/lib/$(PLATFORM)/libxbmc.so
+	rm -rf xbmc/assets xbmc/lib xbmc/libs xbmc/obj tmp
+	mkdir -p xbmc/assets xbmc/res xbmc/lib/$(PLATFORM) images xbmc/assets/python2.6/lib/ xbmc/libs/$(PLATFORM) xbmc/obj/local/$(PLATFORM)
+	 $(foreach var,$(OBJS),cp -fp $(PREFIX)/lib/$(var) xbmc/obj/local/$(PLATFORM)/;)
+	cp -fp $(XBMCROOT)/libxbmc.so xbmc/obj/local/$(PLATFORM)/
 	$(foreach var,$(COPYDIRS), cp -rfp ../../../$(var) ./xbmc/assets/;)
 	cp -rfp $(PREFIX)/lib/python2.6 xbmc/assets/python2.6/lib/
 	cd xbmc/assets/python2.6/lib/python2.6/; rm -rf test config lib-dynload
-	find xbmc/assets/system -name "*.so" -exec mv {} xbmc/lib/$(PLATFORM) \;
+	find xbmc/assets/system -name "*.so" -exec mv {} xbmc/obj/local/$(PLATFORM)/ \;
+	cd xbmc/obj/local/$(PLATFORM)/; find . -name "*.so" -not -name "lib*.so" | sed "s/\.\///" | xargs -I@ mv @ lib@
+	cp -fp xbmc/obj/local/$(PLATFORM)/*.so xbmc/lib/$(PLATFORM)/
 	$(STRIP) --strip-unneeded xbmc/lib/$(PLATFORM)/*.so
-	cd xbmc/lib/$(PLATFORM); find . -name "*.so" -not -name "lib*.so" | sed "s/\.\///" | xargs -I@ mv @ lib@
 	find `pwd`/xbmc/assets/addons/skin.*/media/* -not -iname "Textures.xbt" -exec rm {} \;
-	install -p $(NDKROOT)/toolchains/arm-linux-androideabi-4.4.3/prebuilt/gdbserver ./xbmc/lib/$(PLATFORM)/gdbserver
-	echo "set solib-search-path ./obj/local/$(PLATFORM):$(PREFIX)/lib:$(XBMCROOT):$(XBMCROOT)/xbmc/android/activity" > ./xbmc/lib/$(PLATFORM)/gdb.setup
-	echo "directory $(NDKROOT)/platforms/$(APP_PLATFORM)/arch-arm/usr/include $(NDKROOT)/sources/android/native_app_glue" \
-	     "$(NDKROOT)/sources/cxx-stl/gnu-libstdc++ $(XBMCROOT) $(XBMCROOT)/xbmc/android/activity $(PREFIX)/include jni" >> ./xbmc/lib/$(PLATFORM)/gdb.setup
+	install -p $(NDKROOT)/toolchains/$(HOST)-$(GCC_VERSION)/prebuilt/gdbserver ./xbmc/libs/$(PLATFORM)/gdbserver
+	echo "set solib-search-path ./obj/local/$(PLATFORM)" > ./xbmc/libs/$(PLATFORM)/gdb.setup
+	echo "directory $(TOOLCHAIN)/sysroot/usr/include $(NDKROOT)/sources/android/native_app_glue" \
+	     "$(NDKROOT)/sources/cxx-stl/gnu-libstdc++/include/$(GCC_VERSION) $(XBMCROOT)  $(PREFIX)/include jni" >> ./xbmc/libs/$(PLATFORM)/gdb.setup
+	cp -fp xbmc/libs/$(PLATFORM)/* xbmc/lib/$(PLATFORM)
