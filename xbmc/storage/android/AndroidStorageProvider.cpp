@@ -21,6 +21,7 @@
 #include "AndroidStorageProvider.h"
 #include "android/activity/XBMCApp.h"
 #include "guilib/LocalizeStrings.h"
+#include "filesystem/File.h"
 
 //#include "utils/RegExp.h"
 //#include "utils/StdString.h"
@@ -32,7 +33,7 @@ void CAndroidStorageProvider::GetLocalDrives(VECSOURCES &localDrives)
 
   // external directory
   std::string path;
-  if (CXBMCApp::GetExternalStorage(path) && !path.empty())
+  if (CXBMCApp::GetExternalStorage(path) && !path.empty()  && XFILE::CFile::Exists(path))
   {
     share.strPath = path;
     share.strName = g_localizeStrings.Get(21456);
