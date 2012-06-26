@@ -83,5 +83,5 @@ bool CAndroidStorageProvider::Eject(CStdString mountpath)
 
 bool CAndroidStorageProvider::PumpDriveChangeEvents(IStorageEventsCallback *callback)
 {
-  return true;
+  return false;
 }
