@@ -191,7 +191,6 @@ void* xb_dlopen_internal(const char * path, solib *lib)
   string deppath;
   void *handle;
 
-  CSingleLock lock(xb_CritSection);
 
   deps.clear();
 
@@ -225,7 +224,6 @@ void* xb_dlopen(const char * path)
   solib *lib;
   void *handle;
 
-  CSingleLock lock(xb_CritSection);
   lib = findinlibs(getfilename(path));
   if (lib)
   {
@@ -252,7 +250,6 @@ void* xb_dlopen(const char * path)
 
 int xb_dlclose(void* handle)
 {
-  CSingleLock lock(xb_CritSection);
   for (loaded::iterator i = m_xblibs.begin(); i != m_xblibs.end(); i++)
   {
     if (i->handle == handle)
