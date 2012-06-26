@@ -9,6 +9,16 @@ XBMCROOT = $(CURDIR)/../../..
 COPYDIRS = system addons language media
 AAPT = $(SDKROOT)/platform-tools/aapt
 GCC_VERSION=$(shell $(CC) -dumpversion)
+
+#this fixes a android ndk fuckup where the pathes to 
+#prebuilt stuff follow different name shemes for
+#arm and x86
+ifeq ($(findstring x86,$(PLATFORM)),x86)
+GDBPATH=$(NDKROOT)/toolchains/$(PLATFORM)-$(GCC_VERSION)/prebuilt/gdbserver
+else
+GDBPATH=$(NDKROOT)/toolchains/$(HOST)-$(GCC_VERSION)/prebuilt/gdbserver
+endif
+
 all: debug
 
 debug: prepare
@@ -35,7 +45,7 @@ prepare:
 	cp -fp xbmc/obj/local/$(PLATFORM)/*.so xbmc/lib/$(PLATFORM)/
 	$(STRIP) --strip-unneeded xbmc/lib/$(PLATFORM)/*.so
 	find `pwd`/xbmc/assets/addons/skin.*/media/* -not -iname "Textures.xbt" -exec rm {} \;
-	install -p $(NDKROOT)/toolchains/$(HOST)-$(GCC_VERSION)/prebuilt/gdbserver ./xbmc/libs/$(PLATFORM)/gdbserver
+	install -p $(GDBPATH) ./xbmc/libs/$(PLATFORM)/gdbserver
 	echo "set solib-search-path ./obj/local/$(PLATFORM)" > ./xbmc/libs/$(PLATFORM)/gdb.setup
 	echo "directory $(TOOLCHAIN)/sysroot/usr/include $(NDKROOT)/sources/android/native_app_glue" \
 	     "$(NDKROOT)/sources/cxx-stl/gnu-libstdc++/include/$(GCC_VERSION) $(XBMCROOT)  $(PREFIX)/include jni" >> ./xbmc/libs/$(PLATFORM)/gdb.setup
