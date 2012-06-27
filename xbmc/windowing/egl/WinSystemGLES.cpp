@@ -274,4 +274,14 @@ bool CWinSystemGLES::Show(bool raise)
   return m_eglplatform->ShowWindow(true);
 }
 
+EGLDisplay CWinSystemGLES::GetEGLDisplay()
+{
+  return m_eglplatform->GetEGLDisplay();
+}
+
+EGLContext CWinSystemGLES::GetEGLContext()
+{
+  return m_eglplatform->GetEGLContext();
+}
+
 #endif

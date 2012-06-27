@@ -356,4 +356,14 @@ EGLNativeWindowType CWinEGLPlatformGeneric::getNativeWindow()
   return 0;
 }
 
+EGLDisplay CWinEGLPlatformGeneric::GetEGLDisplay()
+{
+  return m_display;
+}
+
+EGLContext CWinEGLPlatformGeneric::GetEGLContext()
+{
+  return m_context;
+}
+
 #endif
