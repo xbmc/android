@@ -54,6 +54,9 @@ public:
   virtual bool  Hide();
   virtual bool  Show(bool raise = true);
 
+  EGLDisplay    GetEGLDisplay();
+  EGLContext    GetEGLContext();
+
 protected:
   virtual bool  PresentRenderImpl(const CDirtyRegionList &dirty);
   virtual void  SetVSyncImpl(bool enable);
