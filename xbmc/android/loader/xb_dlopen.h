@@ -26,12 +26,20 @@
 
 typedef std::vector<std::string> strings;
 typedef std::vector<void *> handles;
+
+struct solibdep
+{
+  void* handle;
+  std::string filename;
+};
+typedef std::vector<solibdep> solibdeps;
+
 struct solib
 {
   std::string filename;
   void* handle;
   int refcount;
-  handles dephandles;
+  solibdeps deps;
 };
 
 typedef std::vector<solib> loaded;

@@ -58,6 +58,16 @@ string getXBpath(const string &path)
   return getdirname(path) + "/" + getXBfilename(path);
 }
 
+void* finddephandle(solib *lib, const string &filename)
+{
+  for (solibdeps::iterator i = lib->deps.begin(); i != lib->deps.end(); i++)
+  {
+    if (i->filename == filename)
+      return i->handle;
+  }
+  return NULL;
+}
+
 string finddep(const string &filename, const string &extrapath)
 {
   struct stat st;
@@ -203,6 +213,9 @@ void* xb_dlopen_internal(const char * path, solib *lib)
     if (findinlibs(*j) != NULL)
       continue;
 
+    if (finddephandle(lib, getfilename(path)) != NULL)
+      continue;
+
     deppath = finddep(*j, getdirname(path));
 
     // Recurse for each needed lib
@@ -214,8 +227,10 @@ void* xb_dlopen_internal(const char * path, solib *lib)
   if (handle == NULL)
     CXBMCApp::android_printf("xb_dlopen: Error from dlopen(%s): %s", path, dlerror());
 
-  lib->dephandles.push_back(handle);
-
+  solibdep dep;
+  dep.handle = handle;
+  dep.filename = getfilename(path);
+  lib->deps.push_back(dep);
   return handle;
 }
 
@@ -256,9 +271,9 @@ int xb_dlclose(void* handle)
     {
       if (--(i->refcount) > 0 )
         return 0;
-      for (handles::iterator j = i->dephandles.begin(); j != i->dephandles.end(); j++)
+      for (solibdeps::iterator j = i->deps.begin(); j != i->deps.end(); j++)
       {
-        if (dlclose(*j))
+        if (dlclose(j->handle))
         {
           CXBMCApp::android_printf("could not close dep for: %s\n", i->filename.c_str());
           return 1;
