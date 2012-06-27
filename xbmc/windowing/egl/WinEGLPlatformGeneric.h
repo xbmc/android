@@ -51,6 +51,9 @@ public:
   virtual bool SetVSync(bool enable);
   virtual bool IsExtSupported(const char* extension);
 
+  virtual EGLDisplay GetEGLDisplay();
+  virtual EGLContext GetEGLContext();
+
 protected:
   virtual EGLNativeWindowType getNativeWindow();
 
