@@ -12,25 +12,23 @@ HOSTPYTHONDIR=$(CWD)/$(PLATFORM)/hostpython
 
 CONFIGURE=./configure --prefix=$(PREFIX) --disable-shared --disable-toolbox-glue --disable-framework
 
-LIBDYLIB=$(PLATFORM)/libpython2.6.a
+LIBDYLIB=$(PLATFORM)/python
 
 all: .installed-$(PLATFORM)
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
 
-$(LIBDYLIB): $(TARBALLS_LOCATION)/$(ARCHIVE) $(DEPS)
+$(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE) $(DEPS)
 	rm -rf $(PLATFORM)/*; mkdir -p $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); $(CONFIGURE)
-	cd $(PLATFORM); make libpython2.6.a
-	cd $(PLATFORM); ranlib libpython2.6.a
-	cd $(PLATFORM); make python Parser/pgen
+
+$(LIBDYLIB): $(PLATFORM)
+	cd $(PLATFORM); $(MAKE)
 
 .installed-$(PLATFORM): $(LIBDYLIB)
-	#
 	cd $(PLATFORM); make install
-	cd $(PLATFORM); cp Parser/pgen $(PREFIX)/bin
 	touch $@
 
 clean:
