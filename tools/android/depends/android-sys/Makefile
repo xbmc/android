@@ -12,13 +12,10 @@ PRIVATE_LIBS+=$(PRIVATE_LIBDIR)/libmedia.so
 PRIVATE_LIBS+=$(PRIVATE_LIBDIR)/libbinder.so
 PRIVATE_LIBS+=$(PRIVATE_LIBDIR)/libstagefright.so
 
-LDFLAGS  =-nostdlib -Wl,-soname,$(notdir $@) -Wl,--gc-sections -Wl,-shared,-Bsymbolic -lc -lm -lstdc++
-LDFLAGS += -L$(PRIVATE_LIBDIR) -lstagefright -lmedia -lutils -lbinder -llog -landroid
-CXXFLAGS =$(PLATFORM_FLAGS) -I$(PREFIX)/include
-INCLUDES+=-I$(PLATFORM)/android-10/system/core/include
-INCLUDES+=-I$(PLATFORM)/android-10/frameworks/base/include
-INCLUDES+=-I$(PLATFORM)/android-10/frameworks/base/include/media/stagefright/openmax
-
+LDFLAGS += -L$(PRIVATE_LIBDIR)/ -lstagefright -lmedia -lutils -lbinder
+INCLUDES+=-I$(PLATFORM)/$(SDK_PLATFORM)/system/core/include
+INCLUDES+=-I$(PLATFORM)/$(SDK_PLATFORM)/frameworks/base/include
+INCLUDES+=-I$(PLATFORM)/$(SDK_PLATFORM)/frameworks/base/include/media/stagefright/openmax
 
 all: .installed-$(PLATFORM)
 
@@ -29,22 +26,27 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE) $(DEPS)
 	rm -rf $(PLATFORM)/*; mkdir -p $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
 
-$(PRIVATE_LIBDIR)/%.c: $(PRIVATE_LIBDIR)/%.symbols
+$(PRIVATE_LIBS:.so=.symbols): $(PLATFORM)
+
+$(PRIVATE_LIBS:.so=.c): $(PRIVATE_LIBS:.so=.symbols)
 	rm -f $@
-	for s in `cat $<`; do echo "void $$s() {}" >> $@; done
+	for s in `cat $(@:.c=.symbols)`; do echo "void $$s() {}" >> $@; done
 
-$(PRIVATE_LIBDIR)/%.so: $(PRIVATE_LIBDIR)/%.c
-	$(CC) $< -shared -o $@ --sysroot=$(SYSROOT)
+$(PRIVATE_LIBS): $(PRIVATE_LIBS:.so=.c)
+	$(CC) $(@:.so=.c) -shared -o $@
 
-$(PLATFORM)/libiomx.so: $(PRIVATE_LIBS) iomx.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ iomx.cpp $(LDFLAGS)
-	cp -f $@ $(PREFIX)/lib/
+$(PLATFORM)/$(SDK_PLATFORM)/libiomx.so: $(PRIVATE_LIBS) iomx.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -shared -o $@ iomx.cpp $(LDFLAGS)
 
-.installed-$(PLATFORM): $(PLATFORM) $(PLATFORM)/libiomx.so
+.installed-$(PLATFORM): $(PLATFORM)/$(SDK_PLATFORM)/libiomx.so
+	mkdir -p $(PREFIX)/include/$(SDK_PLATFORM)
+	mkdir -p $(PREFIX)/lib/$(SDK_PLATFORM)
+	cp -f $(PLATFORM)/$(SDK_PLATFORM)/libiomx.so $(PREFIX)/lib/$(SDK_PLATFORM)
+	cp -f $(PLATFORM)/$(SDK_PLATFORM)/frameworks/base/include/media/stagefright/openmax/* $(PREFIX)/include/$(SDK_PLATFORM)
 	touch $@
 
 clean:
-	rm -f .installed-$(PLATFORM) $(PLATFORM)/libiomx.so
+	rm -f .installed-$(PLATFORM) $(PLATFORM)/libiomx.so $(PRIVATE_LIBS) $(PRIVATE_LIBS:.so=.c)
 
-distclean:: clean
-	rm -rf $(PLATFORM) $(PRIVATE_LIBDIR) .installed-$(PLATFORM)
+distclean::
+	rm -rf $(PLATFORM) .installed-$(PLATFORM)
