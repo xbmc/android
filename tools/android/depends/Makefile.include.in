@@ -6,6 +6,7 @@ TARBALLS_LOCATION=@use_tarballs@
 HOST=@use_host@
 PLATFORM=@use_cpu@
 NATIVEPLATFORM=@use_cpu@-native
+SDK_PLATFORM=@use_sdk_platform@
 
 ifneq ($(XBMC_OVERRIDE_TOOLCHAIN),)
 TOOLCHAIN=$(XBMC_OVERRIDE_TOOLCHAIN)
@@ -55,10 +56,10 @@ ifneq ($(NATIVE_BUILD),1)
   export RANLIB=$(CROSSTOOLS)ranlib
   export OBJDUMP=$(CROSSTOOLS)objdump
   export READELF=$(CROSSTOOLS)readelf
-  export CFLAGS=$(PLATFORM_FLAGS) -I$(PREFIX)/include -fexceptions
-  export LDFLAGS=$(PLATFORM_FLAGS) -L$(PREFIX)/lib
-  export CPPFLAGS=$(PLATFORM_FLAGS) -I$(PREFIX)/include -fexceptions
-  export CXXFLAGS=$(PLATFORM_FLAGS) -I$(PREFIX)/include -fexceptions -frtti
+  export CFLAGS=$(PLATFORM_FLAGS) -I$(PREFIX)/include -I$(PREFIX)/include/$(SDK_PLATFORM) -fexceptions
+  export LDFLAGS=$(PLATFORM_FLAGS) -L$(PREFIX)/lib -L$(PREFIX)/include/$(SDK_PLATFORM)
+  export CPPFLAGS=$(PLATFORM_FLAGS) -I$(PREFIX)/include -I$(PREFIX)/include/$(SDK_PLATFORM) -fexceptions
+  export CXXFLAGS=$(PLATFORM_FLAGS) -I$(PREFIX)/include -I$(PREFIX)/include/$(SDK_PLATFORM) -fexceptions -frtti
 
   export PKG_CONFIG_PATH=$(PREFIX)/lib/pkgconfig
   export PKG_CONFIG=$(NATIVEPREFIX)/bin/pkg-config
