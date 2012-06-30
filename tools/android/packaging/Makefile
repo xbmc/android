@@ -5,6 +5,8 @@ OBJS = libcurl.so \
   libafpclient.so  \
   libshairport.so libplist.so \
 
+PLATFORM_OBJS = libiomx.so
+
 XBMCROOT = $(CURDIR)/../../..
 COPYDIRS = system addons language media
 AAPT = $(SDKROOT)/platform-tools/aapt
@@ -36,6 +38,7 @@ prepare:
 	rm -rf xbmc/assets xbmc/lib xbmc/libs xbmc/obj tmp
 	mkdir -p xbmc/assets xbmc/res xbmc/lib/$(PLATFORM) images xbmc/assets/python2.6/lib/ xbmc/libs/$(PLATFORM) xbmc/obj/local/$(PLATFORM)
 	 $(foreach var,$(OBJS),cp -fp $(PREFIX)/lib/$(var) xbmc/obj/local/$(PLATFORM)/;)
+	$(foreach var,$(PLATFORM_OBJS),cp -fp $(PREFIX)/lib/$(SDK_PLATFORM)/$(var) xbmc/obj/local/$(PLATFORM)/;)
 	cp -fp $(XBMCROOT)/libxbmc.so xbmc/obj/local/$(PLATFORM)/
 	$(foreach var,$(COPYDIRS), cp -rfp ../../../$(var) ./xbmc/assets/;)
 	cp -rfp $(PREFIX)/lib/python2.6 xbmc/assets/python2.6/lib/
