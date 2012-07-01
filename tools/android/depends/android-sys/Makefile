@@ -48,7 +48,7 @@ $(PLATFORM)/$(SDK_PLATFORM)/libaudiotrack_wrapper.so: libaudiotrack_wrapper.cpp 
 	mkdir -p $(PREFIX)/lib/$(SDK_PLATFORM)
 	cp -f $(PLATFORM)/$(SDK_PLATFORM)/libiomx.so $(PREFIX)/lib/$(SDK_PLATFORM)/
 	cp -f $(PLATFORM)/$(SDK_PLATFORM)/frameworks/base/include/media/stagefright/openmax/* $(PREFIX)/include/$(SDK_PLATFORM)/
-	cp -f $(PLATFORM)/$(SDK_PLATFORM)/libaudiotrack_wrapper.so $(PREFIX)/lib/
+	cp -f $(PLATFORM)/$(SDK_PLATFORM)/libaudiotrack_wrapper.so $(PREFIX)/lib/$(SDK_PLATFORM)/
 	cp -f libaudiotrack_wrapper.h $(PREFIX)/include/$(SDK_PLATFORM)/
 	touch $@
 
