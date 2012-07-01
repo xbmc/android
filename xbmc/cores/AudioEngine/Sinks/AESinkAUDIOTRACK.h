@@ -59,6 +59,7 @@ private:
   AERingBuffer      *m_buffer;
   bool               m_started;
   bool               m_draining;
+  double             m_SecondsPerByte;
 
 };
 
