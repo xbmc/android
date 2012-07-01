@@ -57,7 +57,7 @@ ifneq ($(NATIVE_BUILD),1)
   export OBJDUMP=$(CROSSTOOLS)objdump
   export READELF=$(CROSSTOOLS)readelf
   export CFLAGS=$(PLATFORM_FLAGS) -I$(PREFIX)/include -I$(PREFIX)/include/$(SDK_PLATFORM) -fexceptions
-  export LDFLAGS=$(PLATFORM_FLAGS) -L$(PREFIX)/lib -L$(PREFIX)/include/$(SDK_PLATFORM)
+  export LDFLAGS=$(PLATFORM_FLAGS) -L$(PREFIX)/lib -L$(PREFIX)/lib/$(SDK_PLATFORM)
   export CPPFLAGS=$(PLATFORM_FLAGS) -I$(PREFIX)/include -I$(PREFIX)/include/$(SDK_PLATFORM) -fexceptions
   export CXXFLAGS=$(PLATFORM_FLAGS) -I$(PREFIX)/include -I$(PREFIX)/include/$(SDK_PLATFORM) -fexceptions -frtti
 
