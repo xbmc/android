@@ -31,6 +31,9 @@
   #if defined(HAS_ALSA)
     #include "Sinks/AESinkALSA.h"
   #endif
+  #if defined(TARGET_ANDROID)
+    #include "Sinks/AESinkAUDIOTRACK.h"
+  #endif
   #include "Sinks/AESinkOSS.h"
 #else
   #pragma message("NOTICE: No audio sink for target platform.  Audio output will not be available.")
@@ -51,6 +54,9 @@ void CAESinkFactory::ParseDevice(std::string &device, std::string &driver)
 #if defined(TARGET_LINUX) || defined(TARGET_FREEBSD)
   #if defined(HAS_ALSA)
         driver == "ALSA"        ||
+  #endif
+  #if defined(TARGET_ANDROID)
+        //driver == "AUDIOTRACK" ||
   #endif
         driver == "OSS"         ||
 #elif defined(TARGET_WINDOWS)
@@ -111,6 +117,11 @@ IAESink *CAESinkFactory::Create(std::string &device, AEAudioFormat &desiredForma
   if (driver.empty() || driver == "ALSA")
     TRY_SINK(ALSA)
   #endif
+  #if defined(TARGET_ANDROID)
+  //if (driver.empty() || driver == "AUDIOTRACK")
+  //  TRY_SINK(AUDIOTRACK)
+  #endif
+
   if (driver.empty() || driver == "OSS")
     TRY_SINK(OSS)
 
@@ -151,6 +162,10 @@ void CAESinkFactory::EnumerateEx(AESinkInfoList &list)
 
 #if defined(HAS_ALSA)
   ENUMERATE_SINK(ALSA);
+#endif
+
+#if defined(TARGET_ANDROID)
+  //ENUMERATE_SINK(AUDIOTRACK);
 #endif
 
 #if defined(TARGET_LINUX) || defined(TARGET_FREEBSD)
