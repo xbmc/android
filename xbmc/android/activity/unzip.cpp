@@ -80,10 +80,10 @@ int extract_to_cache(const char *archive, const char *cache_path)
   struct zip_stat zipstat;
   char buf[4096];
   int err;
-  int i, len;
+  int len;
   int fd;
   int dirname_len;
-  long long sum;
+  uint64_t sum;
   char *full_path;
   char *dir_name;
   Stat localfile;
@@ -99,7 +99,7 @@ int extract_to_cache(const char *archive, const char *cache_path)
 
   mkpath(cache_path);
 
-  for (i = 0; i < zip_get_num_entries(ziparchive, 0); i++)
+  for (size_t i = 0; i < zip_get_num_entries(ziparchive, 0); i++)
   {
     if (zip_stat_index(ziparchive, i, 0, &zipstat) != 0)
     {
@@ -142,7 +142,8 @@ int extract_to_cache(const char *archive, const char *cache_path)
       mkpath(dir_name);
       free(dir_name);
     }
-    else if (localfile.st_mtime == zipstat.mtime)
+    // watch this compare, zipstat.mtime is time_t which is a signed long
+    else if (localfile.st_mtime == (unsigned long)zipstat.mtime)
     {
       free(full_path);
       continue;
