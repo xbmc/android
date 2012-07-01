@@ -24,6 +24,9 @@ SRCS += Sinks/AESinkALSA.cpp
 SRCS += Sinks/AESinkOSS.cpp
 SRCS += Sinks/AESinkProfiler.cpp
 SRCS += Sinks/AESinkNULL.cpp
+ifeq (@USE_ANDROID@,1)
+SRCS += Sinks/AESinkAUDIOTRACK.cpp
+endif
 
 SRCS += Utils/AEChannelInfo.cpp
 SRCS += Utils/AEBuffer.cpp
