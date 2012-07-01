@@ -144,26 +144,50 @@ bool CAESinkAUDIOTRACK::Initialize(AEAudioFormat &format, std::string &device)
 void CAESinkAUDIOTRACK::Deinitialize()
 {
   CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::Deinitialize");
-  m_dll->ATW_stop(m_ATWrapper);
+  m_dll->ATW_stop(m_ATWrapper), m_started = false;
   m_dll->ATW_release(m_ATWrapper), m_ATWrapper = NULL;
-  m_draining = false;
   delete m_buffer, m_buffer = NULL;
 }
 
 bool CAESinkAUDIOTRACK::IsCompatible(const AEAudioFormat format, const std::string device)
 {
+  AEAudioFormat in_format = format;
   CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::IsCompatible");
-  return ((m_format.m_sampleRate     == format.m_sampleRate) &&
-          (m_format.m_dataFormat     == format.m_dataFormat) &&
-          (m_format.m_channelLayout  == format.m_channelLayout));
+  CLog::Log(LOGDEBUG, "  is Output Device : %s", device.c_str());
+  CLog::Log(LOGDEBUG, "  is Sample Rate   : %d", m_format.m_sampleRate);
+  CLog::Log(LOGDEBUG, "  is Sample Format : %s", CAEUtil::DataFormatToStr(m_format.m_dataFormat));
+  CLog::Log(LOGDEBUG, "  is Channel Count : %d", m_format.m_channelLayout.Count());
+  CLog::Log(LOGDEBUG, "  is Channel Layout: %s", ((std::string)m_format.m_channelLayout).c_str());
+  CLog::Log(LOGDEBUG, "  is Frames        : %d", m_format.m_frames);
+  CLog::Log(LOGDEBUG, "  is Frame Samples : %d", m_format.m_frameSamples);
+  CLog::Log(LOGDEBUG, "  is Frame Size    : %d", m_format.m_frameSize);
+
+  CLog::Log(LOGDEBUG, "  in Output Device : %s", device.c_str());
+  CLog::Log(LOGDEBUG, "  in Sample Rate   : %d", in_format.m_sampleRate);
+  CLog::Log(LOGDEBUG, "  in Sample Format : %s", CAEUtil::DataFormatToStr(in_format.m_dataFormat));
+  CLog::Log(LOGDEBUG, "  in Channel Count : %d", in_format.m_channelLayout.Count());
+  CLog::Log(LOGDEBUG, "  is Channel Layout: %s", ((std::string)in_format.m_channelLayout).c_str());
+  CLog::Log(LOGDEBUG, "  in Frames        : %d", in_format.m_frames);
+  CLog::Log(LOGDEBUG, "  in Frame Samples : %d", in_format.m_frameSamples);
+  CLog::Log(LOGDEBUG, "  in Frame Size    : %d", in_format.m_frameSize);
+
+  return ((m_format.m_sampleRate    == format.m_sampleRate) &&
+          (m_format.m_dataFormat    == format.m_dataFormat) &&
+          (m_format.m_channelLayout == format.m_channelLayout));
+}
+
+void CAESinkAUDIOTRACK::Stop()
+{
+  m_dll->ATW_stop(m_ATWrapper), m_started = false;
 }
 
 double CAESinkAUDIOTRACK::GetDelay()
 {
+  float latency_sec = (double)m_dll->ATW_latency(m_ATWrapper) / 1000.0;
   // DVDAudio.cpp says, returns the time it takes to play a packet if we add one at this time
   // return the delay in seconds
-  float seconds_to_empty = (double)m_buffer->GetReadSize() / (double)m_format.m_sampleRate;
-  float latency_sec = (double)m_dll->ATW_latency(m_ATWrapper) / 1000.0;
+  float seconds_to_empty = (double)m_buffer->GetReadSize() / (double)m_format.m_frameSize;
+  seconds_to_empty /= (double)m_format.m_sampleRate;
   //CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::GetDelay, latency_sec(%f), buffer_sec(%f)",
   //  latency_sec, buffer_sec);
   return seconds_to_empty + latency_sec;
@@ -172,7 +196,8 @@ double CAESinkAUDIOTRACK::GetDelay()
 double CAESinkAUDIOTRACK::GetCacheTime()
 {
   // DVDAudio.cpp says, returns total amount of data cached in audio output at this time
-  float seconds_to_full = (double)m_buffer->GetWriteSize() / (double)m_format.m_sampleRate;
+  float seconds_to_full = (double)m_buffer->GetWriteSize() / (double)m_format.m_frameSize;
+  seconds_to_full /= (double)m_format.m_sampleRate;
   CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::GetCacheTime, seconds_to_full(%f)", seconds_to_full);
   return seconds_to_full;
 }
@@ -220,23 +245,19 @@ unsigned int CAESinkAUDIOTRACK::AddPackets(uint8_t *data, unsigned int frames)
   else
     m_buffer->Write(data, addbytes);
 
-    Sleep(frames/m_format.m_sampleRate);
   return frames;
 }
 
 void CAESinkAUDIOTRACK::Drain()
 {
   CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::Drain");
-  m_started = false;
   m_draining = true;
-  m_dll->ATW_stop( m_ATWrapper);
+  m_dll->ATW_stop( m_ATWrapper), m_started = false;
   m_dll->ATW_flush(m_ATWrapper);
-  //m_dll->ATW_start(m_ATWrapper);
 }
 
 void CAESinkAUDIOTRACK::EnumerateDevicesEx(AEDeviceInfoList &list)
 {
-  CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::EnumerateDevicesEx, entry");
   CAEDeviceInfo info;
 
   info.m_channels.Reset();
@@ -254,7 +275,6 @@ void CAESinkAUDIOTRACK::EnumerateDevicesEx(AEDeviceInfoList &list)
   info.m_dataFormats.push_back(AE_FMT_S16LE);
 
   list.push_back(info);
-  CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::EnumerateDevicesEx, exit");
 }
 
 int CAESinkAUDIOTRACK::AudioTrackCallback(void *ctx, void *buffer, size_t size)

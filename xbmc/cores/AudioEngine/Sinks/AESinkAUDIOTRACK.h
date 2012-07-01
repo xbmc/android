@@ -43,12 +43,12 @@ public:
   virtual void Deinitialize();
   virtual bool IsCompatible(const AEAudioFormat format, const std::string device);
 
+  virtual void         Stop            ();
   virtual double       GetDelay        ();
   virtual double       GetCacheTime    ();
   virtual double       GetCacheTotal   ();
   virtual unsigned int AddPackets      (uint8_t *data, unsigned int frames);
   virtual void         Drain           ();
-
   static void          EnumerateDevicesEx(AEDeviceInfoList &list);
 
   static int           AudioTrackCallback(void *ctx, void *buffer, size_t size);
