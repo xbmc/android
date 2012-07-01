@@ -1,5 +1,6 @@
 include ../Makefile.include
-DEPS= ../Makefile.include Makefile iomx.cpp
+DEPS = ../Makefile.include Makefile iomx.cpp
+DEPS+= libaudiotrack_wrapper.h libaudiotrack_wrapper.cpp
 
 LIBNAME=android-sys
 VERSION=0.1
@@ -12,9 +13,10 @@ PRIVATE_LIBS+=$(PRIVATE_LIBDIR)/libmedia.so
 PRIVATE_LIBS+=$(PRIVATE_LIBDIR)/libbinder.so
 PRIVATE_LIBS+=$(PRIVATE_LIBDIR)/libstagefright.so
 
-LDFLAGS += -L$(PRIVATE_LIBDIR)/ -lstagefright -lmedia -lutils -lbinder
+LDFLAGS += -L$(PRIVATE_LIBDIR) -lmedia -lutils -lbinder
 INCLUDES+=-I$(PLATFORM)/$(SDK_PLATFORM)/system/core/include
 INCLUDES+=-I$(PLATFORM)/$(SDK_PLATFORM)/frameworks/base/include
+INCLUDES+=-I$(PLATFORM)/android-10/frameworks/base/include/media
 INCLUDES+=-I$(PLATFORM)/$(SDK_PLATFORM)/frameworks/base/include/media/stagefright/openmax
 
 all: .installed-$(PLATFORM)
@@ -35,14 +37,19 @@ $(PRIVATE_LIBS:.so=.c): $(PRIVATE_LIBS:.so=.symbols)
 $(PRIVATE_LIBS): $(PRIVATE_LIBS:.so=.c)
 	$(CC) $(@:.so=.c) -shared -o $@
 
-$(PLATFORM)/$(SDK_PLATFORM)/libiomx.so: $(PRIVATE_LIBS) iomx.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -shared -o $@ iomx.cpp $(LDFLAGS)
+$(PLATFORM)/$(SDK_PLATFORM)/libiomx.so: iomx.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -shared -o $@ iomx.cpp $(LDFLAGS) -lstagefright
 
-.installed-$(PLATFORM): $(PLATFORM)/$(SDK_PLATFORM)/libiomx.so
+$(PLATFORM)/$(SDK_PLATFORM)/libaudiotrack_wrapper.so: libaudiotrack_wrapper.cpp libaudiotrack_wrapper.h
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -shared -o $@ libaudiotrack_wrapper.cpp $(LDFLAGS)
+
+.installed-$(PLATFORM): $(PRIVATE_LIBS) $(PLATFORM)/$(SDK_PLATFORM)/libiomx.so $(PLATFORM)/$(SDK_PLATFORM)/libaudiotrack_wrapper.so
 	mkdir -p $(PREFIX)/include/$(SDK_PLATFORM)
 	mkdir -p $(PREFIX)/lib/$(SDK_PLATFORM)
-	cp -f $(PLATFORM)/$(SDK_PLATFORM)/libiomx.so $(PREFIX)/lib/$(SDK_PLATFORM)
-	cp -f $(PLATFORM)/$(SDK_PLATFORM)/frameworks/base/include/media/stagefright/openmax/* $(PREFIX)/include/$(SDK_PLATFORM)
+	cp -f $(PLATFORM)/$(SDK_PLATFORM)/libiomx.so $(PREFIX)/lib/$(SDK_PLATFORM)/
+	cp -f $(PLATFORM)/$(SDK_PLATFORM)/frameworks/base/include/media/stagefright/openmax/* $(PREFIX)/include/$(SDK_PLATFORM)/
+	cp -f $(PLATFORM)/$(SDK_PLATFORM)/libaudiotrack_wrapper.so $(PREFIX)/lib/
+	cp -f libaudiotrack_wrapper.h $(PREFIX)/include/$(SDK_PLATFORM)/
 	touch $@
 
 clean:
