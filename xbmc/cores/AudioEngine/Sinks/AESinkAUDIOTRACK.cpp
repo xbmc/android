@@ -32,6 +32,7 @@
 
 #include <libaudiotrack_wrapper.h>
 
+#define USE_BUFFER
 ////////////////////////////////////////////////////////////////////////////////////////////
 class DllLibAudioTrackInterface
 {
@@ -128,13 +129,21 @@ bool CAESinkAUDIOTRACK::Initialize(AEAudioFormat &format, std::string &device)
   format.m_frames         = min_frames;
   format.m_frameSamples   = format.m_channelLayout.Count();
   format.m_frameSize      = format.m_frameSamples * (CAEUtil::DataFormatToBits(format.m_dataFormat) >> 3);
+#ifdef USE_BUFFER
   m_dll->ATW_set(m_ATWrapper, format.m_frameSamples, format.m_sampleRate, format.m_frames,
     AudioTrackCallback, this);
+#else
+  m_dll->ATW_set(m_ATWrapper, format.m_frameSamples, format.m_sampleRate, format.m_frames,
+    NULL, NULL);
+#endif
 
   m_format = format;
   m_started = false;
   m_draining = false;
+  m_SecondsPerByte = 1.0 / (double)(m_format.m_sampleRate * m_format.m_frameSize);
+#ifdef USE_BUFFER
   m_buffer = new AERingBuffer(m_format.m_frameSize * m_format.m_sampleRate);
+#endif
 
   m_dll->ATW_start(m_ATWrapper), m_started = true;
 
@@ -183,34 +192,47 @@ void CAESinkAUDIOTRACK::Stop()
 
 double CAESinkAUDIOTRACK::GetDelay()
 {
-  float latency_sec = (double)m_dll->ATW_latency(m_ATWrapper) / 1000.0;
-  // DVDAudio.cpp says, returns the time it takes to play a packet if we add one at this time
-  // return the delay in seconds
-  float seconds_to_empty = (double)m_buffer->GetReadSize() / (double)m_format.m_frameSize;
-  seconds_to_empty /= (double)m_format.m_sampleRate;
+#ifdef USE_BUFFER
+  double latency_sec = (double)m_dll->ATW_latency(m_ATWrapper) / 1000.0;
+  // returns the time it takes to play a packet if we add one at this time
+  //double seconds_to_empty = m_SecondsPerByte * (double)m_buffer->GetReadSize();
   //CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::GetDelay, latency_sec(%f), buffer_sec(%f)",
   //  latency_sec, buffer_sec);
-  return seconds_to_empty + latency_sec;
+  //return seconds_to_empty + latency_sec;
+  return latency_sec;
+#else
+  double latency_sec = (double)m_dll->ATW_latency(m_ATWrapper) / 1000.0;
+  return latency_sec;0
+#endif
 }
 
 double CAESinkAUDIOTRACK::GetCacheTime()
 {
-  // DVDAudio.cpp says, returns total amount of data cached in audio output at this time
-  float seconds_to_full = (double)m_buffer->GetWriteSize() / (double)m_format.m_frameSize;
-  seconds_to_full /= (double)m_format.m_sampleRate;
-  CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::GetCacheTime, seconds_to_full(%f)", seconds_to_full);
-  return seconds_to_full;
+  // returns total amount of data cached in audio output at this time
+#ifdef USE_BUFFER
+  double seconds_to_empty = m_SecondsPerByte * (double)m_buffer->GetReadSize();
+  //CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::GetCacheTime, seconds_to_empty(%f)", seconds_to_empty);
+  return seconds_to_empty;
+#else
+  return 0;
+#endif
 }
 
 double CAESinkAUDIOTRACK::GetCacheTotal()
 {
+  // total amount the audio sink can buffer
+#ifdef USE_BUFFER
   float buffer_totalsec = (double)m_buffer->GetMaxSize() / (double)m_format.m_sampleRate;
-  CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::GetCacheTotal, buffer_sec(%f)", buffer_totalsec);
+  //CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::GetCacheTotal, buffer_sec(%f)", buffer_totalsec);
   return buffer_totalsec;
+#else
+  return 0;
+#endif
 }
 
 unsigned int CAESinkAUDIOTRACK::AddPackets(uint8_t *data, unsigned int frames)
 {
+#ifdef USE_BUFFER
   //CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::AddPackets, frames(%d)", frames);
   unsigned int room = m_buffer->GetWriteSize();
   unsigned int addbytes = frames * m_format.m_frameSize;
@@ -245,7 +267,14 @@ unsigned int CAESinkAUDIOTRACK::AddPackets(uint8_t *data, unsigned int frames)
   else
     m_buffer->Write(data, addbytes);
 
+  // ms sleep block
+  Sleep(m_dll->ATW_latency(m_ATWrapper)/2);
+
   return frames;
+#else
+  m_dll->ATW_write(m_ATWrapper, data, frames * m_format.m_frameSize);
+  return frames;
+#endif
 }
 
 void CAESinkAUDIOTRACK::Drain()
