@@ -153,8 +153,8 @@ int ATW_set(ATW_ctx ctx, int channelCount, int sampleRate, int frameCount,
       (channelCount == 1) ? AUDIO_CHANNEL_OUT_MONO : AUDIO_CHANNEL_OUT_STEREO,
       frameCount,
       0,              // flags
-      audioCallback,  // callback
-      ctx,            // ctx for callback
+      (cbf == NULL) ? NULL : audioCallback, // callback
+      (cbf_ctx == NULL) ? NULL : cbf_ctx,   // ctx for callback
       0,              // notificationFrames
       0);             // sessionId
 );
@@ -166,8 +166,8 @@ int ATW_set(ATW_ctx ctx, int channelCount, int sampleRate, int frameCount,
       (channelCount == 1) ? AudioSystem::CHANNEL_OUT_MONO : AudioSystem::CHANNEL_OUT_STEREO,
       frameCount,
       0,              // flags
-      audioCallback,  // callback
-      ctx,            // ctx for callback
+      (cbf == NULL) ? NULL : audioCallback, // callback
+      (cbf_ctx == NULL) ? NULL : cbf_ctx,   // ctx for callback
       0,              // notificationFrames
       0);             // sessionId
 #endif
