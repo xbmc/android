@@ -13,6 +13,7 @@ PRIVATE_LIBS+=$(PRIVATE_LIBDIR)/libmedia.so
 PRIVATE_LIBS+=$(PRIVATE_LIBDIR)/libbinder.so
 PRIVATE_LIBS+=$(PRIVATE_LIBDIR)/libstagefright.so
 
+CXXFLAGS =$(PLATFORM_FLAGS) -I$(PREFIX)/include -fexceptions
 LDFLAGS += -L$(PRIVATE_LIBDIR) -lmedia -lutils -lbinder
 INCLUDES+=-I$(PLATFORM)/$(SDK_PLATFORM)/system/core/include
 INCLUDES+=-I$(PLATFORM)/$(SDK_PLATFORM)/frameworks/base/include
