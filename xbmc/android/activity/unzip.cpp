@@ -110,6 +110,9 @@ int extract_to_cache(const char *archive, const char *cache_path)
     if(strncmp (zipstat.name,"assets/",7) != 0)
       continue;
 
+    if(strncmp (zipstat.name,"assets/python2.6",16) == 0)
+      continue;
+
     modified.modtime = modified.actime = zipstat.mtime;
 
     full_path = (char*)malloc( sizeof(char*) * (strlen(cache_path) + 1 + strlen(zipstat.name) + 1));
