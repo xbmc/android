@@ -28,7 +28,6 @@ prepare:
 	$(foreach var,$(COPYDIRS), cp -rfp ../../../$(var) ./xbmc/assets/;)
 	cp -rfp $(PREFIX)/lib/python2.6 xbmc/assets/python2.6/lib/
 	cd xbmc/assets/python2.6/lib/python2.6/; rm -rf test config lib-dynload
-	cd xbmc/assets/python2.6/; zip -q -r -m python26.zip *
 	find xbmc/assets/system -name "*.so" -exec mv {} xbmc/lib/$(PLATFORM) \;
 	$(STRIP) --strip-unneeded xbmc/lib/$(PLATFORM)/*.so
 	cd xbmc/lib/$(PLATFORM); find  -name "*.so" -not -name "lib*.so" -printf "%f\n" | xargs -I@ mv @ lib@
