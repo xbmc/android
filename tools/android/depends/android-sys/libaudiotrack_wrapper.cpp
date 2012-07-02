@@ -83,7 +83,7 @@ static void audioCallback(int event, void *user, void *info)
 ATW_ctx ATW_create(void)
 {
   AudioTrackDevice* audiodev = new AudioTrackDevice;
-  // create a new instance of AudioTrack 
+  // create a new instance of AudioTrack
   audiodev->audio_track = new AudioTrack();
   if (audiodev->audio_track == NULL)
   {
@@ -123,7 +123,7 @@ int ATW_get_min_framecount(ATW_ctx ctx, int* frameCount, int sampleRate = 0)
     frameCount, AudioSystem::MUSIC, sampleRate);
 #endif
 
-  if (status != NO_ERROR) 
+  if (status != NO_ERROR)
     return -1;
 
   return 0;
@@ -134,7 +134,7 @@ int ATW_set(ATW_ctx ctx, int channelCount, int sampleRate, int frameCount,
 {
   // channelCount:  Channel mask: see AudioSystem::audio_channels.
   // sampleRate:    Track sampling rate in Hz.
-  // frameCount:    Total size of track PCM buffer in frames, 
+  // frameCount:    Total size of track PCM buffer in frames,
   //                  this defines the latency of the track.
   status_t status = NO_ERROR;
   if (ctx == NULL)
@@ -148,34 +148,34 @@ int ATW_set(ATW_ctx ctx, int channelCount, int sampleRate, int frameCount,
 #ifdef ANDROID_AUDIO_CORE_H
   status = AUDIO_TRACK_DEVICE_TRACK(ctx)->set(
       AUDIO_STREAM_MUSIC,
-      (uint32_t)sampleRate, 
+      (uint32_t)sampleRate,
       AUDIO_FORMAT_PCM_16_BIT,
       (channelCount == 1) ? AUDIO_CHANNEL_OUT_MONO : AUDIO_CHANNEL_OUT_STEREO,
       frameCount,
       0,              // flags
       (cbf == NULL) ? NULL : audioCallback, // callback
-      (cbf_ctx == NULL) ? NULL : cbf_ctx,   // ctx for callback
+      (cfb_ctx == NULL) ? NULL : ctx,       // ctx for callback
       0,              // notificationFrames
       0);             // sessionId
 );
 #else
   status = AUDIO_TRACK_DEVICE_TRACK(ctx)->set(
       AudioSystem::MUSIC,
-      (uint32_t)sampleRate, 
+      (uint32_t)sampleRate,
       AudioSystem::PCM_16_BIT,
       (channelCount == 1) ? AudioSystem::CHANNEL_OUT_MONO : AudioSystem::CHANNEL_OUT_STEREO,
       frameCount,
       0,              // flags
       (cbf == NULL) ? NULL : audioCallback, // callback
-      (cbf_ctx == NULL) ? NULL : cbf_ctx,   // ctx for callback
+      (cbf_ctx == NULL) ? NULL : ctx,       // ctx for callback
       0,              // notificationFrames
       0);             // sessionId
 #endif
   android_printf("Set AudioTrack, status: %d, , sampleRate: %d, "
-      "channelCount: %d, frameCount: %d\n", status, sampleRate, 
+      "channelCount: %d, frameCount: %d\n", status, sampleRate,
       channelCount, frameCount);
 
-  if (status != NO_ERROR) 
+  if (status != NO_ERROR)
     return -1;
 
   return 0;
