@@ -3,13 +3,13 @@ DEPS= ../Makefile.include Makefile
 
 # lib name, version
 LIBNAME=fribidi
-VERSION=0.10.9
+VERSION=0.19.1
 SOURCE=$(LIBNAME)-$(VERSION)
 ARCHIVE=$(SOURCE).tar.gz
-
+CFLAGS+=-D__STDC_INT64__
 # configuration settings
 CONFIGURE=cp -f $(CONFIG_SUB) $(CONFIG_GUESS) .; \
-          ./configure --prefix=$(PREFIX) --host=$(HOST) --disable-docs --enable-malloc gl_cv_header_working_stdint_h=yes \
+          ./configure --prefix=$(PREFIX) --host=$(HOST) --disable-docs --enable-malloc \
           --disable-shared
 
 LIBDYLIB=$(PLATFORM)/.libs/lib$(LIBNAME).a
