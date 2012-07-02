@@ -73,6 +73,7 @@ void setup_env(struct android_app* state)
   temp = env->GetStringUTFChars(jApkPath, NULL);
   strcpy(apkPath, temp);
   env->ReleaseStringUTFChars(jApkPath, temp);
+  setenv("XBMC_ANDROID_APK", apkPath, 0);
   
   // Get the path to the temp/cache directory
   char cacheDir[PATH_MAX];
