@@ -20,18 +20,13 @@
  *
  */
 
-#include "system.h"
-#ifdef TARGET_ANDROID
-
 #include "Interfaces/AESink.h"
 #include "Utils/AEDeviceInfo.h"
-#include <stdint.h>
 
 typedef void* ATW_ctx;
 class AERingBuffer;
-class DllLibAudioTrack;
 
-class CAESinkAUDIOTRACK : public IAESink
+class CAESinkAUDIOTRACK : public CThread, public IAESink
 {
 public:
   virtual const char *GetName() { return "AUDIOTRACK"; }
@@ -43,7 +38,6 @@ public:
   virtual void Deinitialize();
   virtual bool IsCompatible(const AEAudioFormat format, const std::string device);
 
-  virtual void         Stop            ();
   virtual double       GetDelay        ();
   virtual double       GetCacheTime    ();
   virtual double       GetCacheTotal   ();
@@ -51,16 +45,22 @@ public:
   virtual void         Drain           ();
   static void          EnumerateDevicesEx(AEDeviceInfoList &list);
 
-  static int           AudioTrackCallback(void *ctx, void *buffer, size_t size);
 private:
-  static DllLibAudioTrack *m_dll;
+  virtual void OnStartup();
+  virtual void OnExit();
+  virtual void Process();
+
+  void                 ProbeSupportedSampleRates();
+
+  static CAEDeviceInfo m_info;
   AEAudioFormat      m_format;
-  ATW_ctx            m_ATWrapper;
   AERingBuffer      *m_buffer;
-  bool               m_started;
-  bool               m_draining;
+
+  CEvent             m_inited;
+  volatile int       m_init_frames;
+  volatile bool      m_started;
+  volatile bool      m_draining;
+  double             m_buffer_sec;
+  double             m_latency_sec;
   double             m_SecondsPerByte;
-
 };
-
-#endif
