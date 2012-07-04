@@ -33,6 +33,7 @@
 #define TOUCH_MAX_POINTERS  2
 
 // forward delares
+class CAESinkAUDIOTRACK;
 typedef struct _JNIEnv JNIEnv;
 
 class CXBMCApp : public IActivityHandler, public IInputHandler
@@ -81,6 +82,9 @@ public:
   static bool GetStorageUsage(const std::string &path, std::string &usage);
 
 protected:
+  // limit who can access AttachCurrentThread/DetachCurrentThread
+  friend class CAESinkAUDIOTRACK;
+
   static int AttachCurrentThread(JNIEnv** p_env, void* thr_args);
   static int DetachCurrentThread();
 
