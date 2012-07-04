@@ -836,6 +836,17 @@ bool CXBMCApp::XBMC_DestroyDisplay()
   return g_application.getApplicationMessenger().DestroyDisplay();
 }
 
+int CXBMCApp::AttachCurrentThread(JNIEnv** p_env, void* thr_args)
+{
+  return m_activity->vm->AttachCurrentThread(p_env, thr_args);
+}
+
+int CXBMCApp::DetachCurrentThread()
+{
+  return m_activity->vm->DetachCurrentThread();
+}
+
+
 int CXBMCApp::SetBuffersGeometry(int width, int height, int format)
 {
   return ANativeWindow_setBuffersGeometry(m_window, width, height, format);

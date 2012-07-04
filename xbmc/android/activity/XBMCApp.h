@@ -32,6 +32,9 @@
 
 #define TOUCH_MAX_POINTERS  2
 
+// forward delares
+typedef struct _JNIEnv JNIEnv;
+
 class CXBMCApp : public IActivityHandler, public IInputHandler
 {
 public:
@@ -76,6 +79,10 @@ public:
    */
   static bool GetExternalStorage(std::string &path, const std::string type = "");
   static bool GetStorageUsage(const std::string &path, std::string &usage);
+
+protected:
+  static int AttachCurrentThread(JNIEnv** p_env, void* thr_args);
+  static int DetachCurrentThread();
 
 private:
   bool getWakeLock();
