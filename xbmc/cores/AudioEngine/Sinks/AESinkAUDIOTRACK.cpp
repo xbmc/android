@@ -20,7 +20,6 @@
  */
 
 #include "AESinkAUDIOTRACK.h"
-#include "DynamicDll.h"
 #include "Utils/AEUtil.h"
 #include "Utils/AERingBuffer.h"
 #include "android/activity/XBMCApp.h"
@@ -73,6 +72,8 @@ bool CAESinkAUDIOTRACK::Initialize(AEAudioFormat &format, std::string &device)
   m_format.m_dataFormat   = AE_FMT_S16LE;
   m_format.m_frameSamples = m_format.m_channelLayout.Count();
   m_format.m_frameSize    = m_format.m_frameSamples * (CAEUtil::DataFormatToBits(m_format.m_dataFormat) >> 3);
+  m_SecondsPerByte = 1.0 / (double)(m_format.m_frameSize * m_format.m_sampleRate);
+  m_buffer = new AERingBuffer(m_format.m_frameSize * m_format.m_sampleRate);
 
   // launch the process thread and wait for the
   // AutoTrack jni object to get created and setup.
@@ -86,9 +87,6 @@ bool CAESinkAUDIOTRACK::Initialize(AEAudioFormat &format, std::string &device)
 
   // m_init_frames is volatile and has been setup by Process()
   m_format.m_frames = m_init_frames;
-
-  m_SecondsPerByte = 1.0 / (double)(m_format.m_frameSize * m_format.m_sampleRate);
-  m_buffer = new AERingBuffer(m_format.m_frameSize * m_format.m_sampleRate);
 
   CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::Initialize, "
     "m_SecondsPerByte(%f), m_buffer->GetMaxSize(%d), m_buffer_sec(%f), m_latency_sec(%f)",
