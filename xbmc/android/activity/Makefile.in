@@ -6,7 +6,8 @@ APP_GLUE   = android_native_app_glue.o
 SRCS       = android_main.cpp \
              EventLoop.cpp \
              XBMCApp.cpp \
-             unzip.cpp
+             unzip.cpp \
+             GraphicBuffer.cpp
 
 LIB        = activity.a
 
