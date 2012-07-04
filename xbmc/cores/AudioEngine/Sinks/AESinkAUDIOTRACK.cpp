@@ -308,7 +308,8 @@ void CAESinkAUDIOTRACK::Process()
     //int bytes_to_empty = jenv->CallIntMethod(joAudioTrack, jmGetPos);
     //bytes_to_empty *= m_format.m_frameSize;
 
-    unsigned int read_frames = m_buffer->GetReadSize() / m_format.m_frameSize;
+    unsigned int read_frames = std::min((int)min_buffer_size, (int)m_buffer->GetReadSize());
+    read_frames /= m_format.m_frameSize;
     if (read_frames >= m_format.m_frames)
     {
       // Stream the next batch of audio data to the Java AudioTrack.
@@ -316,6 +317,7 @@ void CAESinkAUDIOTRACK::Process()
       if (pBuffer)
       {
         unsigned int buffer_size = read_frames * m_format.m_frameSize;
+        
         m_buffer->Read((unsigned char*)pBuffer, buffer_size);
         jenv->ReleasePrimitiveArrayCritical(jbuffer, pBuffer, 0);
         jenv->CallIntMethod(joAudioTrack, jmWrite, jbuffer, 0, buffer_size);
