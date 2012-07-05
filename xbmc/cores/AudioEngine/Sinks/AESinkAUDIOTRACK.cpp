@@ -42,7 +42,7 @@ CAEDeviceInfo CAESinkAUDIOTRACK::m_info;
 CAESinkAUDIOTRACK::CAESinkAUDIOTRACK()
   : CThread("audiotrack")
 {
-  m_buffer = NULL;
+  m_sinkbuffer = NULL;
 
   CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::CAESinkAUDIOTRACK");
 }
@@ -72,8 +72,10 @@ bool CAESinkAUDIOTRACK::Initialize(AEAudioFormat &format, std::string &device)
   m_format.m_dataFormat   = AE_FMT_S16LE;
   m_format.m_frameSamples = m_format.m_channelLayout.Count();
   m_format.m_frameSize    = m_format.m_frameSamples * (CAEUtil::DataFormatToBits(m_format.m_dataFormat) >> 3);
-  m_SecondsPerByte = 1.0 / (double)(m_format.m_frameSize * m_format.m_sampleRate);
-  m_buffer = new AERingBuffer(m_format.m_frameSize * m_format.m_sampleRate);
+  // setup a 1/4 second internal sink lockless ring buffer
+  m_sinkbuffer = new AERingBuffer(m_format.m_frameSize * m_format.m_sampleRate / 4);
+  m_sinkbuffer_sec = (double)m_sinkbuffer->GetMaxSize() / (double)m_format.m_sampleRate;
+  m_sinkbuffer_sec_per_byte = 1.0 / (double)(m_format.m_frameSize * m_format.m_sampleRate);
 
   // launch the process thread and wait for the
   // AutoTrack jni object to get created and setup.
@@ -89,8 +91,8 @@ bool CAESinkAUDIOTRACK::Initialize(AEAudioFormat &format, std::string &device)
   m_format.m_frames = m_init_frames;
 
   CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::Initialize, "
-    "m_SecondsPerByte(%f), m_buffer->GetMaxSize(%d), m_buffer_sec(%f), m_latency_sec(%f)",
-    m_SecondsPerByte, m_buffer->GetMaxSize(), m_buffer_sec, m_latency_sec);
+    "m_SecondsPerByte(%f), m_sinkbuffer->GetMaxSize(%d), m_audiotrackbuffer_sec(%f), m_audiotracklatency_sec(%f)",
+    m_sinkbuffer_sec_per_byte, m_sinkbuffer->GetMaxSize(), m_audiotrackbuffer_sec, m_audiotracklatency_sec);
 
   format = m_format;
 
@@ -101,7 +103,7 @@ void CAESinkAUDIOTRACK::Deinitialize()
 {
   CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::Deinitialize");
   StopThread();
-  delete m_buffer, m_buffer = NULL;
+  delete m_sinkbuffer, m_sinkbuffer = NULL;
 }
 
 bool CAESinkAUDIOTRACK::IsCompatible(const AEAudioFormat format, const std::string device)
@@ -118,7 +120,7 @@ bool CAESinkAUDIOTRACK::IsCompatible(const AEAudioFormat format, const std::stri
   CLog::Log(LOGDEBUG, "  in Sample Rate   : %d", in_format.m_sampleRate);
   CLog::Log(LOGDEBUG, "  in Sample Format : %s", CAEUtil::DataFormatToStr(in_format.m_dataFormat));
   CLog::Log(LOGDEBUG, "  in Channel Count : %d", in_format.m_channelLayout.Count());
-  CLog::Log(LOGDEBUG, "  is Channel Layout: %s", ((std::string)in_format.m_channelLayout).c_str());
+  CLog::Log(LOGDEBUG, "  in Channel Layout: %s", ((std::string)in_format.m_channelLayout).c_str());
 
   return ((m_format.m_sampleRate    == format.m_sampleRate) &&
           (m_format.m_dataFormat    == format.m_dataFormat) &&
@@ -129,10 +131,11 @@ double CAESinkAUDIOTRACK::GetDelay()
 {
   // this includes any latency due to AudioTrack buffer size,
   // AudioMixer (if any) and audio hardware driver.
-  double seconds_to_empty = m_SecondsPerByte * (double)m_buffer->GetReadSize();
-  //CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::GetDelay, seconds_to_empty(%f), m_latency_sec(%f)",
-  //  seconds_to_empty, m_latency_sec);
-  return seconds_to_empty + m_latency_sec;
+
+  double sinkbuffer_seconds_to_empty = m_sinkbuffer_sec_per_byte * (double)m_sinkbuffer->GetReadSize();
+  //CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::GetDelay, sinkbuffer_seconds_to_empty(%f), m_audiotracklatency_sec(%f)",
+  //  sinkbuffer_seconds_to_empty, m_audiotracklatency_sec);
+  return sinkbuffer_seconds_to_empty + m_audiotracklatency_sec;
 }
 
 double CAESinkAUDIOTRACK::GetCacheTime()
@@ -140,54 +143,34 @@ double CAESinkAUDIOTRACK::GetCacheTime()
   // returns the time in seconds that it will take
   // to underrun the buffer if no sample is added.
 
-  double seconds_to_empty = m_SecondsPerByte * (double)m_buffer->GetReadSize();
-  //CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::GetCacheTime, seconds_to_empty(%f)",
-  //  seconds_to_empty);
-  return seconds_to_empty;
+  double sinkbuffer_seconds_to_empty = m_sinkbuffer_sec_per_byte * (double)m_sinkbuffer->GetReadSize();
+  //CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::GetCacheTime, sinkbuffer_seconds_to_empty(%f)",
+  //  sinkbuffer_seconds_to_empty);
+  return sinkbuffer_seconds_to_empty;
 }
 
 double CAESinkAUDIOTRACK::GetCacheTotal()
 {
   // total amount that the audio sink can buffer in units of seconds
-  double buffer_totalsec = (double)m_buffer->GetMaxSize() / (double)m_format.m_sampleRate;
-  //CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::GetCacheTotal, buffer_totalsec(%f)",
-  //  buffer_totalsec);
-  return buffer_totalsec;
+
+  //CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::GetCacheTotal, m_sinkbuffer_sec(%f)",
+  //  m_sinkbuffer_sec);
+  return m_sinkbuffer_sec;
 }
 
 unsigned int CAESinkAUDIOTRACK::AddPackets(uint8_t *data, unsigned int frames)
 {
-  unsigned int room = m_buffer->GetWriteSize();
-  unsigned int addbytes = frames * m_format.m_frameSize;
-  unsigned int bytes_per_second = m_format.m_frameSize * m_format.m_sampleRate;
+  // write as many frames of audio as we can fit into our internal buffer.
 
-  if (m_draining)
-    return frames;
+  unsigned int write_frames = (m_sinkbuffer->GetWriteSize() / m_format.m_frameSize) % frames;
+  if (write_frames)
+    m_sinkbuffer->Write(data, write_frames * m_format.m_frameSize);
 
-  unsigned int total_ms_sleep = 0;
-  while (!m_draining && addbytes > room && total_ms_sleep < 200)
-  {
-    // we got deleted
-    if (!m_buffer || m_draining )
-      return 0;
+  // AddPackets runs under a non-idled AE thread so rather than attempt to sleep
+  // some magic amount to keep from hammering AddPackets, just yield and pray.
+  sched_yield();
 
-    unsigned int ms_sleep_time = (1000 * room) / bytes_per_second;
-    if (ms_sleep_time == 0)
-      ms_sleep_time++;
-
-    // sleep until we have space (estimated) or 1ms min
-    Sleep(ms_sleep_time);
-    total_ms_sleep += ms_sleep_time;
-
-    room = m_buffer->GetWriteSize();
-  }
-
-  if (addbytes > room)
-    frames = 0;
-  else
-    m_buffer->Write(data, addbytes);
-
-  return frames;
+  return write_frames;
 }
 
 void CAESinkAUDIOTRACK::Drain()
@@ -232,8 +215,8 @@ void CAESinkAUDIOTRACK::OnExit()
 void CAESinkAUDIOTRACK::Process()
 {
   CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::Process");
-  JNIEnv *jenv = NULL;
 
+  JNIEnv *jenv = NULL;
   CXBMCApp::AttachCurrentThread(&jenv, NULL);
   jenv->PushLocalFrame(4);
 
@@ -245,6 +228,7 @@ void CAESinkAUDIOTRACK::Process()
   jmethodID jmPlay              = jenv->GetMethodID(jcAudioTrack, "play", "()V");
   //jmethodID jmPause           = jenv->GetMethodID(jcAudioTrack, "pause", "()V");
   jmethodID jmStop              = jenv->GetMethodID(jcAudioTrack, "stop", "()V");
+  jmethodID jmFlush             = jenv->GetMethodID(jcAudioTrack, "flush", "()V");
   jmethodID jmRelease           = jenv->GetMethodID(jcAudioTrack, "release", "()V");
   jmethodID jmWrite             = jenv->GetMethodID(jcAudioTrack, "write", "([BII)I");
   //jmethodID jmGetPos          = jenv->GetMethodID(jcAudioTrack, "getPlaybackHeadPosition", "()I");
@@ -271,16 +255,17 @@ void CAESinkAUDIOTRACK::Process()
     "min_buffer_size(%d), sampleRate(%d), channelConfig(%d), audioFormat(%d)",
     min_buffer_size, sampleRate, channelConfig, audioFormat);
 
-  // double it get better performance
-  min_buffer_size *= 2;
   m_init_frames = min_buffer_size / m_format.m_frameSize;
   m_format.m_frames = m_init_frames;
 
-  m_buffer_sec  = (double)m_init_frames / m_format.m_sampleRate;
+  m_audiotrackbuffer_sec = (double)min_buffer_size / (double)m_format.m_sampleRate;
+  m_audiotrackbuffer_sec_per_byte = 1.0 / (double)(m_format.m_frameSize * m_format.m_sampleRate);
+
   // we cannot get actual latency using jni so guess
-  m_latency_sec = 0.100;
-  CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::Process, m_init_frames(%d), m_buffer_sec(%f), m_latency_sec(%f)",
-    m_init_frames, m_buffer_sec, m_latency_sec);
+  m_audiotracklatency_sec = 0.100;
+  CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::Process, "
+    "m_init_frames(%d), m_audiotrackbuffer_sec(%f), m_audiotracklatency_sec(%f)",
+    m_init_frames, m_audiotrackbuffer_sec, m_audiotracklatency_sec);
 
   CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::Process3");
   jobject joAudioTrack = jenv->NewObject(jcAudioTrack, jmInit,
@@ -307,20 +292,20 @@ void CAESinkAUDIOTRACK::Process()
   {
     //int bytes_to_empty = jenv->CallIntMethod(joAudioTrack, jmGetPos);
     //bytes_to_empty *= m_format.m_frameSize;
+    //bytes_to_empty %= min_buffer_size;
 
-    unsigned int read_frames = std::min((int)min_buffer_size, (int)m_buffer->GetReadSize());
-    read_frames /= m_format.m_frameSize;
-    if (read_frames >= m_format.m_frames)
+    unsigned int read_bytes = m_sinkbuffer->GetReadSize() % min_buffer_size;
+    if (read_bytes > 0)
     {
       // Stream the next batch of audio data to the Java AudioTrack.
+      // Warning, no other JNI function can be called after
+      // GetPrimitiveArrayCritical until ReleasePrimitiveArrayCritical.
       void *pBuffer = jenv->GetPrimitiveArrayCritical(jbuffer, NULL);
       if (pBuffer)
       {
-        unsigned int buffer_size = read_frames * m_format.m_frameSize;
-        
-        m_buffer->Read((unsigned char*)pBuffer, buffer_size);
+        m_sinkbuffer->Read((unsigned char*)pBuffer, read_bytes);
         jenv->ReleasePrimitiveArrayCritical(jbuffer, pBuffer, 0);
-        jenv->CallIntMethod(joAudioTrack, jmWrite, jbuffer, 0, buffer_size);
+        jenv->CallIntMethod(joAudioTrack, jmWrite, jbuffer, 0, read_bytes);
       }
       else
       {
@@ -333,7 +318,11 @@ void CAESinkAUDIOTRACK::Process()
       Sleep(10);
   }
 
+  jenv->DeleteLocalRef(jbuffer);
+
+  m_draining = true;
   jenv->CallVoidMethod(joAudioTrack, jmStop), m_started = false;
+  jenv->CallVoidMethod(joAudioTrack, jmFlush);
   jenv->CallVoidMethod(joAudioTrack, jmRelease);
 
   // might toss an exception on jmRelease so catch it.
