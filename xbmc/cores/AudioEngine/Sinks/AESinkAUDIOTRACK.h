@@ -60,7 +60,6 @@ private:
 
   CEvent             m_inited;
   volatile int       m_init_frames;
-  volatile bool      m_started;
   volatile bool      m_draining;
   double             m_audiotrackbuffer_sec;
   double             m_audiotrackbuffer_sec_per_byte;
