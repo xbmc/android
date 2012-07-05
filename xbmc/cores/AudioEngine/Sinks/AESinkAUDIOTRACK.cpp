@@ -77,6 +77,7 @@ bool CAESinkAUDIOTRACK::Initialize(AEAudioFormat &format, std::string &device)
   m_sinkbuffer_sec = (double)m_sinkbuffer->GetMaxSize() / (double)m_format.m_sampleRate;
   m_sinkbuffer_sec_per_byte = 1.0 / (double)(m_format.m_frameSize * m_format.m_sampleRate);
 
+  m_draining = false;
   // launch the process thread and wait for the
   // AutoTrack jni object to get created and setup.
   m_inited.Reset();
@@ -226,11 +227,11 @@ void CAESinkAUDIOTRACK::Process()
 
   jmethodID jmInit              = jenv->GetMethodID(jcAudioTrack, "<init>", "(IIIIII)V");
   jmethodID jmPlay              = jenv->GetMethodID(jcAudioTrack, "play", "()V");
-  //jmethodID jmPause           = jenv->GetMethodID(jcAudioTrack, "pause", "()V");
   jmethodID jmStop              = jenv->GetMethodID(jcAudioTrack, "stop", "()V");
   jmethodID jmFlush             = jenv->GetMethodID(jcAudioTrack, "flush", "()V");
   jmethodID jmRelease           = jenv->GetMethodID(jcAudioTrack, "release", "()V");
   jmethodID jmWrite             = jenv->GetMethodID(jcAudioTrack, "write", "([BII)I");
+  jmethodID jmPlayState         = jenv->GetMethodID(jcAudioTrack, "getPlayState", "()I");
   //jmethodID jmGetPos          = jenv->GetMethodID(jcAudioTrack, "getPlaybackHeadPosition", "()I");
   jmethodID jmGetMinBufferSize  = jenv->GetStaticMethodID(jcAudioTrack, "getMinBufferSize", "(III)I");
 
@@ -267,7 +268,6 @@ void CAESinkAUDIOTRACK::Process()
     "m_init_frames(%d), m_audiotrackbuffer_sec(%f), m_audiotracklatency_sec(%f)",
     m_init_frames, m_audiotrackbuffer_sec, m_audiotracklatency_sec);
 
-  CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::Process3");
   jobject joAudioTrack = jenv->NewObject(jcAudioTrack, jmInit,
     GetStaticIntField(jenv, "AudioManager", "STREAM_MUSIC"),
     sampleRate,
@@ -276,27 +276,47 @@ void CAESinkAUDIOTRACK::Process()
     min_buffer_size,
     GetStaticIntField(jenv, "AudioTrack", "MODE_STREAM"));
 
-  CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::Process4, joAudioTrack(%p)", joAudioTrack);
-
   // The AudioTrack object has been created and waiting to play,
   m_inited.Set();
   // yield to give other threads a chance to do some work.
   sched_yield();
 
-  jarray jbuffer = jenv->NewByteArray(min_buffer_size);
+  // cache the playing int value.
+  jint playing = GetStaticIntField(jenv, "AudioTrack", "PLAYSTATE_PLAYING");
 
-  m_draining = false;
-  jenv->CallVoidMethod(joAudioTrack, jmPlay, m_started = true);
+  // create a java byte buffer for writing pcm data to AudioTrack.
+  jarray jbuffer = jenv->NewByteArray(min_buffer_size);
 
   while (!m_bStop)
   {
     //int bytes_to_empty = jenv->CallIntMethod(joAudioTrack, jmGetPos);
     //bytes_to_empty *= m_format.m_frameSize;
     //bytes_to_empty %= min_buffer_size;
+    if (m_draining)
+    {
+      unsigned char byte_drain[1024];
+      unsigned int  byte_drain_size = m_sinkbuffer->GetReadSize() % 1024;
+      while (byte_drain_size)
+      {
+        m_sinkbuffer->Read(byte_drain, byte_drain_size);
+        byte_drain_size = m_sinkbuffer->GetReadSize() % 1024;
+      }
+      jenv->CallVoidMethod(joAudioTrack, jmStop);
+      jenv->CallVoidMethod(joAudioTrack, jmFlush);
+    }
 
     unsigned int read_bytes = m_sinkbuffer->GetReadSize() % min_buffer_size;
     if (read_bytes > 0)
     {
+      // android will auto pause the playstate when it senses idle,
+      // check it and set playing if it does this. Do this before
+      // writing into its buffer.
+      if (jenv->CallIntMethod(joAudioTrack, jmPlayState) != playing)
+      {
+        CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::Process:jmPlay");
+        jenv->CallVoidMethod(joAudioTrack, jmPlay);
+      }
+
       // Stream the next batch of audio data to the Java AudioTrack.
       // Warning, no other JNI function can be called after
       // GetPrimitiveArrayCritical until ReleasePrimitiveArrayCritical.
@@ -306,22 +326,20 @@ void CAESinkAUDIOTRACK::Process()
         m_sinkbuffer->Read((unsigned char*)pBuffer, read_bytes);
         jenv->ReleasePrimitiveArrayCritical(jbuffer, pBuffer, 0);
         jenv->CallIntMethod(joAudioTrack, jmWrite, jbuffer, 0, read_bytes);
+
       }
       else
       {
         CLog::Log(LOGDEBUG, "Failed to get pointer to array bytes");
       }
-      // yield this audio thread to give other threads a chance to do some work.
-      sched_yield();
     }
-    else
-      Sleep(10);
+    // yield this audio thread to give other threads a chance to do some work.
+    sched_yield();
   }
 
   jenv->DeleteLocalRef(jbuffer);
 
-  m_draining = true;
-  jenv->CallVoidMethod(joAudioTrack, jmStop), m_started = false;
+  jenv->CallVoidMethod(joAudioTrack, jmStop);
   jenv->CallVoidMethod(joAudioTrack, jmFlush);
   jenv->CallVoidMethod(joAudioTrack, jmRelease);
 
