@@ -838,14 +838,21 @@ bool CXBMCApp::XBMC_DestroyDisplay()
 
 int CXBMCApp::AttachCurrentThread(JNIEnv** p_env, void* thr_args)
 {
+  // Until a thread is attached, it has no JNIEnv, and cannot make JNI calls.
+  // The JNIEnv is used for thread-local storage. For this reason,
+  //  you cannot share a JNIEnv between threads.
+  // If a thread is attached to JNIEnv and garbage collection is in progress,
+  //  or the debugger has issued a suspend request, Android will
+  //  pause the thread the next time it makes a JNI call.
   return m_activity->vm->AttachCurrentThread(p_env, thr_args);
 }
 
 int CXBMCApp::DetachCurrentThread()
 {
+  // Threads attached through JNIEnv must
+  // call DetachCurrentThread before they exit
   return m_activity->vm->DetachCurrentThread();
 }
-
 
 int CXBMCApp::SetBuffersGeometry(int width, int height, int format)
 {
