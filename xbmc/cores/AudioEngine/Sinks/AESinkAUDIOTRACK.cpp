@@ -126,7 +126,7 @@ bool CAESinkAUDIOTRACK::Initialize(AEAudioFormat &format, std::string &device)
   if(!m_inited.WaitMSec(100))
   {
     while(!m_inited.WaitMSec(1))
-      sleep(10);
+      Sleep(10);
   }
 
   // m_min_frames is volatile and has been setup by Process()
@@ -202,9 +202,9 @@ unsigned int CAESinkAUDIOTRACK::AddPackets(uint8_t *data, unsigned int frames)
         break;
     }
   }
-  // AddPackets runs under a non-idled AE thread so rather than attempt to sleep
-  // some magic amount to keep from hammering AddPackets, just yield and pray.
-  sched_yield();
+  // AddPackets runs under a non-idled AE thread we must block or sleep.
+  // Trying to calc the optimal sleep is tricky so just a minimal sleep.
+  Sleep(1);
 
   return write_frames;
 }
@@ -342,8 +342,8 @@ void CAESinkAUDIOTRACK::Process()
         CLog::Log(LOGDEBUG, "Failed to get pointer to array bytes");
       }
     }
-    // yield this audio thread to give other threads a chance to do some work.
-    sched_yield();
+    // Sleep this audio thread to give other threads a chance to do some work.
+    Sleep(1);
   }
 
   jenv->DeleteLocalRef(jbuffer);
