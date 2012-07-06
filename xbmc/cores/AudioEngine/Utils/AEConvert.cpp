@@ -147,7 +147,7 @@ unsigned int CAEConvert::S16LE_Float(uint8_t* data, const unsigned int samples, 
   static const float mul = 1.0f / (INT16_MAX + 0.5f);
 
 #ifdef __arm__
-  for (int i = 0; i < samples; i++)
+  for (unsigned int i = 0; i < samples; i++)
   {
     __asm__ __volatile__ (
                           "ldrsh r1,[%[in]]       \n\t" // Read a halfword from the source address
@@ -178,7 +178,7 @@ unsigned int CAEConvert::S16BE_Float(uint8_t* data, const unsigned int samples, 
   static const float mul = 1.0f / (INT16_MAX + 0.5f);
 
 #ifdef __arm__
-  for (int i = 0; i < samples; i++)
+  for (unsigned int i = 0; i < samples; i++)
   {
     __asm__ __volatile__ (
                           "ldrsh r1,[%[in]]      \n\t" // Read a halfword from the source address
