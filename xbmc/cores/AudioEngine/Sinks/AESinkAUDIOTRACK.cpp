@@ -276,7 +276,7 @@ void CAESinkAUDIOTRACK::Process()
   m_audiotrackbuffer_sec = (double)min_buffer_size / (double)m_format.m_sampleRate;
   m_audiotrackbuffer_sec_per_byte = 1.0 / (double)(m_sink_frameSize * m_format.m_sampleRate);
   // we cannot get actual latency using jni so guess
-  m_audiotracklatency_sec = 0.050;
+  m_audiotracklatency_sec = 0.100;
 
   // setup a 1/4 second internal sink lockless ring buffer
   m_sinkbuffer = new AERingBuffer(m_sink_frameSize * m_format.m_sampleRate / 4);
