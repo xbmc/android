@@ -3349,6 +3349,7 @@ bool CApplication::Cleanup()
 #ifdef _LINUX
     CXHandle::DumpObjectTracker();
 #endif
+    g_sectionLoader.UnloadAll();
 
 #ifdef _CRTDBG_MAP_ALLOC
     _CrtDumpMemoryLeaks();
