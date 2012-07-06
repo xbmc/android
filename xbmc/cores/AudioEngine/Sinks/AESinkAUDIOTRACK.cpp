@@ -26,10 +26,11 @@
 #include "utils/log.h"
 
 #include <jni.h>
-#include <math.h>
-#include <arm_neon.h>
 
+#if defined(__ARM_NEON__)
+#include <arm_neon.h>
 // LGPLv2 from PulseAudio
+
 #define PA_UNLIKELY(x) (__builtin_expect(!!(x),0))
 #define PA_CLAMP_UNLIKELY(x, low, high)                                 \
     __extension__ ({                                                    \
@@ -38,7 +39,6 @@
             typeof(high) _high = (high);                                \
             (PA_UNLIKELY(_x > _high) ? _high : (PA_UNLIKELY(_x < _low) ? _low : _x)); \
     })
-
 static void pa_sconv_s16le_from_f32ne_neon(unsigned n, const float *a, int16_t *b)
 {
   unsigned int i;
@@ -60,6 +60,7 @@ static void pa_sconv_s16le_from_f32ne_neon(unsigned n, const float *a, int16_t *
   for ( ; i < n; i++)
     b[i] = (int16_t) lrintf(PA_CLAMP_UNLIKELY(a[i], -1.0f, 1.0f) * 0x7FFF);
 }
+#endif
 
 static jint GetStaticIntField(JNIEnv *jenv, std::string class_name, std::string field_name)
 {
@@ -78,19 +79,14 @@ CAESinkAUDIOTRACK::CAESinkAUDIOTRACK()
 {
   m_sinkbuffer = NULL;
   m_alignedS16LE = NULL;
-
-  CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::CAESinkAUDIOTRACK");
 }
 
 CAESinkAUDIOTRACK::~CAESinkAUDIOTRACK()
 {
-  CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::~CAESinkAUDIOTRACK");
 }
 
 bool CAESinkAUDIOTRACK::Initialize(AEAudioFormat &format, std::string &device)
 {
-  CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::Initialize");
-
   m_format = format;
 
   // default to 44100, all android devices support it.
@@ -135,11 +131,6 @@ bool CAESinkAUDIOTRACK::Initialize(AEAudioFormat &format, std::string &device)
 
   // m_min_frames is volatile and has been setup by Process()
   m_format.m_frames = m_min_frames;
-
-  CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::Initialize, "
-    "m_SecondsPerByte(%f), m_sinkbuffer->GetMaxSize(%d), m_audiotrackbuffer_sec(%f), m_audiotracklatency_sec(%f)",
-    m_sinkbuffer_sec_per_byte, m_sinkbuffer->GetMaxSize(), m_audiotrackbuffer_sec, m_audiotracklatency_sec);
-
   format = m_format;
 
   return true;
@@ -147,7 +138,6 @@ bool CAESinkAUDIOTRACK::Initialize(AEAudioFormat &format, std::string &device)
 
 void CAESinkAUDIOTRACK::Deinitialize()
 {
-  CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::Deinitialize");
   StopThread();
   delete m_sinkbuffer, m_sinkbuffer = NULL;
   if (m_alignedS16LE)
@@ -156,20 +146,6 @@ void CAESinkAUDIOTRACK::Deinitialize()
 
 bool CAESinkAUDIOTRACK::IsCompatible(const AEAudioFormat format, const std::string device)
 {
-  AEAudioFormat in_format = format;
-  CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::IsCompatible");
-  CLog::Log(LOGDEBUG, "  is Output Device : %s", device.c_str());
-  CLog::Log(LOGDEBUG, "  is Sample Rate   : %d", m_format.m_sampleRate);
-  CLog::Log(LOGDEBUG, "  is Sample Format : %s", CAEUtil::DataFormatToStr(m_format.m_dataFormat));
-  CLog::Log(LOGDEBUG, "  is Channel Count : %d", m_format.m_channelLayout.Count());
-  CLog::Log(LOGDEBUG, "  is Channel Layout: %s", ((std::string)m_format.m_channelLayout).c_str());
-
-  CLog::Log(LOGDEBUG, "  in Output Device : %s", device.c_str());
-  CLog::Log(LOGDEBUG, "  in Sample Rate   : %d", in_format.m_sampleRate);
-  CLog::Log(LOGDEBUG, "  in Sample Format : %s", CAEUtil::DataFormatToStr(in_format.m_dataFormat));
-  CLog::Log(LOGDEBUG, "  in Channel Count : %d", in_format.m_channelLayout.Count());
-  CLog::Log(LOGDEBUG, "  in Channel Layout: %s", ((std::string)in_format.m_channelLayout).c_str());
-
   return ((m_format.m_sampleRate    == format.m_sampleRate) &&
           (m_format.m_dataFormat    == format.m_dataFormat) &&
           (m_format.m_channelLayout == format.m_channelLayout));
@@ -181,8 +157,6 @@ double CAESinkAUDIOTRACK::GetDelay()
   // AudioMixer (if any) and audio hardware driver.
 
   double sinkbuffer_seconds_to_empty = m_sinkbuffer_sec_per_byte * (double)m_sinkbuffer->GetReadSize();
-  //CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::GetDelay, sinkbuffer_seconds_to_empty(%f), m_audiotracklatency_sec(%f)",
-  //  sinkbuffer_seconds_to_empty, m_audiotracklatency_sec);
   return sinkbuffer_seconds_to_empty + m_audiotracklatency_sec;
 }
 
@@ -192,8 +166,6 @@ double CAESinkAUDIOTRACK::GetCacheTime()
   // to underrun the buffer if no sample is added.
 
   double sinkbuffer_seconds_to_empty = m_sinkbuffer_sec_per_byte * (double)m_sinkbuffer->GetReadSize();
-  //CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::GetCacheTime, sinkbuffer_seconds_to_empty(%f)",
-  //  sinkbuffer_seconds_to_empty);
   return sinkbuffer_seconds_to_empty;
 }
 
@@ -201,8 +173,6 @@ double CAESinkAUDIOTRACK::GetCacheTotal()
 {
   // total amount that the audio sink can buffer in units of seconds
 
-  //CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::GetCacheTotal, m_sinkbuffer_sec(%f)",
-  //  m_sinkbuffer_sec);
   return m_sinkbuffer_sec;
 }
 
@@ -219,6 +189,7 @@ unsigned int CAESinkAUDIOTRACK::AddPackets(uint8_t *data, unsigned int frames)
       case AE_FMT_S16LE:
         m_sinkbuffer->Write(data, write_frames * m_sink_frameSize);
         break;
+#if defined(__ARM_NEON__)
       case AE_FMT_FLOAT:
         if (!m_alignedS16LE)
           m_alignedS16LE = (int16_t*)_aligned_malloc(m_format.m_frames * m_sink_frameSize, 16);
@@ -226,6 +197,7 @@ unsigned int CAESinkAUDIOTRACK::AddPackets(uint8_t *data, unsigned int frames)
         pa_sconv_s16le_from_f32ne_neon(write_frames * m_format.m_frameSamples, (const float*)data, m_alignedS16LE);
         m_sinkbuffer->Write((unsigned char*)m_alignedS16LE, write_frames * m_sink_frameSize);
         break;
+#endif
       default:
         break;
     }
@@ -257,7 +229,9 @@ void CAESinkAUDIOTRACK::EnumerateDevicesEx(AEDeviceInfoList &list)
   m_info.m_channels += AE_CH_FR;
   m_info.m_sampleRates.push_back(44100);
   m_info.m_sampleRates.push_back(48000);
+#if defined(__ARM_NEON__)
   m_info.m_dataFormats.push_back(AE_FMT_FLOAT);
+#endif
   m_info.m_dataFormats.push_back(AE_FMT_S16LE);
 
   list.push_back(m_info);
@@ -267,14 +241,6 @@ void CAESinkAUDIOTRACK::ProbeSupportedSampleRates()
 {
   m_info.m_sampleRates.push_back(44100);
   m_info.m_sampleRates.push_back(48000);
-}
-
-void CAESinkAUDIOTRACK::OnStartup()
-{
-}
-
-void CAESinkAUDIOTRACK::OnExit()
-{
 }
 
 void CAESinkAUDIOTRACK::Process()
@@ -307,23 +273,15 @@ void CAESinkAUDIOTRACK::Process()
   m_sink_frameSize = m_format.m_frameSamples * CAEUtil::DataFormatToBits(AE_FMT_S16LE) >> 3;
   m_min_frames = min_buffer_size / m_sink_frameSize;
 
-  CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::Process:jmGetMinBufferSize, "
-    "min_buffer_size(%d), sampleRate(%d), channelConfig(%d), audioFormat(%d)",
-    min_buffer_size, m_format.m_sampleRate, channelConfig, audioFormat);
-
   m_audiotrackbuffer_sec = (double)min_buffer_size / (double)m_format.m_sampleRate;
   m_audiotrackbuffer_sec_per_byte = 1.0 / (double)(m_sink_frameSize * m_format.m_sampleRate);
   // we cannot get actual latency using jni so guess
-  m_audiotracklatency_sec = 0.100;
+  m_audiotracklatency_sec = 0.050;
 
   // setup a 1/4 second internal sink lockless ring buffer
   m_sinkbuffer = new AERingBuffer(m_sink_frameSize * m_format.m_sampleRate / 4);
   m_sinkbuffer_sec = (double)m_sinkbuffer->GetMaxSize() / (double)m_format.m_sampleRate;
   m_sinkbuffer_sec_per_byte = 1.0 / (double)(m_sink_frameSize * m_format.m_sampleRate);
-
-  CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::Process, "
-    "m_min_frames(%d), m_audiotrackbuffer_sec(%f), m_audiotracklatency_sec(%f)",
-    m_min_frames, m_audiotrackbuffer_sec, m_audiotracklatency_sec);
 
   jobject joAudioTrack = jenv->NewObject(jcAudioTrack, jmInit,
     GetStaticIntField(jenv, "AudioManager", "STREAM_MUSIC"),
@@ -366,10 +324,7 @@ void CAESinkAUDIOTRACK::Process()
       // check it and set playing if it does this. Do this before
       // writing into its buffer.
       if (jenv->CallIntMethod(joAudioTrack, jmPlayState) != playing)
-      {
-        CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::Process:jmPlay");
         jenv->CallVoidMethod(joAudioTrack, jmPlay);
-      }
 
       // Stream the next batch of audio data to the Java AudioTrack.
       // Warning, no other JNI function can be called after
