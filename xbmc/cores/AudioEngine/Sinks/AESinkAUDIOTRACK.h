@@ -23,7 +23,6 @@
 #include "Interfaces/AESink.h"
 #include "Utils/AEDeviceInfo.h"
 
-typedef void* ATW_ctx;
 class AERingBuffer;
 
 class CAESinkAUDIOTRACK : public CThread, public IAESink
@@ -46,8 +45,6 @@ public:
   static void          EnumerateDevicesEx(AEDeviceInfoList &list);
 
 private:
-  virtual void OnStartup();
-  virtual void OnExit();
   virtual void Process();
 
   void                 ProbeSupportedSampleRates();
