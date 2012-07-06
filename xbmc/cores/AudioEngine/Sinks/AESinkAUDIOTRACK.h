@@ -58,6 +58,7 @@ private:
   double             m_sinkbuffer_sec;
   double             m_sinkbuffer_sec_per_byte;
 
+  CEvent             m_wake;
   CEvent             m_inited;
   volatile bool      m_draining;
   double             m_audiotrackbuffer_sec;
