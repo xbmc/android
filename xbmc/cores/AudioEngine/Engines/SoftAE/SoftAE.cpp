@@ -265,14 +265,6 @@ void CSoftAE::InternalOpenSink()
     newFormat.m_sampleRate = g_advancedSettings.m_audioResample;
     CLog::Log(LOGINFO, "CSoftAE::InternalOpenSink - Forcing samplerate to %d", newFormat.m_sampleRate);
   }
-#if defined(TARGET_ANDROID)
-  // force all output to what android can handle
-  // this prevents a sink re-init which puts us
-  // way behind dvdplayer and all hell breaks out.
-  //newFormat.m_dataFormat    = AE_FMT_S16LE;
-  //newFormat.m_sampleRate    = 48000;
-  newFormat.m_channelLayout = AE_CH_LAYOUT_2_0;
-#endif
   /* only re-open the sink if its not compatible with what we need */
   std::string sinkName;
   if (m_sink)
