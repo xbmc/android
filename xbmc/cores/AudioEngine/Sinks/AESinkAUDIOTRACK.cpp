@@ -121,6 +121,7 @@ bool CAESinkAUDIOTRACK::Initialize(AEAudioFormat &format, std::string &device)
   m_draining = false;
   // launch the process thread and wait for the
   // AutoTrack jni object to get created and setup.
+  m_wake.Reset();
   m_inited.Reset();
   Create();
   if(!m_inited.WaitMSec(100))
@@ -138,6 +139,9 @@ bool CAESinkAUDIOTRACK::Initialize(AEAudioFormat &format, std::string &device)
 
 void CAESinkAUDIOTRACK::Deinitialize()
 {
+  // force m_bStop and set m_wake, if might be sleeping.
+  m_bStop = true;
+  m_wake.Set();
   StopThread();
   delete m_sinkbuffer, m_sinkbuffer = NULL;
   if (m_alignedS16LE)
@@ -188,6 +192,7 @@ unsigned int CAESinkAUDIOTRACK::AddPackets(uint8_t *data, unsigned int frames)
     {
       case AE_FMT_S16LE:
         m_sinkbuffer->Write(data, write_frames * m_sink_frameSize);
+        m_wake.Set();
         break;
 #if defined(__ARM_NEON__)
       case AE_FMT_FLOAT:
@@ -196,6 +201,7 @@ unsigned int CAESinkAUDIOTRACK::AddPackets(uint8_t *data, unsigned int frames)
         // neon convert AE_FMT_S16LE to AE_FMT_FLOAT
         pa_sconv_s16le_from_f32ne_neon(write_frames * m_format.m_frameSamples, (const float*)data, m_alignedS16LE);
         m_sinkbuffer->Write((unsigned char*)m_alignedS16LE, write_frames * m_sink_frameSize);
+        m_wake.Set();
         break;
 #endif
       default:
@@ -213,6 +219,7 @@ void CAESinkAUDIOTRACK::Drain()
 {
   CLog::Log(LOGDEBUG, "CAESinkAUDIOTRACK::Drain");
   m_draining = true;
+  m_wake.Set();
 }
 
 void CAESinkAUDIOTRACK::EnumerateDevicesEx(AEDeviceInfoList &list)
@@ -334,6 +341,8 @@ void CAESinkAUDIOTRACK::Process()
       {
         m_sinkbuffer->Read((unsigned char*)pBuffer, read_bytes);
         jenv->ReleasePrimitiveArrayCritical(jbuffer, pBuffer, 0);
+        // jmWrite is blocking and return when the data has been transferred
+        // from the Java layer to the native layer and queued for playback.
         jenv->CallIntMethod(joAudioTrack, jmWrite, jbuffer, 0, read_bytes);
 
       }
@@ -342,8 +351,12 @@ void CAESinkAUDIOTRACK::Process()
         CLog::Log(LOGDEBUG, "Failed to get pointer to array bytes");
       }
     }
-    // Sleep this audio thread to give other threads a chance to do some work.
-    Sleep(1);
+    else
+    {
+      // Sleep this audio thread to give other
+      // threads a chance to do some work.
+      m_wake.WaitMSec(250);
+    }
   }
 
   jenv->DeleteLocalRef(jbuffer);
