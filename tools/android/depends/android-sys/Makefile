@@ -1,6 +1,5 @@
 include ../Makefile.include
 DEPS = ../Makefile.include Makefile iomx.cpp
-DEPS+= libaudiotrack_wrapper.h libaudiotrack_wrapper.cpp
 
 LIBNAME=android-sys
 VERSION=0.1
@@ -17,7 +16,6 @@ CXXFLAGS =$(PLATFORM_FLAGS) -I$(PREFIX)/include -fexceptions
 LDFLAGS += -L$(PRIVATE_LIBDIR) -lmedia -lutils -lbinder
 INCLUDES+=-I$(PLATFORM)/$(SDK_PLATFORM)/system/core/include
 INCLUDES+=-I$(PLATFORM)/$(SDK_PLATFORM)/frameworks/base/include
-INCLUDES+=-I$(PLATFORM)/android-10/frameworks/base/include/media
 INCLUDES+=-I$(PLATFORM)/$(SDK_PLATFORM)/frameworks/base/include/media/stagefright/openmax
 
 all: .installed-$(PLATFORM)
@@ -41,16 +39,11 @@ $(PRIVATE_LIBS): $(PRIVATE_LIBS:.so=.c)
 $(PLATFORM)/$(SDK_PLATFORM)/libiomx.so: iomx.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -shared -o $@ iomx.cpp $(LDFLAGS) -lstagefright
 
-$(PLATFORM)/$(SDK_PLATFORM)/libaudiotrack_wrapper.so: libaudiotrack_wrapper.cpp libaudiotrack_wrapper.h
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -shared -o $@ libaudiotrack_wrapper.cpp $(LDFLAGS)
-
-.installed-$(PLATFORM): $(PRIVATE_LIBS) $(PLATFORM)/$(SDK_PLATFORM)/libiomx.so $(PLATFORM)/$(SDK_PLATFORM)/libaudiotrack_wrapper.so
+.installed-$(PLATFORM): $(PRIVATE_LIBS) $(PLATFORM)/$(SDK_PLATFORM)/libiomx.so
 	mkdir -p $(PREFIX)/include/$(SDK_PLATFORM)
 	mkdir -p $(PREFIX)/lib/$(SDK_PLATFORM)
 	cp -f $(PLATFORM)/$(SDK_PLATFORM)/libiomx.so $(PREFIX)/lib/$(SDK_PLATFORM)/
 	cp -f $(PLATFORM)/$(SDK_PLATFORM)/frameworks/base/include/media/stagefright/openmax/* $(PREFIX)/include/$(SDK_PLATFORM)/
-	cp -f $(PLATFORM)/$(SDK_PLATFORM)/libaudiotrack_wrapper.so $(PREFIX)/lib/$(SDK_PLATFORM)/
-	cp -f libaudiotrack_wrapper.h $(PREFIX)/include/$(SDK_PLATFORM)/
 	touch $@
 
 clean:
