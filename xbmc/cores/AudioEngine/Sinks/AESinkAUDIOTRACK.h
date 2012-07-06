@@ -54,12 +54,14 @@ private:
 
   static CAEDeviceInfo m_info;
   AEAudioFormat      m_format;
+  volatile int       m_min_frames;
+  int16_t           *m_alignedS16LE;
   AERingBuffer      *m_sinkbuffer;
+  unsigned int       m_sink_frameSize;
   double             m_sinkbuffer_sec;
   double             m_sinkbuffer_sec_per_byte;
 
   CEvent             m_inited;
-  volatile int       m_init_frames;
   volatile bool      m_draining;
   double             m_audiotrackbuffer_sec;
   double             m_audiotrackbuffer_sec_per_byte;
