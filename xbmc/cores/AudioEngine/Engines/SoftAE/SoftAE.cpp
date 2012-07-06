@@ -269,7 +269,7 @@ void CSoftAE::InternalOpenSink()
   // force all output to what android can handle
   // this prevents a sink re-init which puts us
   // way behind dvdplayer and all hell breaks out.
-  newFormat.m_dataFormat    = AE_FMT_S16LE;
+  //newFormat.m_dataFormat    = AE_FMT_S16LE;
   //newFormat.m_sampleRate    = 48000;
   newFormat.m_channelLayout = AE_CH_LAYOUT_2_0;
 #endif
