@@ -6,7 +6,6 @@ OBJS = libcurl.so \
   libshairport.so libplist.so \
 
 PLATFORM_OBJS = libiomx.so
-PLATFORM_OBJS+= libaudiotrack_wrapper.so
 
 XBMCROOT = $(CURDIR)/../../..
 COPYDIRS = system addons language media
