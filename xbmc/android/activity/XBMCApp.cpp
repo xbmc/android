@@ -610,7 +610,7 @@ void CXBMCApp::updateTouches(AInputEvent *event, bool saveLast /* = true */)
   }
 }
 
-bool CXBMCApp::getWakeLock()
+bool CXBMCApp::getWakeLock(JNIEnv *env)
 {
   android_printf("%s", __PRETTY_FUNCTION__);
   if (m_activity == NULL)
@@ -619,31 +619,31 @@ bool CXBMCApp::getWakeLock()
     return false;
   }
 
+  if (env == NULL)
+    return false;
+
   if (m_wakeLock == NULL)
   {
-    JNIEnv *env = NULL;
-    m_activity->vm->AttachCurrentThread(&env, NULL);
-
-    jobject activity = m_activity->clazz;
-    jclass activityClass = env->GetObjectClass(activity);
-    jstring jXbmcPackage = env->NewStringUTF("org.xbmc.xbmc");
+    jobject oActivity = m_activity->clazz;
+    jclass cActivity = env->GetObjectClass(oActivity);
 
     // get the wake lock
-    jmethodID midGetSystemService = env->GetMethodID(activityClass, "getSystemService", "(Ljava/lang/String;)Ljava/lang/Object;");
-    jstring jPowerService = env->NewStringUTF("power"); // POWER_SERVICE
-    jobject jPowerManager = env->CallObjectMethod(activity, midGetSystemService, jPowerService);
+    jmethodID midActivityGetSystemService = env->GetMethodID(cActivity, "getSystemService", "(Ljava/lang/String;)Ljava/lang/Object;");
+    jstring sPowerService = env->NewStringUTF("power"); // POWER_SERVICE
+    jobject oPowerManager = env->CallObjectMethod(oActivity, midActivityGetSystemService, sPowerService);
 
-    jclass powerManagerClass = env->GetObjectClass(jPowerManager);
-    jmethodID midNewWakeLock = env->GetMethodID(powerManagerClass, "newWakeLock", "(ILjava/lang/String;)Landroid/os/PowerManager$WakeLock;");
-    jobject wakeLock = env->CallObjectMethod(jPowerManager, midNewWakeLock, (jint)0x1a /* FULL_WAKE_LOCK */, jXbmcPackage);
-    m_wakeLock = env->NewGlobalRef(wakeLock);
+    jclass cPowerManager = env->GetObjectClass(oPowerManager);
+    jmethodID midNewWakeLock = env->GetMethodID(cPowerManager, "newWakeLock", "(ILjava/lang/String;)Landroid/os/PowerManager$WakeLock;");
+    jstring sXbmcPackage = env->NewStringUTF("org.xbmc.xbmc");
+    jobject oWakeLock = env->CallObjectMethod(oPowerManager, midNewWakeLock, (jint)0x1a /* FULL_WAKE_LOCK */, sXbmcPackage);
+    m_wakeLock = env->NewGlobalRef(oWakeLock);
 
-    env->DeleteLocalRef(wakeLock);
-    env->DeleteLocalRef(powerManagerClass);
-    env->DeleteLocalRef(jPowerManager);
-    env->DeleteLocalRef(jPowerService);
-    env->DeleteLocalRef(jXbmcPackage);
-    env->DeleteLocalRef(activityClass);
+    env->DeleteLocalRef(oWakeLock);
+    env->DeleteLocalRef(cPowerManager);
+    env->DeleteLocalRef(oPowerManager);
+    env->DeleteLocalRef(sPowerService);
+    env->DeleteLocalRef(sXbmcPackage);
+    env->DeleteLocalRef(cActivity);
   }
 
   return m_wakeLock != NULL;
@@ -651,40 +651,46 @@ bool CXBMCApp::getWakeLock()
 
 void CXBMCApp::acquireWakeLock()
 {
-  android_printf("%s", __PRETTY_FUNCTION__);
-  if (!getWakeLock())
+  if (m_activity == NULL)
+    return;
+
+  JNIEnv *env = NULL;
+  AttachCurrentThread(&env);
+
+  if (!getWakeLock(env))
   {
-    android_printf("  unable to acquire a WakeLock");
+    android_printf("%s: unable to acquire a WakeLock");
     return;
   }
 
-  JNIEnv *env = NULL;
-  m_activity->vm->AttachCurrentThread(&env, NULL);
+  jclass cWakeLock = env->GetObjectClass(m_wakeLock);
+  jmethodID midWakeLockAcquire = env->GetMethodID(cWakeLock, "acquire", "()V");
+  env->CallVoidMethod(m_wakeLock, midWakeLockAcquire);
+  env->DeleteLocalRef(cWakeLock);
 
-  jclass wakeLockClass = env->GetObjectClass(m_wakeLock);
-  jmethodID midAcquire = env->GetMethodID(wakeLockClass, "acquire", "()V");
-  env->CallVoidMethod(m_wakeLock, midAcquire);
-
-  env->DeleteLocalRef(wakeLockClass);
+  DetachCurrentThread();
 }
 
 void CXBMCApp::releaseWakeLock()
 {
-  android_printf("%s", __PRETTY_FUNCTION__);
-  if (!getWakeLock())
+  if (m_activity == NULL)
+    return;
+
+  JNIEnv *env = NULL;
+  AttachCurrentThread(&env);
+
+  if (!getWakeLock(env))
   {
-    android_printf("  unable to release a WakeLock");
+    android_printf("%s: unable to release a WakeLock");
     return;
   }
 
-  JNIEnv *env = NULL;
-  m_activity->vm->AttachCurrentThread(&env, NULL);
+  jclass cWakeLock = env->GetObjectClass(m_wakeLock);
+  jmethodID midWakeLockRelease = env->GetMethodID(cWakeLock, "release", "()V");
+  env->CallVoidMethod(m_wakeLock, midWakeLockRelease);
+  env->DeleteLocalRef(cWakeLock);
 
-  jclass wakeLockClass = env->GetObjectClass(m_wakeLock);
-  jmethodID midRelease = env->GetMethodID(wakeLockClass, "release", "()V");
-  env->CallVoidMethod(m_wakeLock, midRelease);
-
-  env->DeleteLocalRef(wakeLockClass);
+  DetachCurrentThread();
 }
 
 void CXBMCApp::run()
@@ -836,7 +842,7 @@ bool CXBMCApp::XBMC_DestroyDisplay()
   return g_application.getApplicationMessenger().DestroyDisplay();
 }
 
-int CXBMCApp::AttachCurrentThread(JNIEnv** p_env, void* thr_args)
+int CXBMCApp::AttachCurrentThread(JNIEnv** p_env, void* thr_args /* = NULL */)
 {
   // Until a thread is attached, it has no JNIEnv, and cannot make JNI calls.
   // The JNIEnv is used for thread-local storage. For this reason,
@@ -873,11 +879,11 @@ int CXBMCApp::GetBatteryLevel()
 {
   if (m_activity == NULL)
     return -1;
-  
+
   JNIEnv *env = NULL;
-  m_activity->vm->AttachCurrentThread(&env, NULL);
+  AttachCurrentThread(&env);
   jobject oActivity = m_activity->clazz;
-  
+
   // IntentFilter oIntentFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
   jclass cIntentFilter = env->FindClass("android/content/IntentFilter");
   jmethodID midIntentFilterCtor = env->GetMethodID(cIntentFilter, "<init>", "(Ljava/lang/String;)V");
@@ -906,7 +912,9 @@ int CXBMCApp::GetBatteryLevel()
   env->DeleteLocalRef(sBatteryManagerExtraScale);
   env->DeleteLocalRef(oBatteryStatus);
   env->DeleteLocalRef(oIntentFilter);
-  
+
+  DetachCurrentThread();
+
   if (iLevel <= 0 || iScale < 0)
     return iLevel;
 
@@ -919,7 +927,7 @@ bool CXBMCApp::GetExternalStorage(std::string &path, const std::string type /* =
     return false;
 
   JNIEnv *env = NULL;
-  m_activity->vm->AttachCurrentThread(&env, NULL);
+  AttachCurrentThread(&env);
 
   // check if external storage is available
   // String sStorageState = android.os.Environment.getExternalStorageState();
@@ -980,11 +988,16 @@ bool CXBMCApp::GetExternalStorage(std::string &path, const std::string type /* =
 
   env->DeleteLocalRef(cEnvironment);
 
+  DetachCurrentThread();
+
   return mounted && !path.empty();
 }
 
 bool CXBMCApp::GetStorageUsage(const std::string &path, std::string &usage)
 {
+  if (m_activity == NULL)
+    return false;
+
   if (path.empty())
   {
     ostringstream fmt;
@@ -993,14 +1006,14 @@ bool CXBMCApp::GetStorageUsage(const std::string &path, std::string &usage)
     fmt.width(12);  fmt << "Used";
     fmt.width(12);  fmt << "Avail";
     fmt.width(12);  fmt << "Use %";
-    
+
     usage = fmt.str();
     return false;
   }
 
   JNIEnv *env = NULL;
-  m_activity->vm->AttachCurrentThread(&env, NULL);
-  
+  AttachCurrentThread(&env);
+
   // android.os.StatFs oStats = new android.os.StatFs(sPath);
   jclass cStatFs = env->FindClass("android/os/StatFs");
   jmethodID midStatFsCtor = env->GetMethodID(cStatFs, "<init>", "(Ljava/lang/String;)V");
@@ -1022,7 +1035,9 @@ bool CXBMCApp::GetStorageUsage(const std::string &path, std::string &usage)
 
   env->DeleteLocalRef(oStats);
   env->DeleteLocalRef(cStatFs);
-  
+
+  DetachCurrentThread();
+
   if (iBlockSize <= 0 || iBlocksTotal <= 0 || iBlocksFree < 0)
     return false;
   
