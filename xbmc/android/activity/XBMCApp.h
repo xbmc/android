@@ -85,11 +85,11 @@ protected:
   // limit who can access AttachCurrentThread/DetachCurrentThread
   friend class CAESinkAUDIOTRACK;
 
-  static int AttachCurrentThread(JNIEnv** p_env, void* thr_args);
+  static int AttachCurrentThread(JNIEnv** p_env, void* thr_args = NULL);
   static int DetachCurrentThread();
 
 private:
-  bool getWakeLock();
+  bool getWakeLock(JNIEnv *env);
   void acquireWakeLock();
   void releaseWakeLock();
   void run();
