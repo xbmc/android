@@ -25,8 +25,8 @@ string CAndroidDyload::FindLib(const string &filename)
   if (stat((filename).c_str(), &st) == 0)
     return(filename);
 
-// Also check in system paths. Should not be necessary.
 #if 0
+  // Also check in system paths. Should not be necessary.
   string systemLibs = (getenv("XBMC_ANDROID_SYSTEM_LIBS"));
   while (true)
   {
@@ -184,8 +184,8 @@ void* CAndroidDyload::Open(const char * path)
     m_lib.handle = handle;
     m_lib.filename = filename;
     m_recursivelibs.push_back(m_lib);
-    CXBMCApp::android_printf("xb_dlopen: opening lib: %s", filename.c_str());
 #if defined(DEBUG_SPEW)
+    CXBMCApp::android_printf("xb_dlopen: opening lib: %s", filename.c_str());
     Dump();
 #endif
   }
@@ -202,7 +202,6 @@ void* CAndroidDyload::Open_Internal(string filename)
   string path = FindLib(filename);
   if (!path.size())
     return NULL;
-  CXBMCApp::android_printf("xb_dlopen: asked to dlopen(%s)", path.c_str());
 
   GetDeps(path, &deps);
 
@@ -245,7 +244,6 @@ void* CAndroidDyload::Open_Internal(string filename)
   CSingleLock lock(m_libLock);
   m_libs[filename] = lib;
 
-  CXBMCApp::android_printf("xb_dlopen: opening dep: %s", filename.c_str());
   return handle;
 }
 
@@ -260,15 +258,12 @@ int CAndroidDyload::Close(void *handle)
       {
         if (DecRef(j->filename) == 0)
         {
-          CXBMCApp::android_printf("xb_dlopen: dlclosing(%s)", j->filename.c_str());
           if (dlclose(j->handle))
             CXBMCApp::android_printf("xb_dlopen: Error from dlopen(%s): %s", j->filename.c_str(), dlerror());
 
           CSingleLock lock(m_libLock);
           m_libs.erase(j->filename);
         }
-        else
-          CXBMCApp::android_printf("xb_dlopen: decrefing(%s)", j->filename.c_str());
       }
       m_recursivelibs.erase(i);
 #if defined(DEBUG_SPEW)

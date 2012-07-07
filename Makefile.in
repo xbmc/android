@@ -133,7 +133,7 @@ endif
 BIN_DIRS = $(dir $(DIRECTORY_ARCHIVES)) $(dir $(NWAOBJSXBMC))
 
 ifeq (@USE_ANDROID@,1)
-DIRECTORY_ARCHIVES += xbmc/android/loader/xb_dlopen.a
+DIRECTORY_ARCHIVES += xbmc/android/loader/AndroidDyload.a
 DIRECTORY_ARCHIVES += xbmc/windowing/android/windowing_android.a
 DIRECTORY_ARCHIVES += xbmc/android/activity/activity.a
 endif
@@ -367,7 +367,7 @@ endif
 
 OBJSXBMC:=$(filter-out $(DYNOBJSXBMC), $(OBJSXBMC))
 
-libxbmcapp.so: xbmc/android/loader/xb_dlopen.a
+libxbmcapp.so: xbmc/android/loader/AndroidDyload.a
 	$(MAKE) -C xbmc/android/activity
 
 libxbmc.so: $(OBJSXBMC) $(DYNOBJSXBMC) $(NWAOBJSXBMC)

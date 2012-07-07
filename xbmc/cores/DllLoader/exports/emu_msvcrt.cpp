@@ -72,7 +72,7 @@
 #include "utils/URIUtils.h"
 #endif
 #if defined(TARGET_ANDROID)
-#include "android/loader/xb_dlopen.h"
+#include "android/loader/AndroidDyload.h"
 #else
 #include <dlfcn.h>
 #endif
@@ -460,7 +460,8 @@ extern "C"
   void *dll_dlopen(const char *filename, int flag)
   {
 #if defined(TARGET_ANDROID)
-    return xb_dlopen(filename);
+    CAndroidDyload temp;
+    return temp.Open(filename);
 #else
     return dlopen(filename, flag);
 #endif
