@@ -1044,6 +1044,7 @@ bool CXBMCApp::GetStorageUsage(const std::string &path, std::string &usage)
   float totalSize = (float)iBlockSize * iBlocksTotal / GIGABYTES;
   float freeSize = (float)iBlockSize * iBlocksFree / GIGABYTES;
   float usedSize = totalSize - freeSize;
+  float usedPercentage = usedSize / totalSize * 100;
 
   ostringstream fmt;
   fmt << fixed;
@@ -1053,7 +1054,7 @@ bool CXBMCApp::GetStorageUsage(const std::string &path, std::string &usage)
   fmt.width(12);  fmt << usedSize << "G"; // used in GB
   fmt.width(12);  fmt << freeSize << "G"; // free
   fmt.precision(0);
-  fmt.width(12);  fmt << (usedSize / freeSize) << "%"; // percentage used
+  fmt.width(12);  fmt << usedPercentage << "%"; // percentage used
   
   usage = fmt.str();
   return true;
