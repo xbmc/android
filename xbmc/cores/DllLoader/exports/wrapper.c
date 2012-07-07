@@ -45,7 +45,7 @@ typedef int64_t   off64_t;
 typedef off64_t   __off64_t;
 typedef fpos_t    fpos64_t;
 #define stat64    stat
-#if defined(TARGET_DARWIN)
+#if defined(__arm__)
 #define _G_va_list va_list
 #endif
 #endif
@@ -111,8 +111,18 @@ void dll_funlockfile(FILE *file);
 int dll_fstat64(int fd, struct stat64 *buf);
 int dll_fstat(int fd, struct _stat *buf);
 FILE* dll_popen(const char *command, const char *mode);
+void* dll_dlopen(const char *filename, int flag);
 int dll_setvbuf(FILE *stream, char *buf, int type, size_t size);
 struct mntent *dll_getmntent(FILE *fp);
+
+void *__wrap_dlopen(const char *filename, int flag)
+{
+#if defined(TARGET_ANDROID)
+  return dll_dlopen(filename, flag);
+#else
+  return dlopen(filename, flag);
+#endif
+}
 
 FILE *__wrap_popen(const char *command, const char *mode)
 {
