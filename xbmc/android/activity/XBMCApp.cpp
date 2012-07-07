@@ -193,19 +193,19 @@ void CXBMCApp::onDestroy()
 void CXBMCApp::onSaveState(void **data, size_t *size)
 {
   android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
-  // TODO: probably no need to save anything as XBMC is running in its own thread
+  // no need to save anything as XBMC is running in its own thread
 }
 
 void CXBMCApp::onConfigurationChanged()
 {
   android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
-  // TODO
+  // ignore any configuration changes like screen rotation etc
 }
 
 void CXBMCApp::onLowMemory()
 {
   android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
-  // TODO: probably can't do much apart from closing completely
+  // can't do much as we don't want to close completely
 }
 
 void CXBMCApp::onCreateWindow(ANativeWindow* window)
