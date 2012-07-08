@@ -16,8 +16,8 @@ $(TARBALLS_LOCATION)/$(ARCHIVE):
 	rm -rf $(PLATFORM)/*; mkdir -p $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
 	echo 'using gcc : : $(CC) : ' > $(PLATFORM)/tools/build/v2/user-config.jam
-	echo '	<cflags>"$(CFLAGS) -DBOOST_AC_USE_PTHREADS -DBOOST_SP_USE_PTHREADS"' >> $(PLATFORM)/tools/build/v2/user-config.jam
-	echo '  <cxxflags>"$(CXXFLAGS) -DBOOST_AC_USE_PTHREADS -DBOOST_SP_USE_PTHREADS"' >> $(PLATFORM)/tools/build/v2/user-config.jam
+	echo '	<cflags>"$(CFLAGS)"' >> $(PLATFORM)/tools/build/v2/user-config.jam
+	echo '  <cxxflags>"$(CXXFLAGS)"' >> $(PLATFORM)/tools/build/v2/user-config.jam
 	echo '	;' >> $(PLATFORM)/tools/build/v2/user-config.jam
 	cd $(PLATFORM); patch -p1 < ../add-arm-mem-barrier.patch
 	cd $(PLATFORM); patch -p1 < ../fix-deprecated-swp.patch
