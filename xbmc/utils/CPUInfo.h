@@ -40,6 +40,7 @@
 #define CPU_FEATURE_3DNOW    1 << 8
 #define CPU_FEATURE_3DNOWEXT 1 << 9
 #define CPU_FEATURE_ALTIVEC  1 << 10
+#define CPU_FEATURE_NEON     1 << 11
 
 struct CoreInfo
 {
@@ -79,6 +80,7 @@ private:
   bool readProcStat(unsigned long long& user, unsigned long long& nice, unsigned long long& system,
     unsigned long long& idle, unsigned long long& io);
   void ReadCPUFeatures();
+  bool HasNeon();
 
   FILE* m_fProcStat;
   FILE* m_fProcTemperature;
