@@ -29,6 +29,7 @@
 
 #if defined(__ARM_NEON__)
 #include <arm_neon.h>
+#include "utils/CPUInfo.h"
 // LGPLv2 from PulseAudio
 
 #define PA_UNLIKELY(x) (__builtin_expect(!!(x),0))
@@ -196,12 +197,15 @@ unsigned int CAESinkAUDIOTRACK::AddPackets(uint8_t *data, unsigned int frames)
         break;
 #if defined(__ARM_NEON__)
       case AE_FMT_FLOAT:
+        if (g_cpuInfo.GetCPUFeatures() & CPU_FEATURE_NEON)
+        {
         if (!m_alignedS16LE)
           m_alignedS16LE = (int16_t*)_aligned_malloc(m_format.m_frames * m_sink_frameSize, 16);
         // neon convert AE_FMT_S16LE to AE_FMT_FLOAT
         pa_sconv_s16le_from_f32ne_neon(write_frames * m_format.m_frameSamples, (const float*)data, m_alignedS16LE);
         m_sinkbuffer->Write((unsigned char*)m_alignedS16LE, write_frames * m_sink_frameSize);
         m_wake.Set();
+        }
         break;
 #endif
       default:
@@ -237,7 +241,8 @@ void CAESinkAUDIOTRACK::EnumerateDevicesEx(AEDeviceInfoList &list)
   m_info.m_sampleRates.push_back(44100);
   m_info.m_sampleRates.push_back(48000);
 #if defined(__ARM_NEON__)
-  m_info.m_dataFormats.push_back(AE_FMT_FLOAT);
+  if (g_cpuInfo.GetCPUFeatures() & CPU_FEATURE_NEON)
+    m_info.m_dataFormats.push_back(AE_FMT_FLOAT);
 #endif
   m_info.m_dataFormats.push_back(AE_FMT_S16LE);
 
