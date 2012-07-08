@@ -50,6 +50,7 @@
 
 #if defined(__ARM_NEON__)
 #include "yuv2rgb.neon.h"
+#include "utils/CPUInfo.h"
 #endif
 #ifdef HAVE_VIDEOTOOLBOXDECODER
 #include "DVDCodecs/Video/DVDVideoCodecVideoToolBox.h"
@@ -1339,9 +1340,13 @@ void CLinuxRendererGLES::UploadYV12Texture(int source)
     }
 
 #if defined(__ARM_NEON__)
-    yuv420_2_rgb8888_neon(m_rgbBuffer, im->plane[0], im->plane[2], im->plane[1],
-      m_sourceWidth, m_sourceHeight, im->stride[0], im->stride[1], m_sourceWidth * 4);
-#else
+    if (g_cpuInfo.GetCPUFeatures() & CPU_FEATURE_NEON)
+    {
+      yuv420_2_rgb8888_neon(m_rgbBuffer, im->plane[0], im->plane[2], im->plane[1],
+        m_sourceWidth, m_sourceHeight, im->stride[0], im->stride[1], m_sourceWidth * 4);
+      return;
+    }
+#endif
     m_sw_context = m_dllSwScale->sws_getCachedContext(m_sw_context,
       im->width, im->height, PIX_FMT_YUV420P,
       im->width, im->height, PIX_FMT_RGBA,
@@ -1352,7 +1357,6 @@ void CLinuxRendererGLES::UploadYV12Texture(int source)
     uint8_t *dst[]  = { m_rgbBuffer, 0, 0, 0 };
     int dstStride[] = { m_sourceWidth*4, 0, 0, 0 };
     m_dllSwScale->sws_scale(m_sw_context, src, srcStride, 0, im->height, dst, dstStride);
-#endif
   }
 
   bool deinterlacing;
