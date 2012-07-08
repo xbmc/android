@@ -197,15 +197,12 @@ unsigned int CAESinkAUDIOTRACK::AddPackets(uint8_t *data, unsigned int frames)
         break;
 #if defined(__ARM_NEON__)
       case AE_FMT_FLOAT:
-        if (g_cpuInfo.GetCPUFeatures() & CPU_FEATURE_NEON)
-        {
-          if (!m_alignedS16LE)
-            m_alignedS16LE = (int16_t*)_aligned_malloc(m_format.m_frames * m_sink_frameSize, 16);
-          // neon convert AE_FMT_S16LE to AE_FMT_FLOAT
-          pa_sconv_s16le_from_f32ne_neon(write_frames * m_format.m_frameSamples, (const float*)data, m_alignedS16LE);
-          m_sinkbuffer->Write((unsigned char*)m_alignedS16LE, write_frames * m_sink_frameSize);
-          m_wake.Set();
-        }
+        if (!m_alignedS16LE)
+          m_alignedS16LE = (int16_t*)_aligned_malloc(m_format.m_frames * m_sink_frameSize, 16);
+        // neon convert AE_FMT_S16LE to AE_FMT_FLOAT
+        pa_sconv_s16le_from_f32ne_neon(write_frames * m_format.m_frameSamples, (const float*)data, m_alignedS16LE);
+        m_sinkbuffer->Write((unsigned char*)m_alignedS16LE, write_frames * m_sink_frameSize);
+        m_wake.Set();
         break;
 #endif
       default:
