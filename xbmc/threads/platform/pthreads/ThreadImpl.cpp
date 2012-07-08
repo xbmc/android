@@ -90,24 +90,22 @@ bool CThread::IsCurrentThread(const ThreadIdentifier tid)
 
 int CThread::GetMinPriority(void)
 {
-  // one level lower than application
-  return -1;
+  return THREAD_PRIORITY_IDLE;
 }
 
 int CThread::GetMaxPriority(void)
 {
-  // one level higher than application
-  return 1;
+  return THREAD_PRIORITY_HIGHEST;
 }
 
 int CThread::GetNormalPriority(void)
 {
-  // same level as application
-  return 0;
+  return THREAD_PRIORITY_NORMAL;
 }
 
 bool CThread::SetPriority(const int iPriority)
 {
+  // iPriority is with respect to that defined in Thread.h
   bool bReturn = false;
 
   // wait until thread is running, it needs to get its lwp id
@@ -115,44 +113,25 @@ bool CThread::SetPriority(const int iPriority)
   
   CSingleLock lock(m_CriticalSection);
 
-  // get min prio for SCHED_RR
-  int minRR = GetMaxPriority() + 1;
-
   if (!m_ThreadId)
-    bReturn = false;
-  else if (iPriority >= minRR)
-    bReturn = SetPrioritySched_RR(iPriority);
-#ifdef RLIMIT_NICE
+    return false;
+
+  // keep priority in bounds
+  int prio = iPriority;
+  if (prio >= GetMaxPriority())
+    prio = GetMinPriority();
+  if (prio < GetMinPriority())
+    prio = GetMinPriority();
+
+  // nice level of application
+  int appNice = getpriority(PRIO_PROCESS, getpid());
+  // flip it with respect to the 'nice' levels (-20 to 19)
+  prio = appNice - prio;
+
+  if (setpriority(PRIO_PROCESS, m_ThreadOpaque.LwpId, prio) == 0)
+    bReturn = true;
   else
-  {
-    // get user max prio
-    struct rlimit limit;
-    int userMaxPrio;
-    if (getrlimit(RLIMIT_NICE, &limit) == 0)
-    {
-      userMaxPrio = limit.rlim_cur - 20;
-    }
-    else
-      userMaxPrio = 0;
-
-    // keep priority in bounds
-    int prio = iPriority;
-    if (prio >= GetMaxPriority())
-      prio = std::min(GetMaxPriority(), userMaxPrio);
-    if (prio < GetMinPriority())
-      prio = GetMinPriority();
-
-    // nice level of application
-    int appNice = getpriority(PRIO_PROCESS, getpid());
-    if (prio)
-      prio = prio > 0 ? appNice-1 : appNice+1;
-
-    if (setpriority(PRIO_PROCESS, m_ThreadOpaque.LwpId, prio) == 0)
-      bReturn = true;
-    else
-      if (logger) logger->Log(LOGERROR, "%s: error %s", __FUNCTION__, strerror(errno));
-  }
-#endif
+    if (logger) logger->Log(LOGERROR, "%s: error %s", __FUNCTION__, strerror(errno));
 
   return bReturn;
 }
@@ -168,6 +147,8 @@ int CThread::GetPriority()
   
   int appNice = getpriority(PRIO_PROCESS, getpid());
   int prio = getpriority(PRIO_PROCESS, m_ThreadOpaque.LwpId);
+  // flip it with respect to the 'nice' levels (-20 to 19), so that
+  // what is returned is with repect to that defined in Thread.h
   iReturn = appNice - prio;
 
   return iReturn;
