@@ -622,47 +622,39 @@ void CCPUInfo::ReadCPUFeatures()
 
 bool CCPUInfo::HasNeon()
 {
-#if defined(TARGET_LINUX) && !defined(TARGET_ANDROID) && defined(__ARM_NEON__)
-  static bool detected = false;
-  static bool have_neon = false;
-  int fd;
-  Elf32_auxv_t auxv;
-  unsigned int hwcaps;
+  static int has_neon = -1;
+#if defined (TARGET_ANDROID)
+  if (has_neon == -1)
+    has_neon = (CAndroidCPU::HasNeon()) ? 1 : 0;
 
-  if (!detected)
+#elif defined(TARGET_DARWIN_IOS)
+  has_neon = 1;
+
+#elif defined(TARGET_LINUX) && defined(__ARM_NEON__)
+  if (has_neon == -1)
   {
-    int fd;
-    Elf32_auxv_t auxv;
-    unsigned int hwcaps;
-
-    fd = open("/proc/self/auxv", O_RDONLY);
+    has_neon = 0;
+    // why are we not looking at the Features in
+    // /proc/cpuinfo for neon ?
+    int fd = open("/proc/self/auxv", O_RDONLY);
     if (fd >= 0)
     {
+      Elf32_auxv_t auxv;
       while (read(fd, &auxv, sizeof(Elf32_auxv_t)) == sizeof(Elf32_auxv_t))
       {
         if (auxv.a_type == AT_HWCAP)
         {
-          have_neon = (auxv.a_un.a_val & HWCAP_NEON) ? true : false;
+          has_neon = (auxv.a_un.a_val & HWCAP_NEON) ? 1 : 0;
           break;
         }
       }
-      close (fd);
+      close(fd);
     }
-    else
-    {
-      have_neon = false;
-    }
-    detected = true;
   }
-  return have_neon;
 
-#elif defined (TARGET_ANDROID)
-    return (CAndroidCPU::HasNeon());
-#elif defined(TARGET_DARWIN_IOS)
-  return true
-#else
-  return false;
 #endif
+
+  return has_neon == 1;
 }
 
 CCPUInfo g_cpuInfo;
