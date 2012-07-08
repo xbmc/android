@@ -21,6 +21,9 @@
 
 #include "VisMatrixGLES.h"
 #include <cmath>
+#if defined(__ARM_NEON__)
+#include "utils/CPUInfo.h"
+#endif
 
 #define MODE_WITHIN_RANGE(m)       ((m >= 0) && (m < (int)MM_MATRIXSIZE))
 
@@ -227,20 +230,19 @@ inline void Matrix4Mul(const float* src_mat_1, const float* src_mat_2, float* ds
     : "memory", "q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10", "q11" //clobber
     );
 }
+#endif
 void CVisMatrixGLES::MultMatrixf(const GLfloat *matrix)
 {
   if (m_pMatrix)
   {
-    GLfloat m[16];
-    Matrix4Mul(m_pMatrix, matrix, m);
-  }
-}
-
-#else
-void CVisMatrixGLES::MultMatrixf(const GLfloat *matrix)
-{
-  if (m_pMatrix)
-  {
+#if defined(__ARM_NEON__)
+    if (g_cpuInfo.GetCPUFeatures() & CPU_FEATURE_NEON)
+    {
+      GLfloat m[16];
+      Matrix4Mul(m_pMatrix, matrix, m);
+      return;
+    }
+#endif
     GLfloat a = (matrix[0]  * m_pMatrix[0]) + (matrix[1]  * m_pMatrix[4]) + (matrix[2]  * m_pMatrix[8])  + (matrix[3]  * m_pMatrix[12]);
     GLfloat b = (matrix[0]  * m_pMatrix[1]) + (matrix[1]  * m_pMatrix[5]) + (matrix[2]  * m_pMatrix[9])  + (matrix[3]  * m_pMatrix[13]);
     GLfloat c = (matrix[0]  * m_pMatrix[2]) + (matrix[1]  * m_pMatrix[6]) + (matrix[2]  * m_pMatrix[10]) + (matrix[3]  * m_pMatrix[14]);
@@ -263,7 +265,6 @@ void CVisMatrixGLES::MultMatrixf(const GLfloat *matrix)
     m_pMatrix[3] = d;  m_pMatrix[7] = h;  m_pMatrix[11] = l;  m_pMatrix[15] = p;
   }
 }
-#endif
 
 // gluLookAt implementation taken from Mesa3D
 void CVisMatrixGLES::LookAt(GLfloat eyex, GLfloat eyey, GLfloat eyez, GLfloat centerx, GLfloat centery, GLfloat centerz, GLfloat upx, GLfloat upy, GLfloat upz)
