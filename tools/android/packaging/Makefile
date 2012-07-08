@@ -5,7 +5,7 @@ OBJS = libcurl.so \
   libafpclient.so  \
   libshairport.so libplist.so \
 
-PLATFORM_OBJS = libiomx.so
+PLATFORM_OBJS =
 
 XBMCROOT = $(CURDIR)/../../..
 COPYDIRS = system addons language media
