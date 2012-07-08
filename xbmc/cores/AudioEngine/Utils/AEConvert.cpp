@@ -41,6 +41,7 @@
 
 #ifdef __ARM_NEON__
 #include <arm_neon.h>
+#include "utils/CPUInfo.h"
 #endif
 
 #define CLAMP(x) std::min(-1.0f, std::max(1.0f, (float)(x)))
@@ -250,7 +251,8 @@ unsigned int CAEConvert::S32LE_Float(uint8_t *data, const unsigned int samples, 
   int32_t *src = (int32_t*)data;
 
 #if defined(__ARM_NEON__)
-
+  if (g_cpuInfo.GetCPUFeatures() & CPU_FEATURE_NEON)
+  {
   /* groups of 4 samples */
   for (float *end = dest + (samples & ~0x3); dest < end; src += 4, dest += 4)
   {
@@ -279,7 +281,9 @@ unsigned int CAEConvert::S32LE_Float(uint8_t *data, const unsigned int samples, 
   if (samples & 0x1)
     dest[0] = (float)src[0] * factor;
 
-#else /* !defined(__ARM_NEON__) */
+  return samples;
+  }
+#endif /* !defined(__ARM_NEON__) */
 
   /* do this in groups of 4 to give the compiler a better chance of optimizing this */
   for (float *end = dest + (samples & ~0x3); dest < end; src += 4, dest += 4)
@@ -294,8 +298,6 @@ unsigned int CAEConvert::S32LE_Float(uint8_t *data, const unsigned int samples, 
   for (float *end = dest + (samples & 0x3); dest < end; ++src, ++dest)
     dest[0] = (float)Endian_SwapLE32(src[0]) * factor;
 
-#endif
-
   return samples;
 }
 
@@ -305,7 +307,8 @@ unsigned int CAEConvert::S32BE_Float(uint8_t *data, const unsigned int samples, 
   int32_t *src = (int32_t*)data;
 
 #if defined(__ARM_NEON__)
-
+  if (g_cpuInfo.GetCPUFeatures() & CPU_FEATURE_NEON)
+  {
   /* groups of 4 samples */
   for (float *end = dest + (samples & ~0x3); dest < end; src += 4, dest += 4)
   {
@@ -334,7 +337,9 @@ unsigned int CAEConvert::S32BE_Float(uint8_t *data, const unsigned int samples, 
   if (samples & 0x1)
     dest[0] = (float)src[0] * factor;
 
-#else /* !defined(__ARM_NEON__) */
+  return samples;
+  }
+#endif /* !defined(__ARM_NEON__) */
 
   /* do this in groups of 4 to give the compiler a better chance of optimizing this */
   for (float *end = dest + (samples & ~0x3); dest < end; src += 4, dest += 4)
@@ -348,8 +353,6 @@ unsigned int CAEConvert::S32BE_Float(uint8_t *data, const unsigned int samples, 
   /* process any remaining samples */
   for (float *end = dest + (samples & 0x3); dest < end; ++src, ++dest)
     dest[0] = (float)Endian_SwapBE32(src[0]) * factor;
-
-#endif
 
   return samples;
 }
@@ -966,9 +969,11 @@ unsigned int CAEConvert::Float_S32LE(float *data, const unsigned int samples, ui
     }
   }
   _mm_empty();
+  return samples << 2;
 
   #elif defined(__ARM_NEON__)
-
+  if (g_cpuInfo.GetCPUFeatures() & CPU_FEATURE_NEON)
+  {
   for (float *end = data + (samples & ~0x3); data < end; data += 4, dst += 4)
   {
     float32x4_t val = vmulq_n_f32(vld1q_f32((const float32_t *)data), INT32_MAX);
@@ -997,7 +1002,9 @@ unsigned int CAEConvert::Float_S32LE(float *data, const unsigned int samples, ui
     dst[0] = Endian_SwapLE32(dst[0]);
   }
 
-  #else
+  return samples << 2;
+  }
+  #endif
 
   /* no SIMD */
   for (uint32_t i = 0; i < samples; ++i, ++data, ++dst)
@@ -1005,7 +1012,6 @@ unsigned int CAEConvert::Float_S32LE(float *data, const unsigned int samples, ui
     dst[0] = safeRound(data[0] * (float)INT32_MAX);
     dst[0] = Endian_SwapLE32(dst[0]);
   }
-  #endif
 
   return samples << 2;
 }
@@ -1071,9 +1077,11 @@ unsigned int CAEConvert::Float_S32BE(float *data, const unsigned int samples, ui
     }
   }
   _mm_empty();
+  return samples << 2;
 
   #elif defined(__ARM_NEON__)
-
+  if (g_cpuInfo.GetCPUFeatures() & CPU_FEATURE_NEON)
+  {
   for (float *end = data + (samples & ~0x3); data < end; data += 4, dst += 4)
   {
     float32x4_t val = vmulq_n_f32(vld1q_f32((const float32_t *)data), INT32_MAX);
@@ -1101,8 +1109,9 @@ unsigned int CAEConvert::Float_S32BE(float *data, const unsigned int samples, ui
     dst[0] = safeRound(data[0] * (float)INT32_MAX);
     dst[0] = Endian_SwapBE32(dst[0]);
   }
-
-  #else
+  return samples << 2;
+  }
+  #endif
 
   /* no SIMD */
   for (uint32_t i = 0; i < samples; ++i, ++data, ++dst)
@@ -1110,7 +1119,6 @@ unsigned int CAEConvert::Float_S32BE(float *data, const unsigned int samples, ui
     dst[0] = safeRound(data[0] * (float)INT32_MAX);
     dst[0] = Endian_SwapBE32(dst[0]);
   }
-  #endif
 
   return samples << 2;
 }
