@@ -46,6 +46,9 @@ CMatrixGLES::CMatrixGLES()
   }
   m_matrixMode = (EMATRIXMODE)-1;
   m_pMatrix    = NULL;
+#if defined(__ARM_NEON__)
+  m_has_neon = (g_cpuInfo.GetCPUFeatures() & CPU_FEATURE_NEON) == CPU_FEATURE_NEON;
+#endif
 }
 
 CMatrixGLES::~CMatrixGLES()
@@ -245,7 +248,7 @@ void CMatrixGLES::MultMatrixf(const GLfloat *matrix)
   if (m_pMatrix)
   {
 #if defined(__ARM_NEON__)
-    if (g_cpuInfo.GetCPUFeatures() & CPU_FEATURE_NEON)
+    if (m_has_neon)
     {
       GLfloat m[16];
       Matrix4Mul(m_pMatrix, matrix, m);
