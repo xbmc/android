@@ -47,8 +47,6 @@ public:
 private:
   virtual void Process();
 
-  void                 ProbeSupportedSampleRates();
-
   static CAEDeviceInfo m_info;
   AEAudioFormat      m_format;
   volatile int       m_min_frames;
