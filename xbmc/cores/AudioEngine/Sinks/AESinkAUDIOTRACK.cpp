@@ -181,7 +181,7 @@ double CAESinkAUDIOTRACK::GetCacheTotal()
   return m_sinkbuffer_sec;
 }
 
-unsigned int CAESinkAUDIOTRACK::AddPackets(uint8_t *data, unsigned int frames)
+unsigned int CAESinkAUDIOTRACK::AddPackets(uint8_t *data, unsigned int frames, bool hasAudio)
 {
   // write as many frames of audio as we can fit into our internal buffer.
 
