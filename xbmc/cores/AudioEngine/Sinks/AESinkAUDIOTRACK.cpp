@@ -187,7 +187,7 @@ unsigned int CAESinkAUDIOTRACK::AddPackets(uint8_t *data, unsigned int frames, b
 
   // our internal sink buffer is always AE_FMT_S16LE
   unsigned int write_frames = (m_sinkbuffer->GetWriteSize() / m_sink_frameSize) % frames;
-  if (write_frames)
+  if (hasAudio && write_frames)
   {
     switch(m_format.m_dataFormat)
     {
@@ -211,9 +211,9 @@ unsigned int CAESinkAUDIOTRACK::AddPackets(uint8_t *data, unsigned int frames, b
   }
   // AddPackets runs under a non-idled AE thread we must block or sleep.
   // Trying to calc the optimal sleep is tricky so just a minimal sleep.
-  Sleep(1);
+  Sleep(10);
 
-  return write_frames;
+  return hasAudio ? write_frames:frames;
 }
 
 void CAESinkAUDIOTRACK::Drain()
@@ -237,19 +237,13 @@ void CAESinkAUDIOTRACK::EnumerateDevicesEx(AEDeviceInfoList &list)
   m_info.m_channels += AE_CH_FR;
   m_info.m_sampleRates.push_back(44100);
   m_info.m_sampleRates.push_back(48000);
+  m_info.m_dataFormats.push_back(AE_FMT_S16LE);
 #if defined(__ARM_NEON__)
   if (g_cpuInfo.GetCPUFeatures() & CPU_FEATURE_NEON)
     m_info.m_dataFormats.push_back(AE_FMT_FLOAT);
 #endif
-  m_info.m_dataFormats.push_back(AE_FMT_S16LE);
 
   list.push_back(m_info);
-}
-
-void CAESinkAUDIOTRACK::ProbeSupportedSampleRates()
-{
-  m_info.m_sampleRates.push_back(44100);
-  m_info.m_sampleRates.push_back(48000);
 }
 
 void CAESinkAUDIOTRACK::Process()
@@ -335,7 +329,7 @@ void CAESinkAUDIOTRACK::Process()
       if (jenv->CallIntMethod(joAudioTrack, jmPlayState) != playing)
         jenv->CallVoidMethod(joAudioTrack, jmPlay);
 
-      // Stream the next batch of audio data to the Java AudioTrack.
+      // Write a buffer of audio data to Java AudioTrack.
       // Warning, no other JNI function can be called after
       // GetPrimitiveArrayCritical until ReleasePrimitiveArrayCritical.
       void *pBuffer = jenv->GetPrimitiveArrayCritical(jbuffer, NULL);
@@ -343,20 +337,17 @@ void CAESinkAUDIOTRACK::Process()
       {
         m_sinkbuffer->Read((unsigned char*)pBuffer, read_bytes);
         jenv->ReleasePrimitiveArrayCritical(jbuffer, pBuffer, 0);
-        // jmWrite is blocking and return when the data has been transferred
-        // from the Java layer to the native layer and queued for playback.
+        // jmWrite is blocking and returns when the data has been transferred
+        // from the Java layer and queued for playback.
         jenv->CallIntMethod(joAudioTrack, jmWrite, jbuffer, 0, read_bytes);
-
-      }
-      else
-      {
-        CLog::Log(LOGDEBUG, "Failed to get pointer to array bytes");
       }
     }
     else
     {
-      // Sleep this audio thread to give other
-      // threads a chance to do some work.
+      // the sink buffer is empty, stop playback.
+      // Audiotrack will playout any written contents.
+      jenv->CallVoidMethod(joAudioTrack, jmStop);
+      // sleep this audio thread, we will get woken when we have audio data.
       m_wake.WaitMSec(250);
     }
   }
