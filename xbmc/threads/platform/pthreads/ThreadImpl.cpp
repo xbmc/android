@@ -90,12 +90,14 @@ bool CThread::IsCurrentThread(const ThreadIdentifier tid)
 
 int CThread::GetMinPriority(void)
 {
-  return THREAD_PRIORITY_IDLE;
+  return 4;
+  //return THREAD_PRIORITY_IDLE;
 }
 
 int CThread::GetMaxPriority(void)
 {
-  return THREAD_PRIORITY_HIGHEST;
+    return -4;
+//  return THREAD_PRIORITY_HIGHEST;
 }
 
 int CThread::GetNormalPriority(void)
