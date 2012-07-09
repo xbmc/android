@@ -119,7 +119,7 @@ bool CThread::SetPriority(const int iPriority)
   // keep priority in bounds
   int prio = iPriority;
   if (prio >= GetMaxPriority())
-    prio = GetMinPriority();
+    prio = GetMaxPriority();
   if (prio < GetMinPriority())
     prio = GetMinPriority();
 
