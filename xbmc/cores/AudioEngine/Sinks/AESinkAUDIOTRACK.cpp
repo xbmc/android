@@ -158,11 +158,11 @@ bool CAESinkAUDIOTRACK::IsCompatible(const AEAudioFormat format, const std::stri
 
 double CAESinkAUDIOTRACK::GetDelay()
 {
-  // this includes any latency due to AudioTrack buffer size,
+  // this includes any latency due to AudioTrack buffer,
   // AudioMixer (if any) and audio hardware driver.
 
   double sinkbuffer_seconds_to_empty = m_sinkbuffer_sec_per_byte * (double)m_sinkbuffer->GetReadSize();
-  return sinkbuffer_seconds_to_empty + m_audiotracklatency_sec;
+  return sinkbuffer_seconds_to_empty + m_audiotrack_empty_sec;
 }
 
 double CAESinkAUDIOTRACK::GetCacheTime()
@@ -171,14 +171,14 @@ double CAESinkAUDIOTRACK::GetCacheTime()
   // to underrun the buffer if no sample is added.
 
   double sinkbuffer_seconds_to_empty = m_sinkbuffer_sec_per_byte * (double)m_sinkbuffer->GetReadSize();
-  return sinkbuffer_seconds_to_empty;
+  return sinkbuffer_seconds_to_empty + m_audiotrack_empty_sec;
 }
 
 double CAESinkAUDIOTRACK::GetCacheTotal()
 {
   // total amount that the audio sink can buffer in units of seconds
 
-  return m_sinkbuffer_sec;
+  return m_sinkbuffer_sec + m_audiotrackbuffer_sec;
 }
 
 unsigned int CAESinkAUDIOTRACK::AddPackets(uint8_t *data, unsigned int frames, bool hasAudio)
@@ -265,6 +265,7 @@ void CAESinkAUDIOTRACK::Process()
   jmethodID jmRelease           = jenv->GetMethodID(jcAudioTrack, "release", "()V");
   jmethodID jmWrite             = jenv->GetMethodID(jcAudioTrack, "write", "([BII)I");
   jmethodID jmPlayState         = jenv->GetMethodID(jcAudioTrack, "getPlayState", "()I");
+  jmethodID jmPlayHeadPosition  = jenv->GetMethodID(jcAudioTrack, "getPlaybackHeadPosition", "()I");
   jmethodID jmGetMinBufferSize  = jenv->GetStaticMethodID(jcAudioTrack, "getMinBufferSize", "(III)I");
 
   jint audioFormat    = GetStaticIntField(jenv, "AudioFormat", "ENCODING_PCM_16BIT");
@@ -277,9 +278,7 @@ void CAESinkAUDIOTRACK::Process()
   m_min_frames = min_buffer_size / m_sink_frameSize;
 
   m_audiotrackbuffer_sec = (double)min_buffer_size / (double)m_format.m_sampleRate;
-  m_audiotrackbuffer_sec_per_byte = 1.0 / (double)(m_sink_frameSize * m_format.m_sampleRate);
-  // we cannot get actual latency using jni so guess
-  m_audiotracklatency_sec = 0.100;
+  m_audiotrack_empty_sec = 0.0;
 
   // setup a 1/4 second internal sink lockless ring buffer
   m_sinkbuffer = new AERingBuffer(m_sink_frameSize * m_format.m_sampleRate / 4);
@@ -304,6 +303,9 @@ void CAESinkAUDIOTRACK::Process()
 
   // create a java byte buffer for writing pcm data to AudioTrack.
   jarray jbuffer = jenv->NewByteArray(min_buffer_size);
+
+  int64_t frames_written = 0;
+  int64_t frame_position = 0;
 
   while (!m_bStop)
   {
@@ -342,7 +344,14 @@ void CAESinkAUDIOTRACK::Process()
         jenv->CallIntMethod(joAudioTrack, jmWrite, jbuffer, 0, read_bytes);
       }
     }
-    else
+    // calc the number of seconds until audiotrack buffer is empty.
+    frame_position = jenv->CallIntMethod(joAudioTrack, jmPlayHeadPosition);
+    if (frame_position == 0)
+      frames_written = 0;
+    frames_written += read_bytes / m_sink_frameSize;
+    m_audiotrack_empty_sec = (double)(frames_written - frame_position) / m_format.m_sampleRate;
+
+    if (m_sinkbuffer->GetReadSize() == 0)
     {
       // the sink buffer is empty, stop playback.
       // Audiotrack will playout any written contents.
