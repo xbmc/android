@@ -265,7 +265,6 @@ void CSoftAE::InternalOpenSink()
     newFormat.m_sampleRate = g_advancedSettings.m_audioResample;
     CLog::Log(LOGINFO, "CSoftAE::InternalOpenSink - Forcing samplerate to %d", newFormat.m_sampleRate);
   }
-
   /* only re-open the sink if its not compatible with what we need */
   std::string sinkName;
   if (m_sink)
@@ -809,7 +808,7 @@ double CSoftAE::GetCacheTime()
   CSharedLock sinkLock(m_sinkLock);
 
   double time;
-  time  = (double)m_buffer.Free() * m_sinkFormatFrameSizeMul * m_sinkFormatSampleRateMul;
+  time  = (double)m_buffer.Used() * m_sinkFormatFrameSizeMul * m_sinkFormatSampleRateMul;
   time += m_sink->GetCacheTime();
 
   return time;
@@ -853,11 +852,13 @@ void CSoftAE::Run()
   CSingleLock runningLock(m_runningLock);
   CLog::Log(LOGINFO, "CSoftAE::Run - Thread Started");
 
+  bool hasAudio = false;
   while (m_running)
   {
     bool restart = false;
 
-    (this->*m_outputStageFn)();
+    if ((this->*m_outputStageFn)(hasAudio) > 0)
+      hasAudio = false; /* taken some audio - reset our silence flag */
 
     /* if we have enough room in the buffer */
     if (m_buffer.Free() >= m_frameSize)
@@ -868,7 +869,8 @@ void CSoftAE::Run()
 
       /* run the stream stage */
       CSoftAEStream *oldMaster = m_masterStream;
-      (this->*m_streamStageFn)(m_chLayout.Count(), out, restart);
+      if ((this->*m_streamStageFn)(m_chLayout.Count(), out, restart) > 0)
+        hasAudio = true; /* have some audio */
 
       /* if in audiophile mode and the master stream has changed, flag for restart */
       if (m_audiophile && oldMaster != m_masterStream)
@@ -884,10 +886,11 @@ void CSoftAE::Run()
   }
 }
 
-void CSoftAE::MixSounds(float *buffer, unsigned int samples)
+unsigned int CSoftAE::MixSounds(float *buffer, unsigned int samples)
 {
   SoundStateList::iterator itt;
 
+  unsigned int mixed = 0;
   CSingleLock lock(m_soundSampleLock);
   for (itt = m_playing_sounds.begin(); itt != m_playing_sounds.end(); )
   {
@@ -915,18 +918,24 @@ void CSoftAE::MixSounds(float *buffer, unsigned int samples)
     ss->samples     += mixSamples;
 
     ++itt;
+    ++mixed;
   }
+  return mixed;
 }
 
-void CSoftAE::FinalizeSamples(float *buffer, unsigned int samples)
+bool CSoftAE::FinalizeSamples(float *buffer, unsigned int samples, bool hasAudio)
 {
   if (m_soundMode != AE_SOUND_OFF)
-    MixSounds(buffer, samples);
+    hasAudio |= MixSounds(buffer, samples) > 0;
+
+  /* no need to process if we don't have audio (buffer is memset to 0) */
+  if (!hasAudio)
+    return false;
 
   if (m_muted)
   {
     memset(buffer, 0, samples * sizeof(float));
-    return;
+    return false;
   }
 
   /* deamplify */
@@ -962,21 +971,22 @@ void CSoftAE::FinalizeSamples(float *buffer, unsigned int samples)
 
   /* if there were no samples outside of the range, dont clamp the buffer */
   if (!clamp)
-    return;
+    return true;
 
   CLog::Log(LOGDEBUG, "CSoftAE::FinalizeSamples - Clamping buffer of %d samples", samples);
   CAEUtil::ClampArray(buffer, samples);
+  return true;
 }
 
-void CSoftAE::RunOutputStage()
+int CSoftAE::RunOutputStage(bool hasAudio)
 {
   const unsigned int needSamples = m_sinkFormat.m_frames * m_sinkFormat.m_channelLayout.Count();
   const size_t needBytes = needSamples * sizeof(float);
   if (m_buffer.Used() < needBytes)
-    return;
+    return 0;
 
   void *data = m_buffer.Raw(needBytes);
-  FinalizeSamples((float*)data, needSamples);
+  hasAudio = FinalizeSamples((float*)data, needSamples, hasAudio);
 
   int wroteFrames;
   if (m_convertFn)
@@ -992,7 +1002,7 @@ void CSoftAE::RunOutputStage()
     data = m_converted;
   }
 
-  wroteFrames = m_sink->AddPackets((uint8_t*)data, m_sinkFormat.m_frames);
+  wroteFrames = m_sink->AddPackets((uint8_t*)data, m_sinkFormat.m_frames, hasAudio);
 
   /* Return value of INT_MAX signals error in sink - restart */
   if (wroteFrames == INT_MAX)
@@ -1003,14 +1013,15 @@ void CSoftAE::RunOutputStage()
   }
 
   m_buffer.Shift(NULL, wroteFrames * m_sinkFormat.m_channelLayout.Count() * sizeof(float));
+  return wroteFrames;
 }
 
-void CSoftAE::RunRawOutputStage()
+int CSoftAE::RunRawOutputStage(bool hasAudio)
 {
   if(m_buffer.Used() < m_sinkBlockSize)
-    return;
+    return 0;
 
-  int wroteFrames = m_sink->AddPackets((uint8_t*)m_buffer.Raw(m_sinkBlockSize), m_sinkFormat.m_frames);
+  int wroteFrames = m_sink->AddPackets((uint8_t*)m_buffer.Raw(m_sinkBlockSize), m_sinkFormat.m_frames, hasAudio);
 
   /* Return value of INT_MAX signals error in sink - restart */
   if (wroteFrames == INT_MAX)
@@ -1021,17 +1032,19 @@ void CSoftAE::RunRawOutputStage()
   }
 
   m_buffer.Shift(NULL, wroteFrames * m_sinkFormat.m_frameSize);
+  return wroteFrames;
 }
 
-void CSoftAE::RunTranscodeStage()
+int CSoftAE::RunTranscodeStage(bool hasAudio)
 {
   /* if we dont have enough samples to encode yet, return */
   unsigned int block     = m_encoderFormat.m_frames * m_encoderFormat.m_frameSize;
   unsigned int sinkBlock = m_sinkFormat.m_frames    * m_sinkFormat.m_frameSize;
 
+  int encodedFrames = 0;
   if (m_buffer.Used() >= block && m_encodedBuffer.Used() < sinkBlock * 2)
   {
-    FinalizeSamples((float*)m_buffer.Raw(block), m_encoderFormat.m_frameSamples);
+    hasAudio = FinalizeSamples((float*)m_buffer.Raw(block), m_encoderFormat.m_frameSamples, hasAudio);
 
     void *buffer;
     if (m_convertFn)
@@ -1053,7 +1066,7 @@ void CSoftAE::RunTranscodeStage()
     else
       buffer = m_buffer.Raw(block);
 
-    int encodedFrames  = m_encoder->Encode((float*)buffer, m_encoderFormat.m_frames);
+    encodedFrames = m_encoder->Encode((float*)buffer, m_encoderFormat.m_frames);
     m_buffer.Shift(NULL, encodedFrames * m_encoderFormat.m_frameSize);
 
     uint8_t *packet;
@@ -1069,7 +1082,7 @@ void CSoftAE::RunTranscodeStage()
   /* if we have enough data to write */
   if (m_encodedBuffer.Used() >= sinkBlock)
   {
-    int wroteFrames = m_sink->AddPackets((uint8_t*)m_encodedBuffer.Raw(sinkBlock), m_sinkFormat.m_frames);
+    int wroteFrames = m_sink->AddPackets((uint8_t*)m_encodedBuffer.Raw(sinkBlock), m_sinkFormat.m_frames, hasAudio);
     
     /* Return value of INT_MAX signals error in sink - restart */
     if (wroteFrames == INT_MAX)
@@ -1081,6 +1094,7 @@ void CSoftAE::RunTranscodeStage()
 
     m_encodedBuffer.Shift(NULL, wroteFrames * m_sinkFormat.m_frameSize);
   }
+  return encodedFrames;
 }
 
 unsigned int CSoftAE::RunRawStreamStage(unsigned int channelCount, void *out, bool &restart)
