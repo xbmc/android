@@ -1,7 +1,7 @@
 include ../Makefile.include
 DEPS= ../Makefile.include Makefile Python-2.6.2-android.patch \
       Python-2.6.5-xcompile.patch Python-2.6-ctypes.patch \
-      Python-no-modules.patch modules.setup
+      Python-no-modules.patch Python-no-export-path.patch modules.setup
 
 # lib name, version
 LIBNAME=Python
@@ -30,10 +30,11 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE) $(DEPS)
 	cd $(PLATFORM); patch -Np1 -i ../Python-2.6.5-xcompile.patch
 	cd $(PLATFORM); patch -Np1 -i ../Python-2.6.2-android.patch
 	cd $(PLATFORM); patch -p0 < ../Python-no-modules.patch
+	cd $(PLATFORM); patch -p0 < ../Python-no-export-path.patch
+	cp modules.setup $(PLATFORM)/Modules/Setup.dist
 	cd $(PLATFORM); sed -ie 's|-framework CoreFoundation||' configure.in
 	cd $(PLATFORM); $(AUTORECONF)
 	cd $(PLATFORM); $(CONFIGURE)
-	cp modules.setup $(PLATFORM)/Modules/Setup
 
 $(LIBDYLIB): $(PLATFORM)
 	$(MAKE) -C $(PLATFORM) HOSTPYTHON=$(NATIVEPREFIX)/bin/python HOSTPGEN=$(NATIVEPREFIX)/bin/pgen CROSS_COMPILE_TARGET=yes libpython2.6.a
