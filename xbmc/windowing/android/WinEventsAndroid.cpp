@@ -67,7 +67,7 @@ bool CWinEventsAndroid::MessagePump()
 
   if (gotEvent)
   {
-    ret |= g_application.OnEvent(pumpEvent);
+    ret = g_application.OnEvent(pumpEvent);
   }
 
   return ret;
