@@ -10,6 +10,7 @@ PLATFORM_OBJS =
 XBMCROOT = $(shell cd $(CURDIR)/../../..; pwd)
 COPYDIRS = system addons language media
 AAPT = $(SDKROOT)/platform-tools/aapt
+DX = $(SDKROOT)/platform-tools/dx
 GCC_VERSION=$(shell $(CC) -dumpversion)
 
 X86OVERRIDES=XBMC_OVERRIDE_HOST=i686-android-linux XBMC_OVERRIDE_TOOLCHAIN=$(XBMC_X86_TOOLCHAIN)
@@ -39,7 +40,9 @@ multi: x86 arm
 
 package: extras
 	@cp images/xbmcapp-debug-skeleton.apk images/xbmcapp-debug-$(PLATFORM)-unaligned.apk
-	@cd xbmc; zip -r -q ../images/xbmcapp-debug-$(PLATFORM)-unaligned.apk lib/$(PLATFORM) assets
+	@javac xbmc/src/org/xbmc/xbmc/xbmc.java
+	@$(DX) --dex --output=xbmc/classes.dex xbmc/src/org/xbmc/xbmc/
+	@cd xbmc; zip -r -q ../images/xbmcapp-debug-$(PLATFORM)-unaligned.apk lib/$(PLATFORM) assets classes.dex
 	@jarsigner -keystore ~/.android/debug.keystore -storepass android images/xbmcapp-debug-$(PLATFORM)-unaligned.apk androiddebugkey
 	@$(SDKROOT)/tools/zipalign -f 4 images/xbmcapp-debug-$(PLATFORM)-unaligned.apk $(XBMCROOT)/xbmcapp-$(PLATFORM)-debug.apk
 	@rm images/xbmcapp-debug-$(PLATFORM)-unaligned.apk
