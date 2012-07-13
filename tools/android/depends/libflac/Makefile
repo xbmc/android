@@ -9,7 +9,7 @@ ARCHIVE=$(SOURCE).tar.gz
 export NASM=
 # configuration settings
 CONFIGURE=cp -f $(CONFIG_SUB) $(CONFIG_GUESS) .; \
-          ./autogen.sh --prefix=$(PREFIX) --host=$(HOST) --disable-xmms-plugin --disable-cpplibs
+          ./configure --prefix=$(PREFIX) --host=$(HOST) --disable-xmms-plugin --disable-cpplibs
 
 LIBDYLIB=$(PLATFORM)/src/libFLAC/.libs/libFLAC.a
 
@@ -24,6 +24,7 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE) $(DEPS)
 	rm -rf $(PLATFORM)/*; mkdir -p $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); patch -p0 < ../nasm.patch
+	cd $(PLATFORM); $(AUTOCONF)
 	cd $(PLATFORM); $(CONFIGURE)
 
 $(LIBDYLIB): $(PLATFORM)

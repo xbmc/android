@@ -65,6 +65,7 @@ ifneq ($(NATIVE_BUILD),1)
   export PKG_CONFIG=$(NATIVEPREFIX)/bin/pkg-config
 
   export AUTOMAKE=$(NATIVEPREFIX)/bin/automake
+  export AUTOCONF=$(NATIVEPREFIX)/bin/autoconf
   export ACLOCAL=$(NATIVEPREFIX)/bin/aclocal
   export ACLOCAL_PATH=$(PREFIX)/share/aclocal:$(NATIVEPREFIX)/share/aclocal
   export LIBTOOLIZE=$(NATIVEPREFIX)/bin/libtoolize
