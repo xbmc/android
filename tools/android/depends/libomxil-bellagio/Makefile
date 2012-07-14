@@ -6,7 +6,6 @@ LIBNAME=libomxil-bellagio
 VERSION=0.9.3
 SOURCE=$(LIBNAME)-$(VERSION)
 ARCHIVE=$(LIBNAME)-$(VERSION).tar.gz
-BASE_URL=http://sourceforge.net/projects/omxil/files/omxil/Bellagio $(VERSION)/
 # configuration settings
 CFLAGS+=-I$(CURDIR)/oscl
 CONFIGURE=cp -f $(CONFIG_SUB) $(CONFIG_GUESS) .; \

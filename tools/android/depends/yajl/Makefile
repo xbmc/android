@@ -6,7 +6,6 @@ LIBNAME=yajl
 VERSION=2.0.1
 SOURCE=lloyd-$(LIBNAME)-f4b2b1a
 ARCHIVE=$(LIBNAME)-$(VERSION).tar.gz
-BASE_URL=http://github.com/lloyd/yajl/tarball/2.0.1
 CMAKE=$(PREFIX)/bin/cmake
 # configuration settings
 LIBDYLIB=$(PLATFORM)/build/$(LIBNAME)-$(VERSION)/lib/libyajl.a
@@ -16,7 +15,7 @@ CLEAN_FILES=$(ARCHIVE) $(PLATFORM)
 all: .installed-$(PLATFORM)
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
-	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)
+	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
 
 $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE) $(DEPS)
 	rm -rf $(PLATFORM)/*; mkdir -p $(PLATFORM)

@@ -5,7 +5,6 @@ DEPS= ../Makefile.include Makefile
 # lib name, version
 LIBNAME=autoconf
 VERSION=2.68
-BASE_URL=http://ftp.gnu.org/gnu/autoconf/
 SOURCE=$(LIBNAME)-$(VERSION)
 ARCHIVE=$(SOURCE).tar.gz
 
