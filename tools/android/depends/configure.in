@@ -4,7 +4,6 @@ AC_CONFIG_FILES([Makefile Makefile.include])
 
 AC_ARG_VAR(XBMC_ANDROID_NDK, path to android ndk)
 AC_ARG_VAR(XBMC_ANDROID_SDK, path to android sdk)
-AC_ARG_VAR(XBMC_ANDROID_STAGING, path to android staging dir)
 AC_ARG_VAR(XBMC_ANDROID_TARBALLS, path where tarballs will be saved)
 
 use_ndk=$XBMC_ANDROID_NDK
@@ -14,37 +13,37 @@ use_tarballs=$XBMC_ANDROID_TARBALLS
 
 AC_ARG_WITH([toolchain],
   [AS_HELP_STRING([--with-toolchain],
-  [specify path to android toolchain. required.])],
+  [specify path to android toolchain])],
   [use_toolchain=$withval],AC_MSG_ERROR([No toolchain defined]))
-
-AC_ARG_WITH([cpu],
-  [AS_HELP_STRING([--with-cpu],
-  [specify target cpu. guessed if not specified])],
-  [use_cpu=$withval],use_cpu=no)
 
 AC_ARG_WITH([sdk],
   [AS_HELP_STRING([--with-sdk],
-  [specify path to android sdk. required if env var is not set.])],
+  [specify path to android sdk])],
   [use_sdk=$withval],[if test -z $use_sdk; then AC_MSG_ERROR([No SDK path defined]); fi])
 
 AC_ARG_WITH([ndk],
   [AS_HELP_STRING([--with-ndk],
-  [specify path to android ndk. required if env var is not set.])],
+  [specify path to android ndk])],
   [use_ndk=$withval],[if test -z $use_ndk; then AC_MSG_ERROR([No NDK path defined]); fi])
-
-AC_ARG_WITH([staging],
-  [AS_HELP_STRING([--with-staging],
-  [specify path to android staging sysroot. required if env var is not set.])],
-  [use_staging=$withval],[if test -z $use_staging; then AC_MSG_ERROR([No staging path defined]); fi])
 
 AC_ARG_WITH([tarballs],
   [AS_HELP_STRING([--with-tarballs],
-  [path where tarballs will be saved. required if env var is not set.])],
+  [path where tarballs will be saved])],
   [use_tarballs=$withval], [if test -z $use_tarballs; then AC_MSG_ERROR([No tarballs path defined]); fi])
+
+AC_ARG_WITH([staging],
+  [AS_HELP_STRING([--with-staging],
+  [optional. path for staging sysroot. defaults to $toolchain/staging])],
+  [use_staging=$withval],[use_staging=$use_toolchain/staging])
+
+AC_ARG_WITH([cpu],
+  [AS_HELP_STRING([--with-cpu],
+  [optional. specify target cpu. guessed if not specified])],
+  [use_cpu=$withval],use_cpu=no)
 
 AC_ARG_WITH([sdk-platform],
   [AS_HELP_STRING([--with-sdk-platform],
-  [spcify sdk platform version (for android headers). default is android-10])],
+  [optional. spcify sdk platform version (for android headers). default is android-10])],
   [use_sdk_platform=$withval],use_sdk_platform=android-10)
 
 #find host toolchain
