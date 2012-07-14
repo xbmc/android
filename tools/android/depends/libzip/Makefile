@@ -5,7 +5,7 @@ DEPS= ../Makefile.include Makefile
 LIBNAME=libzip
 VERSION=0.10
 SOURCE=$(LIBNAME)-$(VERSION)
-BASE_URL=http://www.nih.at/libzip
+BASE_URL=ftp://ftp.giga.or.at/pub/nih/libzip
 ARCHIVE=$(SOURCE).tar.gz
 
 # configuration settings
