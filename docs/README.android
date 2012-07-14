@@ -300,7 +300,7 @@ is 'tools/android/packaging' and that the proper sdk/ndk paths are set.
   # adb logcat -s XBMC:V
   
 -Create a (new) debug key to sign debug APKs
-  # keytool -genkey -v -store -alias androiddebugkey -dname "CN=Android Debug,O=Android,C=US" -keypass android -storepass android -keyalg RSA -keysize 2048 -validity 10000
+  # keytool -genkey -keystore ~/.android/debug.keystore -v -alias androiddebugkey -dname "CN=Android Debug,O=Android,C=US" -keypass android -storepass android -keyalg RSA -keysize 2048 -validity 10000
   
 -Enable CheckJNI (BEFORE starting the application)
   # adb shell setprop debug.checkjni 1
