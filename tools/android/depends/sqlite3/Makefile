@@ -6,7 +6,6 @@ LIBNAME=sqlite
 VERSION=3071000
 SOURCE=$(LIBNAME)-autoconf-$(VERSION)
 ARCHIVE=$(SOURCE).tar.gz
-BASE_URL=http://www.sqlite.org
 
 # configuration settings
 export CXXFLAGS+=-DSQLITE_ENABLE_COLUMN_METADATA=1

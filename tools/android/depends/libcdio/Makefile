@@ -6,7 +6,6 @@ LIBNAME=libcdio
 VERSION=0.82
 SOURCE=$(LIBNAME)-$(VERSION)
 ARCHIVE=$(SOURCE).tar.gz
-BASE_URL=http://ftp.gnu.org/gnu/libcdio
 
 # configuration settings
 CONFIGURE=cp -f $(CONFIG_SUB) $(CONFIG_GUESS) .; \

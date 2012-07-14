@@ -7,7 +7,6 @@ LIBNAME=libjpeg-turbo
 VERSION=1.2.0
 SOURCE=$(LIBNAME)-$(VERSION)
 ARCHIVE=$(LIBNAME)-$(VERSION).tar.gz
-BASE_URL=http://sourceforge.net/projects/libjpeg-turbo/files/$(VERSION)
 # configuration settings
 CONFIGURE=cp -f $(CONFIG_SUB) $(CONFIG_GUESS) .; \
           NASM=$(YASM) ./configure --prefix=$(PREFIX) --with-jpeg8

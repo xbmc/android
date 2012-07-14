@@ -6,7 +6,6 @@ LIBNAME=curl
 VERSION=7.21.3
 SOURCE=$(LIBNAME)-$(VERSION)
 ARCHIVE=$(SOURCE).tar.bz2
-BASE_URL=http://curl.haxx.se/download/
 CFLAGS+=-DANDROID
 
 # configuration settings
