@@ -33,9 +33,10 @@ $(LIBDYLIB): $(PLATFORM)
 .installed-$(PLATFORM): $(LIBDYLIB)
 	$(MAKE) -C $(PLATFORM) install
 	rm -f $(PREFIX)/lib/libFLAC.la $(PREFIX)/lib/libFLAC.so $(PREFIX)/lib/libFLAC.so.8
-	mv -f $(PREFIX)/lib/libFLAC.so.8.2.0 $(PREFIX)/lib/libFLAC.so
-	$(RPL) -e "libFLAC.so.8" "libFLAC.so\x00\x00" $(PREFIX)/lib/libFLAC.so
-	-$(READELF) --dynamic $(PREFIX)/lib/libFLAC.so | grep ibrary
+	mv -f $(PREFIX)/lib/libFLAC.so.8.2.0 $(PREFIX)/lib/libxbFLAC.so
+	ln -sf $(PREFIX)/lib/libxbFLAC.so $(PREFIX)/lib/libFLAC.so
+	$(RPL) -e "libFLAC.so.8" "libxbFLAC.so" $(PREFIX)/lib/libxbFLAC.so
+	-$(READELF) --dynamic $(PREFIX)/lib/libxbFLAC.so | grep ibrary
 	touch $@
 
 clean:
