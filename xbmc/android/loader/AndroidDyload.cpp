@@ -15,19 +15,33 @@ using namespace std;
 std::list<recursivelib> CAndroidDyload::m_recursivelibs;
 solib CAndroidDyload::m_libs;
 
-string CAndroidDyload::FindLib(const string &filename)
+bool CAndroidDyload::IsSystemLib(const string &filename)
+{
+  {
+    CSingleLock lock(m_libLock);
+    for ( solibit i = m_libs.begin() ; i != m_libs.end(); i++ )
+    {
+      if (i->first == filename)
+        return i->second.system;
+    }
+  }
+
+  string result = FindLib(filename, false);
+  if (result.size() > 0)
+    return false;
+  result = FindLib(filename, true);
+  return result.size() > 0;
+}
+
+string CAndroidDyload::FindLib(const string &filename, bool checkSystem)
 {
   struct stat st;
   string path;
   strings searchpaths;
-  searchpaths.push_back(getenv("XBMC_ANDROID_LIBS"));
-
-  if (stat((filename).c_str(), &st) == 0)
-    return(filename);
-
-#if 0
-  // Also check in system paths. Should not be necessary.
   string systemLibs = (getenv("XBMC_ANDROID_SYSTEM_LIBS"));
+  string localLibs = getenv("XBMC_ANDROID_LIBS");
+  string dirname = filename.substr(0,filename.find_last_of('/'));
+
   while (true)
   {
     size_t pos = systemLibs.find(":");
@@ -38,14 +52,34 @@ string CAndroidDyload::FindLib(const string &filename)
     else
       break;
   }
-#endif
 
+  // Check xbmc package libs
+  path = (localLibs+"/"+filename.substr(filename.find_last_of('/') +1));
+  if (stat((path).c_str(), &st) == 0)
+    return(path);
+
+  // Check system libs. If we're not looking in system libs, bail.
+  // Note that we also bail if the explicit path happens to itself be a system
+  // lib and checkSystem == false.
   for (strings::iterator j = searchpaths.begin(); j != searchpaths.end(); ++j)
   {
     path = (*j+"/"+filename.substr(filename.find_last_of('/') +1));
     if (stat((path).c_str(), &st) == 0)
-      return(path);
+    {
+      if (checkSystem)
+        return(path);
+      else
+      {
+        if (dirname == *j)
+          return "";
+      }
+    }
   }
+
+  // Nothing found yet, try the full given path.
+  if (stat((filename).c_str(), &st) == 0)
+    return(filename);
+
   return "";
 }
 
@@ -176,8 +210,8 @@ void* CAndroidDyload::Open(const char * path)
     AddRef(filename);
     return handle;
   }
-
-  handle = Open_Internal(filename);
+  bool checkSystem = IsSystemLib(path);
+  handle = Open_Internal(filename, checkSystem);
   if (handle != NULL)
   {
     CSingleLock lock(m_depsLock);
@@ -192,14 +226,14 @@ void* CAndroidDyload::Open(const char * path)
   return handle;
 }
 
-void* CAndroidDyload::Open_Internal(string filename)
+void* CAndroidDyload::Open_Internal(string filename, bool checkSystem)
 {
   strings deps;
   string deppath;
   libdata lib;
   void *handle = NULL;
 
-  string path = FindLib(filename);
+  string path = FindLib(filename, checkSystem);
   if (!path.size())
     return NULL;
 
@@ -217,6 +251,8 @@ void* CAndroidDyload::Open_Internal(string filename)
     handle = Find(*j);
     if (handle)
     {
+      if (IsSystemLib(*j) && !checkSystem)
+        continue;
       recursivelibdep dep;
       dep.handle = handle;
       dep.filename = *j;
@@ -225,7 +261,7 @@ void* CAndroidDyload::Open_Internal(string filename)
       continue;
     }
 
-    Open_Internal(*j);
+    Open_Internal(*j, checkSystem);
   }
 
   handle = dlopen(path.c_str(), RTLD_LOCAL);
@@ -240,6 +276,7 @@ void* CAndroidDyload::Open_Internal(string filename)
 
   lib.refcount = 1;
   lib.handle = handle;
+  lib.system = checkSystem;
 
   CSingleLock lock(m_libLock);
   m_libs[filename] = lib;
