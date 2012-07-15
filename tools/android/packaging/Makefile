@@ -4,6 +4,7 @@ OBJS = libcurl.so \
   librtmp.so  libmad.so \
   libafpclient.so  \
   libshairport.so libplist.so \
+  libxbogg.so libxbvorbis.so libxbFLAC.so
 
 PLATFORM_OBJS =
 
