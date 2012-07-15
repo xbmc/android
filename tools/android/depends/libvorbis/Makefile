@@ -33,21 +33,24 @@ $(LIBDYLIB): $(PLATFORM)
 .installed-$(PLATFORM): $(LIBDYLIB)
 	$(MAKE) -C $(PLATFORM) install
 	rm -f $(PREFIX)/lib/libvorbis.la $(PREFIX)/lib/libvorbis.so $(PREFIX)/lib/libvorbis.so.0
-	mv -f $(PREFIX)/lib/libvorbis.so.0.4.3 $(PREFIX)/lib/libvorbis.so
-	$(RPL) -e "libvorbis.so.0" "libvorbis.so\x00\x00" $(PREFIX)/lib/libvorbis.so
-	-$(READELF) --dynamic $(PREFIX)/lib/libvorbis.so | grep ibrary
+	mv -f $(PREFIX)/lib/libvorbis.so.0.4.3 $(PREFIX)/lib/libxbvorbis.so
+	ln -sf $(PREFIX)/lib/libxbvorbis.so $(PREFIX)/lib/libvorbis.so
+	$(RPL) -e "libvorbis.so.0" "libxbvorbis.so" $(PREFIX)/lib/libxbvorbis.so
+	-$(READELF) --dynamic $(PREFIX)/lib/libxbvorbis.so | grep ibrary
 	#
 	rm -f $(PREFIX)/lib/libvorbisfile.la $(PREFIX)/lib/libvorbisfile.so $(PREFIX)/lib/libvorbisfile.so.3
-	mv -f $(PREFIX)/lib/libvorbisfile.so.3.3.2 $(PREFIX)/lib/libvorbisfile.so
-	$(RPL) -e "libvorbisfile.so.3" "libvorbisfile.so\x00\x00" $(PREFIX)/lib/libvorbisfile.so
-	$(RPL) -e "libvorbis.so.0" "libvorbis.so\x00\x00" $(PREFIX)/lib/libvorbisfile.so
-	-$(READELF) --dynamic $(PREFIX)/lib/libvorbisfile.so | grep ibrary
+	mv -f $(PREFIX)/lib/libvorbisfile.so.3.3.2 $(PREFIX)/lib/libxbvorbisfile.so
+	ln -sf $(PREFIX)/lib/libxbvorbisfile.so $(PREFIX)/lib/libvorbisfile.so
+	$(RPL) -e "libvorbisfile.so.3" "libxbvorbisfile.so" $(PREFIX)/lib/libxbvorbisfile.so
+	$(RPL) -e "libvorbis.so.0" "libxbvorbis.so" $(PREFIX)/lib/libxbvorbisfile.so
+	-$(READELF) --dynamic $(PREFIX)/lib/libxbvorbisfile.so | grep ibrary
 	#
 	rm -f $(PREFIX)/lib/libvorbisenc.la $(PREFIX)/lib/libvorbisenc.so $(PREFIX)/lib/libvorbisenc.so.2
-	mv -f $(PREFIX)/lib/libvorbisenc.so.2.0.6 $(PREFIX)/lib/libvorbisenc.so
-	$(RPL) -e "libvorbisenc.so.2" "libvorbisenc.so\x00\x00" $(PREFIX)/lib/libvorbisenc.so
-	$(RPL) -e "libvorbis.so.0" "libvorbis.so\x00\x00" $(PREFIX)/lib/libvorbisenc.so
-	-$(READELF) --dynamic $(PREFIX)/lib/libvorbisenc.so | grep ibrary
+	mv -f $(PREFIX)/lib/libvorbisenc.so.2.0.6 $(PREFIX)/lib/libxbvorbisenc.so
+	ln -sf $(PREFIX)/lib/libxbvorbisenc.so $(PREFIX)/lib/libvorbisenc.so
+	$(RPL) -e "libvorbisenc.so.2" "libxbvorbisenc.so" $(PREFIX)/lib/libxbvorbisenc.so
+	$(RPL) -e "libvorbis.so.0" "libxbvorbis.so" $(PREFIX)/lib/libxbvorbisenc.so
+	-$(READELF) --dynamic $(PREFIX)/lib/libxbvorbisenc.so | grep ibrary
 	#
 	touch $@
 
