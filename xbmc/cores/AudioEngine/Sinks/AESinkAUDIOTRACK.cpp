@@ -40,7 +40,7 @@
             typeof(high) _high = (high);                                \
             (PA_UNLIKELY(_x > _high) ? _high : (PA_UNLIKELY(_x < _low) ? _low : _x)); \
     })
-static void pa_sconv_s16le_from_f32ne_neon(unsigned n, const float *a, int16_t *b)
+static void pa_sconv_s16le_from_f32ne_neon(unsigned n, const float32_t *a, int16_t *b)
 {
   unsigned int i;
 
