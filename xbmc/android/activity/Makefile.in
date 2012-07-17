@@ -11,7 +11,9 @@ SRCS       = android_main.cpp \
              XBMCApp.cpp \
              unzip.cpp \
              GraphicBuffer.cpp \
-             CPUFeatures.cpp
+             CPUFeatures.cpp \
+             AndroidTouch.cpp \
+             AndroidKey.cpp \
 
 INCLUDES += -I$(GLUEPATH) -I$(CPUPATH)
 

@@ -30,13 +30,12 @@
 
 #include "xbmc.h"
 
-#define TOUCH_MAX_POINTERS  2
 
 // forward delares
 class CAESinkAUDIOTRACK;
 typedef struct _JNIEnv JNIEnv;
 
-class CXBMCApp : public IActivityHandler, public IInputHandler
+class CXBMCApp : public IActivityHandler
 {
 public:
   CXBMCApp(ANativeActivity *nativeActivity);
@@ -63,8 +62,6 @@ public:
   void onGainFocus();
   void onLostFocus();
 
-  bool onKeyboardEvent(AInputEvent* event);
-  bool onTouchEvent(AInputEvent* event);
 
   static ANativeWindow* GetNativeWindow() { return m_window; };
   static int SetBuffersGeometry(int width, int height, int format);
@@ -129,83 +126,10 @@ private:
   
   void setAppState(AppState state);
     
-  class Touch {
-    public:
-      Touch() { reset(); }
-      
-      bool valid() const { return x >= 0.0f && y >= 0.0f && time >= 0; }
-      void reset() { x = -1.0f; y = -1.0f; time = -1; }
-      void copy(const Touch &other) { x = other.x; y = other.y; time = other.time; }
-      
-      float x;      // in pixels (With possible sub-pixels)
-      float y;      // in pixels (With possible sub-pixels)
-      int64_t time; // in nanoseconds
-  };
-  
-  class Pointer {
-    public:
-      Pointer() { reset(); }
-      
-      bool valid() const { return down.valid(); }
-      void reset() { down.reset(); last.reset(); moving = false; size = 0.0f; }
-      
-      Touch down;
-      Touch last;
-      Touch current;
-      bool moving;
-      float size;
-  };
-  
-  Pointer m_touchPointers[TOUCH_MAX_POINTERS];
-  
-  class CVector {
-    public:
-      CVector()
-      : x(0.0f), y(0.0f)
-      { }
-      CVector(float xCoord, float yCoord)
-      : x(xCoord), y(yCoord)
-      { }
-      CVector(const CXBMCApp::Touch &touch)
-      : x(touch.x), y(touch.y)
-      { }
-      
-      const CVector operator+(const CVector &other) const { return CVector(x + other.x, y + other.y); }
-      const CVector operator-(const CVector &other) const { return CVector(x - other.x, y - other.y); }
-      
-      float scalar(const CVector &other) { return x * other.x + y * other.y; }
-      float length() { return sqrt(pow(x, 2) + pow(y, 2)); }
-      
-      float x;
-      float y;
-  };
-  
-  typedef enum {
-    TouchGestureUnknown = 0,
-    // only primary pointer active but stationary so far
-    TouchGestureSingleTouch,
-    // primary pointer moving
-    TouchGesturePan,
-    // at least two pointers active but stationary so far
-    TouchGestureMultiTouchStart,
-    // at least two pointers active and moving
-    TouchGestureMultiTouch,
-    // all but primary pointer have been lifted
-    TouchGestureMultiTouchDone
-  } TouchGestureState;
-  
-  TouchGestureState m_touchGestureState;
   static ANativeWindow* m_window;
   
-  void handleMultiTouchGesture(AInputEvent *event);
-  void updateTouches(AInputEvent *event, bool saveLast = true);
-
   void XBMC_Pause(bool pause);
   void XBMC_Stop();
   bool XBMC_DestroyDisplay();
   bool XBMC_SetupDisplay();
-  int  XBMC_TouchGestureCheck(float posX, float posY);
-  void XBMC_TouchGesture(int32_t action, float posX, float posY, float offsetX, float offsetY);
-  void XBMC_Touch(uint8_t type, uint8_t button, uint16_t x, uint16_t y);
-  void XBMC_Key(uint8_t code, uint16_t key, uint16_t modifiers, bool up);
 };
