@@ -163,8 +163,9 @@ extern void android_main(struct android_app* state)
   setup_env(state);
   CEventLoop eventLoop(state);
   CXBMCApp xbmcApp(state->activity);
+  IInputHandler inputHandler;
   if (xbmcApp.isValid())
-    eventLoop.run(xbmcApp, xbmcApp);
+    eventLoop.run(xbmcApp, inputHandler);
   else
     CXBMCApp::android_printf("android_main: setup failed");
 

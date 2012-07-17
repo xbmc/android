@@ -19,7 +19,19 @@
  *
  */
 
-#include "AndroidTouch.h"
-#include "AndroidKey.h"
-class IInputHandler : public CAndroidTouch, public CAndroidKey
-{};
+#include <stdint.h>
+#include <android/input.h>
+
+typedef struct {
+  int32_t nativeKey;
+  int16_t xbmcKey;
+} KeyMap;
+
+class CAndroidKey
+{
+public:
+  CAndroidKey(){};
+  ~CAndroidKey(){};
+  void XBMC_Key(uint8_t code, uint16_t key, uint16_t modifiers, bool up);
+  bool onKeyboardEvent(AInputEvent* event);
+};
