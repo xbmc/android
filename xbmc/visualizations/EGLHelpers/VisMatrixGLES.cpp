@@ -236,7 +236,6 @@ void CVisMatrixGLES::MultMatrixf(const GLfloat *matrix)
   if (m_pMatrix)
   {
 #if defined(__ARM_NEON__)
-    if (g_cpuInfo.GetCPUFeatures() & CPU_FEATURE_NEON)
     {
       GLfloat m[16];
       Matrix4Mul(m_pMatrix, matrix, m);
