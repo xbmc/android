@@ -73,7 +73,7 @@ void setup_env(struct android_app* state)
   env->DeleteLocalRef(cApplicationInfo);
 
   // get the path to the APK
-  char apkPath[PATH_MAX];
+  char apkPath[PATH_MAX] = {0};
   jmethodID midActivityGetPackageResourcePath = env->GetMethodID(cActivity, "getPackageResourcePath", "()Ljava/lang/String;");
   jstring sApkPath = (jstring)env->CallObjectMethod(oActivity, midActivityGetPackageResourcePath);
   temp = env->GetStringUTFChars(sApkPath, NULL);
@@ -83,8 +83,8 @@ void setup_env(struct android_app* state)
   env->DeleteLocalRef(sApkPath);
   
   // Get the path to the temp/cache directory
-  char cacheDir[PATH_MAX];
-  char tempDir[PATH_MAX];
+  char cacheDir[PATH_MAX] = {0};
+  char tempDir[PATH_MAX] = {0};
   jmethodID midActivityGetCacheDir = env->GetMethodID(cActivity, "getCacheDir", "()Ljava/io/File;");
   jobject oCacheDir = env->CallObjectMethod(oActivity, midActivityGetCacheDir);
 
@@ -115,16 +115,19 @@ void setup_env(struct android_app* state)
   // Get the path to the external storage
   // The path would actually be available from state->activity->externalDataPath (apart from a (known) bug in Android 2.3.x)
   // but calling getExternalFilesDir() will automatically create the necessary directories for us.
-  char storagePath[PATH_MAX];
+  // There might NOT be external storage present so check it before trying to setup.
+  char storagePath[PATH_MAX] = {0};
   jmethodID midActivityGetExternalFilesDir = env->GetMethodID(cActivity, "getExternalFilesDir", "(Ljava/lang/String;)Ljava/io/File;");
   jobject oExternalDir = env->CallObjectMethod(oActivity, midActivityGetExternalFilesDir, (jstring)NULL);
-
-  jstring sExternalPath = (jstring)env->CallObjectMethod(oExternalDir, midFileGetAbsolutePath);
-  temp = env->GetStringUTFChars(sExternalPath, NULL);
-  strcpy(storagePath, temp);
-  env->ReleaseStringUTFChars(sExternalPath, temp);
-  env->DeleteLocalRef(sExternalPath);
-  env->DeleteLocalRef(oExternalDir);
+  if (oExternalDir)
+  {
+    jstring sExternalPath = (jstring)env->CallObjectMethod(oExternalDir, midFileGetAbsolutePath);
+    temp = env->GetStringUTFChars(sExternalPath, NULL);
+    strcpy(storagePath, temp);
+    env->ReleaseStringUTFChars(sExternalPath, temp);
+    env->DeleteLocalRef(sExternalPath);
+    env->DeleteLocalRef(oExternalDir);
+  }
 
   // Check if we don't have a valid path yet
   if (strlen(storagePath) <= 0)
