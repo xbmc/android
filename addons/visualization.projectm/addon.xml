@@ -8,7 +8,8 @@
     point="xbmc.player.musicviz"
     library_linux="projectM.vis"
     library_wingl="projectM_win32.vis"
-    library_osx="projectM.vis">
+    library_osx="projectM.vis"
+    library_android="libvisprojectM.so">
     <settings>
       <userdirs>
         <userdir path="special://profile/addon_data/visualization.projectm"/>
