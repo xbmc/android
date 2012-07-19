@@ -452,6 +452,7 @@ bool CXBMCApp::ListApplications(vector<string> *applications)
     return false;
 
   JNIEnv *env = NULL;
+  string application;
   AttachCurrentThread(&env);
   jobject oActivity = m_activity->clazz;
   jclass cActivity = env->GetObjectClass(oActivity);
@@ -476,28 +477,28 @@ bool CXBMCApp::ListApplications(vector<string> *applications)
   int size = env->GetArrayLength(adata);
   for (int i = 0; i < size; i++)
   {
-    // label = adata[i].packageName;
+    // application = adata[i].packageName;
     jobject oApplicationInfo = env->GetObjectArrayElement(adata, i);
     jclass cApplicationInfo = env->GetObjectClass(oApplicationInfo);
     jfieldID mclassName = env->GetFieldID(cApplicationInfo, "packageName", "Ljava/lang/String;");
-    jstring slabel = (jstring)env->GetObjectField(oApplicationInfo, mclassName);
-    if (!slabel)
+    jstring sapplication = (jstring)env->GetObjectField(oApplicationInfo, mclassName);
+    if (!sapplication)
     {
       env->DeleteLocalRef(cApplicationInfo);
       env->DeleteLocalRef(oApplicationInfo);
       continue;
     }
-    const char* cname = env->GetStringUTFChars(slabel, NULL);
-    string label = cname;
-    env->DeleteLocalRef(slabel);
+    const char* cname = env->GetStringUTFChars(sapplication, NULL);
+    string application = cname;
+    env->ReleaseStringUTFChars(sapplication, cname);
+    env->DeleteLocalRef(sapplication);
     env->DeleteLocalRef(cApplicationInfo);
     env->DeleteLocalRef(oApplicationInfo);
 
-    if (!HasLaunchIntent(label))
+    if (!HasLaunchIntent(application))
       continue;
-    applications->push_back(label);
+    applications->push_back(application);
   }
-
   DetachCurrentThread();
   return true;
 }
@@ -537,7 +538,10 @@ bool CXBMCApp::HasLaunchIntent(const string &package)
     return false;
   }
   if (!oPackageIntent)
+  {
+    DetachCurrentThread();
     return false;
+  }
 
   env->DeleteLocalRef(oPackageIntent);
   DetachCurrentThread();
