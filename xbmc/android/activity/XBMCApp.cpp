@@ -491,7 +491,7 @@ int CXBMCApp::GetBatteryLevel()
   return ((int)iLevel * 100) / (int)iScale;
 }
 
-bool CXBMCApp::GetExternalStorage(std::string &path, const std::string type /* = "" */)
+bool CXBMCApp::GetExternalStorage(std::string &path, const std::string &type /* = "" */)
 {
   if (m_activity == NULL)
     return false;
