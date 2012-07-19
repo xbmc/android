@@ -38,10 +38,19 @@ CBaseRenderer::CBaseRenderer()
   m_sourceHeight = 480;
   m_resolution = RES_DESKTOP;
   m_fps = 0.0f;
+
+  m_RenderUpdateCallBackFn = NULL;
+  m_RenderUpdateCallBackCtx = NULL;
 }
 
 CBaseRenderer::~CBaseRenderer()
 {
+}
+
+void CBaseRenderer::RegisterRenderUpdateCallBack(const void *ctx, RenderUpdateCallBackFn fn)
+{
+  m_RenderUpdateCallBackFn = fn;
+  m_RenderUpdateCallBackCtx = ctx;
 }
 
 void CBaseRenderer::ChooseBestResolution(float fps)
