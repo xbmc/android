@@ -467,7 +467,7 @@ uint8_t* CSoftAEStream::GetFrame()
     }
   }
 
-  --m_framesBuffered;
+  m_framesBuffered--;
   return ret;
 }
 
