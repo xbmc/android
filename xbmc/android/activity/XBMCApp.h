@@ -69,7 +69,6 @@ public:
   static int android_printf(const char *format, ...);
   
   static bool ListApplications(std::vector <std::string> *applications);
-  static bool HasLaunchIntent(const std::string &package);
   static bool StartActivity(const std::string &package);
   static int GetBatteryLevel();
   
@@ -95,6 +94,7 @@ private:
   void releaseWakeLock();
   void run();
   void stop();
+  static bool HasLaunchIntent(JNIEnv *env, const std::string &package);
   
   static ANativeActivity *m_activity;
   jobject m_wakeLock;

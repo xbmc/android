@@ -495,7 +495,7 @@ bool CXBMCApp::ListApplications(vector<string> *applications)
     env->DeleteLocalRef(cApplicationInfo);
     env->DeleteLocalRef(oApplicationInfo);
 
-    if (!HasLaunchIntent(application))
+    if (!HasLaunchIntent(env, application))
       continue;
     applications->push_back(application);
   }
@@ -503,14 +503,12 @@ bool CXBMCApp::ListApplications(vector<string> *applications)
   return true;
 }
 
-bool CXBMCApp::HasLaunchIntent(const string &package)
+bool CXBMCApp::HasLaunchIntent(JNIEnv *env, const string &package)
 {
-  if (!m_activity || !package.size())
+  if (!m_activity || !package.size() || !env)
     return false;
 
   jthrowable exc;
-  JNIEnv *env = NULL;
-  AttachCurrentThread(&env);
   jobject oActivity = m_activity->clazz;
 
   jclass cActivity = env->GetObjectClass(oActivity);
@@ -534,17 +532,14 @@ bool CXBMCApp::HasLaunchIntent(const string &package)
     CLog::Log(LOGERROR, "CXBMCApp::HasLaunchIntent Error checking for  Launch Intent for %s. Exception follows:", package.c_str());
     env->ExceptionDescribe();
     env->ExceptionClear();
-    DetachCurrentThread();
     return false;
   }
   if (!oPackageIntent)
   {
-    DetachCurrentThread();
     return false;
   }
 
   env->DeleteLocalRef(oPackageIntent);
-  DetachCurrentThread();
   return true;
 }
 
