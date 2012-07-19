@@ -22,6 +22,7 @@
 #include <math.h>
 #include <pthread.h>
 #include <string>
+#include <vector>
 
 #include <android/native_activity.h>
 
@@ -67,6 +68,9 @@ public:
   static int SetBuffersGeometry(int width, int height, int format);
   static int android_printf(const char *format, ...);
   
+  static bool ListApplications(std::vector <std::string> *applications);
+  static bool HasLaunchIntent(const std::string &package);
+  static bool StartActivity(const std::string &package);
   static int GetBatteryLevel();
   
   /*!
