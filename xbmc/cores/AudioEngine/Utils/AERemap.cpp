@@ -47,14 +47,14 @@ bool CAERemap::Initialize(CAEChannelInfo input, CAEChannelInfo output, bool fina
   m_output = output;
 
   /* figure which channels we have */
-  for (unsigned int o = 0; o < output.Count(); o++)
+  for (unsigned int o = 0; o < output.Count(); ++o)
     m_mixInfo[output[o]].in_dst = true;
 
   /* flag invalid channels for forced downmix */
   if (stdChLayout != AE_CH_LAYOUT_INVALID)
   {
     CAEChannelInfo layout = stdChLayout;
-    for (unsigned int o = 0; o < output.Count(); o++)
+    for (unsigned int o = 0; o < output.Count(); ++o)
       if (!layout.HasChannel(output[o]))
         m_mixInfo[output[o]].in_dst = false;
   }
@@ -62,7 +62,7 @@ bool CAERemap::Initialize(CAEChannelInfo input, CAEChannelInfo output, bool fina
   m_outChannels = output.Count();
 
   /* lookup the channels that exist in the output */
-  for (unsigned int i = 0; i < input.Count(); i++)
+  for (unsigned int i = 0; i < input.Count(); ++i)
   {
     AEMixInfo  *info = &m_mixInfo[input[i]];
     AEMixLevel *lvl  = &info->srcIndex[info->srcCount++];
@@ -71,7 +71,7 @@ bool CAERemap::Initialize(CAEChannelInfo input, CAEChannelInfo output, bool fina
     lvl->level   = 1.0f;
     if (!info->in_dst)
     {
-      for (unsigned int o = 0; o < output.Count(); o++)
+      for (unsigned int o = 0; o < output.Count(); ++o)
       {
         if (input[i] == output[o])
         {
@@ -83,7 +83,7 @@ bool CAERemap::Initialize(CAEChannelInfo input, CAEChannelInfo output, bool fina
 
     m_inChannels = i;
   }
-  m_inChannels++;
+  ++m_inChannels;
 
   /* the final stage does not need any down/upmix */
   if (finalStage)
@@ -200,11 +200,11 @@ bool CAERemap::Initialize(CAEChannelInfo input, CAEChannelInfo output, bool fina
   if (normalize)
   {
     float max = 0;
-    for (unsigned int o = 0; o < output.Count(); o++)
+    for (unsigned int o = 0; o < output.Count(); ++o)
     {
       AEMixInfo *info = &m_mixInfo[output[o]];
       float sum = 0;
-      for (int i = 0; i < info->srcCount; i++)
+      for (int i = 0; i < info->srcCount; ++i)
         sum += info->srcIndex[i].level;
 
       if (sum > max)
@@ -212,10 +212,10 @@ bool CAERemap::Initialize(CAEChannelInfo input, CAEChannelInfo output, bool fina
     }
 
     float scale = 1.0f / max;
-    for (unsigned int o = 0; o < output.Count(); o++)
+    for (unsigned int o = 0; o < output.Count(); ++o)
     {
       AEMixInfo *info = &m_mixInfo[output[o]];
-      for (int i = 0; i < info->srcCount; i++)
+      for (int i = 0; i < info->srcCount; ++i)
         info->srcIndex[i].level *= scale;
     }
   }
@@ -223,7 +223,7 @@ bool CAERemap::Initialize(CAEChannelInfo input, CAEChannelInfo output, bool fina
 #if 1
   /* dump the matrix */
   CLog::Log(LOGINFO, "==[Downmix Matrix]==");
-  for (unsigned int o = 0; o < output.Count(); o++)
+  for (unsigned int o = 0; o < output.Count(); ++o)
   {
     AEMixInfo *info = &m_mixInfo[output[o]];
     if (info->srcCount == 0)
@@ -231,7 +231,7 @@ bool CAERemap::Initialize(CAEChannelInfo input, CAEChannelInfo output, bool fina
 
     std::stringstream s;
     s << CAEChannelInfo::GetChName(output[o]) << " =";
-    for (int i = 0; i < info->srcCount; i++)
+    for (int i = 0; i < info->srcCount; ++i)
       s << " " << CAEChannelInfo::GetChName(input[info->srcIndex[i].index]) << "(" << info->srcIndex[i].level << ")";
 
     CLog::Log(LOGINFO, "%s", s.str().c_str());
@@ -248,17 +248,17 @@ void CAERemap::ResolveMix(const AEChannel from, CAEChannelInfo to)
   if (fromInfo->in_dst || !fromInfo->in_src)
     return;
 
-  for (unsigned int i = 0; i < to.Count(); i++)
+  for (unsigned int i = 0; i < to.Count(); ++i)
   {
     AEMixInfo *toInfo = &m_mixInfo[to[i]];
     toInfo->in_src = true;
-    for (int o = 0; o < fromInfo->srcCount; o++)
+    for (int o = 0; o < fromInfo->srcCount; ++o)
     {
       AEMixLevel *fromLvl = &fromInfo->srcIndex[o];
       AEMixLevel *toLvl   = NULL;
 
       /* if its already in the output, then we need to combine the levels */
-      for (int l = 0; l < toInfo->srcCount; l++)
+      for (int l = 0; l < toInfo->srcCount; ++l)
          if (toInfo->srcIndex[l].index == fromLvl->index)
          {
            toLvl = &toInfo->srcIndex[l];
@@ -284,7 +284,7 @@ void CAERemap::Remap(float * const in, float * const out, const unsigned int fra
 {
   const unsigned int frameBlocks = frames & ~0x3;
 
-  for (int o = 0; o < m_outChannels; o++)
+  for (int o = 0; o < m_outChannels; ++o)
   {
     const AEMixInfo *info = &m_mixInfo[m_output[o]];
     if (!info->in_dst)
@@ -333,7 +333,7 @@ void CAERemap::Remap(float * const in, float * const out, const unsigned int fra
     }
     else
     {
-      for (unsigned int f = 0; f < frames; f++)
+      for (unsigned int f = 0; f < frames; ++f)
       {
         float *outOffset = out + (f * m_outChannels) + o;
         float *inOffset  = in  + (f * m_inChannels);
@@ -393,11 +393,11 @@ inline void CAERemap::BuildUpmixMatrix(const CAEChannelInfo& input, const CAECha
   }
 
   /* fix the levels of anything we added */
-  for (unsigned int i = 0; i < output.Count(); i++)
+  for (unsigned int i = 0; i < output.Count(); ++i)
   {
     AEMixInfo *outputInfo = &m_mixInfo[output[i]];
     if (!outputInfo->in_src && outputInfo->srcCount > 0)
-      for (int src = 0; src < outputInfo->srcCount; src++)
+      for (int src = 0; src < outputInfo->srcCount; ++src)
       {
         AEChannel srcChannel = input[outputInfo->srcIndex[src].index];
         AEMixInfo *inputInfo = &m_mixInfo[srcChannel];
@@ -406,7 +406,7 @@ inline void CAERemap::BuildUpmixMatrix(const CAEChannelInfo& input, const CAECha
   }
 
   /* fix the source levels also */
-  for (unsigned int i = 0; i < input.Count(); i++)
+  for (unsigned int i = 0; i < input.Count(); ++i)
   {
     AEMixInfo *inputInfo = &m_mixInfo[input[i]];
     if (!inputInfo->in_dst || inputInfo->cpyCount == 0)

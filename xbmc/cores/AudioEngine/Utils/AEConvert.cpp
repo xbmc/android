@@ -141,7 +141,7 @@ unsigned int CAEConvert::U8_Float(uint8_t *data, const unsigned int samples, flo
 {
   const float mul = 2.0f / UINT8_MAX;
 
-  for (unsigned int i = 0; i < samples; i++)
+  for (unsigned int i = 0; i < samples; ++i)
     *dest++ = *data++ * mul - 1.0f;
 
   return samples;
@@ -151,7 +151,7 @@ unsigned int CAEConvert::S8_Float(uint8_t *data, const unsigned int samples, flo
 {
   const float mul = 1.0f / (INT8_MAX + 0.5f);
 
-  for (unsigned int i = 0; i < samples; i++)
+  for (unsigned int i = 0; i < samples; ++i)
     *dest++ = *data++ * mul;
 
   return samples;
@@ -181,7 +181,7 @@ unsigned int CAEConvert::S16LE_Float(uint8_t* data, const unsigned int samples, 
     dest++;
   }
 #else
-  for (unsigned int i = 0; i < samples; i++, data += 2)
+  for (unsigned int i = 0; i < samples; ++i, data += 2)
     *dest++ = Endian_SwapLE16(*(int16_t*)data) * mul;
 #endif
 
@@ -212,7 +212,7 @@ unsigned int CAEConvert::S16BE_Float(uint8_t* data, const unsigned int samples, 
     dest++;
   }
 #else
-  for (unsigned int i = 0; i < samples; i++, data += 2)
+  for (unsigned int i = 0; i < samples; ++i, data += 2)
     *dest++ = Endian_SwapBE16(*(int16_t*)data) * mul;
 #endif
 
@@ -221,7 +221,7 @@ unsigned int CAEConvert::S16BE_Float(uint8_t* data, const unsigned int samples, 
 
 unsigned int CAEConvert::S24LE4_Float(uint8_t *data, const unsigned int samples, float *dest)
 {
-  for (unsigned int i = 0; i < samples; i++, data += 4)
+  for (unsigned int i = 0; i < samples; ++i, data += 4)
   {
     int s = (data[2] << 24) | (data[1] << 16) | (data[0] << 8);
     *dest++ = (float)s * INT32_SCALE;
@@ -231,7 +231,7 @@ unsigned int CAEConvert::S24LE4_Float(uint8_t *data, const unsigned int samples,
 
 unsigned int CAEConvert::S24BE4_Float(uint8_t *data, const unsigned int samples, float *dest)
 {
-  for (unsigned int i = 0; i < samples; i++, data += 4)
+  for (unsigned int i = 0; i < samples; ++i, data += 4)
   {
     int s = (data[0] << 24) | (data[1] << 16) | (data[2] << 8);
     *dest++ = (float)s * INT32_SCALE;
@@ -241,7 +241,7 @@ unsigned int CAEConvert::S24BE4_Float(uint8_t *data, const unsigned int samples,
 
 unsigned int CAEConvert::S24LE3_Float(uint8_t *data, const unsigned int samples, float *dest)
 {
-  for (unsigned int i = 0; i < samples; i++, data += 3)
+  for (unsigned int i = 0; i < samples; ++i, data += 3)
   {
     int s = (data[2] << 24) | (data[1] << 16) | (data[0] << 8);
     *dest++ = (float)s * INT32_SCALE;
@@ -251,7 +251,7 @@ unsigned int CAEConvert::S24LE3_Float(uint8_t *data, const unsigned int samples,
 
 unsigned int CAEConvert::S24BE3_Float(uint8_t *data, const unsigned int samples, float *dest)
 {
-  for (unsigned int i = 0; i < samples; i++, data += 3)
+  for (unsigned int i = 0; i < samples; ++i, data += 3)
   {
     int s = (data[1] << 24) | (data[2] << 16) | (data[3] << 8);
     *dest++ = (float)s * INT32_SCALE;
@@ -380,7 +380,7 @@ unsigned int CAEConvert::S32BE_Float_Neon(uint8_t *data, const unsigned int samp
 unsigned int CAEConvert::DOUBLE_Float(uint8_t *data, const unsigned int samples, float *dest)
 {
   double *src = (double*)data;
-  for (unsigned int i = 0; i < samples; i++)
+  for (unsigned int i = 0; i < samples; ++i)
     *dest++ = CLAMP(*src++ / (float)INT32_MAX);
 
   return samples;
@@ -397,9 +397,9 @@ unsigned int CAEConvert::Float_U8(float *data, const unsigned int samples, uint8
   while ((((uintptr_t)data & 0xF) || ((uintptr_t)dest & 0xF)) && count > 0)
   {
     dest[0] = safeRound((data[0] + 1.0f) * ((float)INT8_MAX+.5f));
-    data++;
-    dest++;
-    count--;
+    ++data;
+    ++dest;
+    --count;
   }
 
   const uint32_t even = count & ~0x3;
@@ -454,7 +454,7 @@ unsigned int CAEConvert::Float_U8(float *data, const unsigned int samples, uint8
   }
   _mm_empty();
   #else /* no SSE */
-  for (uint32_t i = 0; i < samples; i++)
+  for (uint32_t i = 0; i < samples; ++i)
     *dest++ = safeRound((*data++ + 1.0f) * ((float)INT8_MAX+.5f));
   #endif
 
@@ -471,9 +471,9 @@ unsigned int CAEConvert::Float_S8(float *data, const unsigned int samples, uint8
   while ((((uintptr_t)data & 0xF) || ((uintptr_t)dest & 0xF)) && count > 0)
   {
     dest[0] = safeRound(data[0] * ((float)INT8_MAX+.5f));
-    data++;
-    dest++;
-    count--;
+    ++data;
+    ++dest;
+    --count;
   }
 
   const uint32_t even = count & ~0x3;
@@ -513,7 +513,7 @@ unsigned int CAEConvert::Float_S8(float *data, const unsigned int samples, uint8
   }
   _mm_empty();
   #else /* no SSE */
-  for (uint32_t i = 0; i < samples; i++)
+  for (uint32_t i = 0; i < samples; ++i)
     *dest++ = safeRound(*data++ * ((float)INT8_MAX+.5f));
   #endif
 
@@ -646,7 +646,7 @@ unsigned int CAEConvert::Float_S16LE(float *data, const unsigned int samples, ui
     *dst++ = Endian_SwapLE16(safeRound(*data++ * ((float)INT16_MAX + rand[3])));
   }
 
-  for(; i < samples; i++)
+  for(; i < samples; ++i)
     *dst++ = Endian_SwapLE16(safeRound(*data++ * ((float)INT16_MAX + CAEUtil::FloatRand1(-0.5f, 0.5f))));
 
   #endif
@@ -780,7 +780,7 @@ unsigned int CAEConvert::Float_S16BE(float *data, const unsigned int samples, ui
     *dst++ = Endian_SwapBE16(safeRound(*data++ * ((float)INT16_MAX + rand[3])));
   }
 
-  for(; i < samples; i++, data++, dst++)
+  for(; i < samples; ++i, data++, dst++)
     *dst++ = Endian_SwapBE16(safeRound(*data++ * ((float)INT16_MAX + CAEUtil::FloatRand1(-0.5f, 0.5f))));
 
   #endif
@@ -800,9 +800,9 @@ unsigned int CAEConvert::Float_S24NE4(float *data, const unsigned int samples, u
   while ((((uintptr_t)data & 0xF) || ((uintptr_t)dest & 0xF)) && count > 0)
   {
     dst[0] = safeRound(data[0] * ((float)INT24_MAX+.5f));
-    data++;
-    dst++;
-    count--;
+    ++data;
+    ++dst;
+    --count;
   }
 
   const uint32_t even = count & ~0x3;
@@ -842,7 +842,7 @@ unsigned int CAEConvert::Float_S24NE4(float *data, const unsigned int samples, u
   }
   _mm_empty();
   #else /* no SSE */
-  for (uint32_t i = 0; i < samples; i++)
+  for (uint32_t i = 0; i < samples; ++i)
     *dst++ = (safeRound(*data++ * ((float)INT24_MAX+.5f)) & 0xFFFFFF) << 8;
   #endif
 
@@ -871,8 +871,8 @@ unsigned int CAEConvert::Float_S24NE3(float *data, const unsigned int samples, u
   while ((((uintptr_t)data & 0xF) || ((uintptr_t)dest & 0xF)) && count > 0)
   {
     *((uint32_t*)(dest)) = (safeRound(*data * ((float)INT24_MAX+.5f)) & 0xFFFFFF) << leftShift;
-    dest++;
-    count--;
+    ++dest;
+    --count;
   }
 
   const uint32_t even = count & ~0x3;
@@ -921,7 +921,7 @@ unsigned int CAEConvert::Float_S24NE3(float *data, const unsigned int samples, u
   }
   _mm_empty();
   #else /* no SSE */
-  for (uint32_t i = 0; i < samples; i++, data++, dest += 3)
+  for (uint32_t i = 0; i < samples; ++i, ++data, dest += 3)
     *((uint32_t*)(dest)) = (safeRound(*data * ((float)INT24_MAX+.5f)) & 0xFFFFFF) << leftShift;
   #endif
 
@@ -939,9 +939,9 @@ unsigned int CAEConvert::Float_S32LE(float *data, const unsigned int samples, ui
   while ((((uintptr_t)data & 0xF) || ((uintptr_t)dest & 0xF)) && count > 0)
   {
     dst[0] = safeRound(data[0] * (float)INT32_MAX);
-    data++;
-    dst++;
-    count--;
+    ++data;
+    ++dst;
+    --count;
   }
 
   const uint32_t even = count & ~0x3;
@@ -992,7 +992,7 @@ unsigned int CAEConvert::Float_S32LE(float *data, const unsigned int samples, ui
   #else
 
   /* no SIMD */
-  for (uint32_t i = 0; i < samples; i++, data++, dst++)
+  for (uint32_t i = 0; i < samples; ++i, ++data, ++dst)
   {
     dst[0] = safeRound(data[0] * (float)INT32_MAX);
     dst[0] = Endian_SwapLE32(dst[0]);
@@ -1048,9 +1048,9 @@ unsigned int CAEConvert::Float_S32BE(float *data, const unsigned int samples, ui
   while ((((uintptr_t)data & 0xF) || ((uintptr_t)dest & 0xF)) && count > 0)
   {
     dst[0] = safeRound(data[0] * (float)INT32_MAX);
-    data++;
-    dst++;
-    count--;
+    ++data;
+    ++dst;
+    --count;
   }
 
   const uint32_t even = count & ~0x3;
@@ -1100,7 +1100,7 @@ unsigned int CAEConvert::Float_S32BE(float *data, const unsigned int samples, ui
   _mm_empty();
   #else
   /* no SIMD */
-  for (uint32_t i = 0; i < samples; i++, data++, dst++)
+  for (uint32_t i = 0; i < samples; ++i, ++data, ++dst)
   {
     dst[0] = safeRound(data[0] * (float)INT32_MAX);
     dst[0] = Endian_SwapBE32(dst[0]);
@@ -1148,7 +1148,7 @@ unsigned int CAEConvert::Float_S32BE_Neon(float *data, const unsigned int sample
 unsigned int CAEConvert::Float_DOUBLE(float *data, const unsigned int samples, uint8_t *dest)
 {
   double *dst = (double*)dest;
-  for (unsigned int i = 0; i < samples; i++)
+  for (unsigned int i = 0; i < samples; ++i)
     *dst++ = *data++;
 
   return samples * sizeof(double);

@@ -33,7 +33,7 @@ CAEDeviceInfo::operator std::string()
   ss << "m_channels        : " << (std::string)m_channels << '\n';
 
   ss << "m_sampleRates     : ";
-  for (AESampleRateList::iterator itt = m_sampleRates.begin(); itt != m_sampleRates.end(); itt++)
+  for (AESampleRateList::iterator itt = m_sampleRates.begin(); itt != m_sampleRates.end(); ++itt)
   {
     if (itt != m_sampleRates.begin())
       ss << ',';
@@ -42,7 +42,7 @@ CAEDeviceInfo::operator std::string()
   ss << '\n';
 
   ss << "m_dataFormats     : ";
-  for (AEDataFormatList::iterator itt = m_dataFormats.begin(); itt != m_dataFormats.end(); itt++)
+  for (AEDataFormatList::iterator itt = m_dataFormats.begin(); itt != m_dataFormats.end(); ++itt)
   {
     if (itt != m_dataFormats.begin())
       ss << ',';
