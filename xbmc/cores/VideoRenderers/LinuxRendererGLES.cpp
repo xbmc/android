@@ -1371,19 +1371,21 @@ void CLinuxRendererGLES::UploadYV12Texture(int source)
     {
       yuv420_2_rgb8888_neon(m_rgbBuffer, im->plane[0], im->plane[2], im->plane[1],
         m_sourceWidth, m_sourceHeight, im->stride[0], im->stride[1], m_sourceWidth * 4);
-      return;
     }
+    else
 #endif
-    m_sw_context = m_dllSwScale->sws_getCachedContext(m_sw_context,
-      im->width, im->height, PIX_FMT_YUV420P,
-      im->width, im->height, PIX_FMT_RGBA,
-      SWS_FAST_BILINEAR, NULL, NULL, NULL);
+    {
+      m_sw_context = m_dllSwScale->sws_getCachedContext(m_sw_context,
+        im->width, im->height, PIX_FMT_YUV420P,
+        im->width, im->height, PIX_FMT_RGBA,
+        SWS_FAST_BILINEAR, NULL, NULL, NULL);
 
-    uint8_t *src[]  = { im->plane[0], im->plane[1], im->plane[2], 0 };
-    int srcStride[] = { im->stride[0], im->stride[1], im->stride[2], 0 };
-    uint8_t *dst[]  = { m_rgbBuffer, 0, 0, 0 };
-    int dstStride[] = { m_sourceWidth*4, 0, 0, 0 };
-    m_dllSwScale->sws_scale(m_sw_context, src, srcStride, 0, im->height, dst, dstStride);
+      uint8_t *src[]  = { im->plane[0], im->plane[1], im->plane[2], 0 };
+      int srcStride[] = { im->stride[0], im->stride[1], im->stride[2], 0 };
+      uint8_t *dst[]  = { m_rgbBuffer, 0, 0, 0 };
+      int dstStride[] = { m_sourceWidth*4, 0, 0, 0 };
+      m_dllSwScale->sws_scale(m_sw_context, src, srcStride, 0, im->height, dst, dstStride);
+    }
   }
 
   bool deinterlacing;
