@@ -266,9 +266,9 @@ unsigned int CAEStreamInfo::DetectType(uint8_t *data, unsigned int size)
     }
 
     /* move along one byte */
-    size--;
-    skipped++;
-    data++;
+    --size;
+    ++skipped;
+    ++data;
   }
 
   return possible ? possible : skipped;
@@ -278,7 +278,7 @@ unsigned int CAEStreamInfo::SyncAC3(uint8_t *data, unsigned int size)
 {
   unsigned int skip = 0;
 
-  for (; size - skip > 7; skip++, data++)
+  for (; size - skip > 7; ++skip, ++data)
   {
     /* search for an ac3 sync word */
     if (data[0] != 0x0b || data[1] != 0x77)
@@ -421,7 +421,7 @@ unsigned int CAEStreamInfo::SyncDTS(uint8_t *data, unsigned int size)
   }
 
   unsigned int skip = 0;
-  for (; size - skip > 13; skip++, data++)
+  for (; size - skip > 13; ++skip, ++data)
   {
     unsigned int header = data[0] << 24 | data[1] << 16 | data[2] << 8 | data[3];
     unsigned int hd_sync = 0;
@@ -605,7 +605,7 @@ unsigned int CAEStreamInfo::SyncDTS(uint8_t *data, unsigned int size)
 inline unsigned int CAEStreamInfo::GetTrueHDChannels(const uint16_t chanmap)
 {
   int channels = 0;
-  for (int i = 0; i < 13; i++)
+  for (int i = 0; i < 13; ++i)
     channels += THDChanMap[i] * ((chanmap >> i) & 1);
   return channels;
 }
@@ -616,7 +616,7 @@ unsigned int CAEStreamInfo::SyncTrueHD(uint8_t *data, unsigned int size)
   unsigned int skip = 0;
 
   /* if MLP */
-  for (; left; skip++, data++, left--)
+  for (; left; ++skip, ++data, --left)
   {
     /* if we dont have sync and there is less the 8 bytes, then break out */
     if (!m_hasSync && left < 8)
@@ -683,7 +683,7 @@ unsigned int CAEStreamInfo::SyncTrueHD(uint8_t *data, unsigned int size)
       /* verify the parity */
       int     p     = 0;
       uint8_t check = 0;
-      for (int i = -1; i < m_substreams; i++)
+      for (int i = -1; i < m_substreams; ++i)
       {
         check ^= data[p++];
         check ^= data[p++];

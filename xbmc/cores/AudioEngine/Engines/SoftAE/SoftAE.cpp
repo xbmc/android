@@ -61,11 +61,11 @@ CSoftAE::CSoftAE():
   m_streamStageFn      (NULL        )
 {
   CAESinkFactory::EnumerateEx(m_sinkInfoList);
-  for (AESinkInfoList::iterator itt = m_sinkInfoList.begin(); itt != m_sinkInfoList.end(); itt++)
+  for (AESinkInfoList::iterator itt = m_sinkInfoList.begin(); itt != m_sinkInfoList.end(); ++itt)
   {
     CLog::Log(LOGNOTICE, "Enumerated %s devices:", itt->m_sinkName.c_str());
     int count = 0;
-    for (AEDeviceInfoList::iterator itt2 = itt->m_deviceInfoList.begin(); itt2 != itt->m_deviceInfoList.end(); itt2++)
+    for (AEDeviceInfoList::iterator itt2 = itt->m_deviceInfoList.begin(); itt2 != itt->m_deviceInfoList.end(); ++itt2)
     {
       CLog::Log(LOGNOTICE, "    Device %d", ++count);
       CAEDeviceInfo& info = *itt2;
@@ -144,7 +144,7 @@ inline CSoftAEStream *CSoftAE::GetMasterStream()
       delete stream;
       continue;
     }
-    itt++;
+    ++itt;
   }
 
   if (!m_newStreams.empty())
@@ -400,19 +400,19 @@ void CSoftAE::InternalOpenSink()
     {
       CSingleLock soundLock(m_soundLock);
       StopAllSounds();
-      for (SoundList::iterator itt = m_sounds.begin(); itt != m_sounds.end(); itt++)
+      for (SoundList::iterator itt = m_sounds.begin(); itt != m_sounds.end(); ++itt)
         (*itt)->Initialize();
     }
 
     /* re-init streams */
     streamLock.Enter();
-    for (StreamList::iterator itt = m_streams.begin(); itt != m_streams.end(); itt++)
+    for (StreamList::iterator itt = m_streams.begin(); itt != m_streams.end(); ++itt)
       (*itt)->Initialize();
     streamLock.Leave();
   }
 
   /* any new streams need to be initialized */
-  for (StreamList::iterator itt = m_newStreams.begin(); itt != m_newStreams.end(); itt++)
+  for (StreamList::iterator itt = m_newStreams.begin(); itt != m_newStreams.end(); ++itt)
   {
     (*itt)->Initialize();
     m_streams.push_back(*itt);
@@ -486,7 +486,7 @@ void CSoftAE::OnSettingsChange(std::string setting)
   {
     /* re-init stream reamppers */
     CSingleLock streamLock(m_streamLock);
-    for (StreamList::iterator itt = m_streams.begin(); itt != m_streams.end(); itt++)
+    for (StreamList::iterator itt = m_streams.begin(); itt != m_streams.end(); ++itt)
       (*itt)->InitializeRemap();
   }
 }
@@ -538,10 +538,10 @@ void CSoftAE::VerifySoundDevice(std::string& device, bool passthrough)
 {
   /* check that the specified device exists */
   std::string firstDevice;
-  for (AESinkInfoList::iterator itt = m_sinkInfoList.begin(); itt != m_sinkInfoList.end(); itt++)
+  for (AESinkInfoList::iterator itt = m_sinkInfoList.begin(); itt != m_sinkInfoList.end(); ++itt)
   {
     AESinkInfo sinkInfo = *itt;
-    for (AEDeviceInfoList::iterator itt2 = sinkInfo.m_deviceInfoList.begin(); itt2 != sinkInfo.m_deviceInfoList.end(); itt2++)
+    for (AEDeviceInfoList::iterator itt2 = sinkInfo.m_deviceInfoList.begin(); itt2 != sinkInfo.m_deviceInfoList.end(); ++itt2)
     {
       CAEDeviceInfo& devInfo = *itt2;
       if (passthrough && devInfo.m_deviceType == AE_DEVTYPE_PCM)
@@ -592,10 +592,10 @@ void CSoftAE::Deinitialize()
 
 void CSoftAE::EnumerateOutputDevices(AEDeviceList &devices, bool passthrough)
 {
-  for (AESinkInfoList::iterator itt = m_sinkInfoList.begin(); itt != m_sinkInfoList.end(); itt++)
+  for (AESinkInfoList::iterator itt = m_sinkInfoList.begin(); itt != m_sinkInfoList.end(); ++itt)
   {
     AESinkInfo sinkInfo = *itt;
-    for (AEDeviceInfoList::iterator itt2 = sinkInfo.m_deviceInfoList.begin(); itt2 != sinkInfo.m_deviceInfoList.end(); itt2++)
+    for (AEDeviceInfoList::iterator itt2 = sinkInfo.m_deviceInfoList.begin(); itt2 != sinkInfo.m_deviceInfoList.end(); ++itt2)
     {
       CAEDeviceInfo devInfo = *itt2;
       if (passthrough && devInfo.m_deviceType == AE_DEVTYPE_PCM)
@@ -620,10 +620,10 @@ void CSoftAE::EnumerateOutputDevices(AEDeviceList &devices, bool passthrough)
 
 std::string CSoftAE::GetDefaultDevice(bool passthrough)
 {
-  for (AESinkInfoList::iterator itt = m_sinkInfoList.begin(); itt != m_sinkInfoList.end(); itt++)
+  for (AESinkInfoList::iterator itt = m_sinkInfoList.begin(); itt != m_sinkInfoList.end(); ++itt)
   {
     AESinkInfo sinkInfo = *itt;
-    for (AEDeviceInfoList::iterator itt2 = sinkInfo.m_deviceInfoList.begin(); itt2 != sinkInfo.m_deviceInfoList.end(); itt2++)
+    for (AEDeviceInfoList::iterator itt2 = sinkInfo.m_deviceInfoList.begin(); itt2 != sinkInfo.m_deviceInfoList.end(); ++itt2)
     {
       CAEDeviceInfo devInfo = *itt2;
       if (passthrough && devInfo.m_deviceType == AE_DEVTYPE_PCM)
@@ -741,7 +741,7 @@ void CSoftAE::FreeSound(IAESound *sound)
 
   sound->Stop();
   CSingleLock soundLock(m_soundLock);
-  for (SoundList::iterator itt = m_sounds.begin(); itt != m_sounds.end(); itt++)
+  for (SoundList::iterator itt = m_sounds.begin(); itt != m_sounds.end(); ++itt)
     if (*itt == sound)
     {
       m_sounds.erase(itt);
@@ -774,7 +774,7 @@ void CSoftAE::StopSound(IAESound *sound)
       itt = m_playing_sounds.erase(itt);
     }
     else
-      itt++;
+      ++itt;
   }
 }
 
@@ -923,15 +923,15 @@ unsigned int CSoftAE::MixSounds(float *buffer, unsigned int samples)
       CAEUtil::SSEMulAddArray(buffer, ss->samples, volume, mixSamples);
     #else
       float *sample_buffer = ss->samples;
-      for (unsigned int i = 0; i < mixSamples; i++)
+      for (unsigned int i = 0; i < mixSamples; ++i)
         *buffer++ = *sample_buffer++ * volume;
     #endif
 
     ss->sampleCount -= mixSamples;
     ss->samples     += mixSamples;
 
-    itt++;
-    mixed++;
+    ++itt;
+    ++mixed;
   }
   return mixed;
 }
@@ -1124,7 +1124,7 @@ unsigned int CSoftAE::RunRawStreamStage(unsigned int channelCount, void *out, bo
   CSingleLock streamLock(m_streamLock);
 
   /* handle playing streams */
-  for (itt = m_playingStreams.begin(); itt != m_playingStreams.end(); itt++)
+  for (itt = m_playingStreams.begin(); itt != m_playingStreams.end(); ++itt)
   {
     CSoftAEStream *sitt = *itt;
     if (sitt == m_masterStream)
@@ -1175,7 +1175,7 @@ unsigned int CSoftAE::RunStreamStage(unsigned int channelCount, void *out, bool 
 
   /* mix in any running streams */
   StreamList resumeStreams;
-  for (StreamList::iterator itt = m_playingStreams.begin(); itt != m_playingStreams.end(); itt++)
+  for (StreamList::iterator itt = m_playingStreams.begin(); itt != m_playingStreams.end(); ++itt)
   {
     CSoftAEStream *stream = *itt;
 
@@ -1212,7 +1212,7 @@ unsigned int CSoftAE::RunStreamStage(unsigned int channelCount, void *out, bool 
       }
     }
 
-    mixed++;
+    ++mixed;
   }
 
   ResumeSlaveStreams(resumeStreams);
@@ -1225,7 +1225,7 @@ inline void CSoftAE::ResumeSlaveStreams(const StreamList &streams)
     return;
 
   /* resume any streams that need to be */
-  for (StreamList::const_iterator itt = streams.begin(); itt != streams.end(); itt++)
+  for (StreamList::const_iterator itt = streams.begin(); itt != streams.end(); ++itt)
   {
     CSoftAEStream *stream = *itt;
     m_playingStreams.push_back(stream->m_slave);

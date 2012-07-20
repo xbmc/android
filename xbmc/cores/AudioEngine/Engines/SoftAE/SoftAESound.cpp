@@ -83,7 +83,7 @@ float* CSoftAESound::GetSamples()
   if (!m_wavLoader.IsValid())
     return NULL;
 
-  m_inUse++;
+  ++m_inUse;
   return m_wavLoader.GetSamples();
 }
 
@@ -91,7 +91,7 @@ void CSoftAESound::ReleaseSamples()
 {
   CSingleLock cs(m_critSection);
   ASSERT(m_inUse > 0);
-  m_inUse--;
+  --m_inUse;
 }
 
 bool CSoftAESound::IsPlaying()
