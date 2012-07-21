@@ -21,5 +21,6 @@
 
 #include "AndroidTouch.h"
 #include "AndroidKey.h"
+
 class IInputHandler : public CAndroidTouch, public CAndroidKey
 {};
