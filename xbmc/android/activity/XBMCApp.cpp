@@ -580,8 +580,8 @@ bool CXBMCApp::StartActivity(const string &package)
   if (!oPackageIntent)
   {
     CLog::Log(LOGERROR, "CXBMCApp::StartActivity %s has no Launch Intent", package.c_str());
-    DetachCurrentThread();
     env->DeleteLocalRef(cActivity);
+    DetachCurrentThread();
     return false;
   }
   // startActivity(oIntent);
