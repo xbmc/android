@@ -174,8 +174,8 @@ bool CAESinkAUDIOTRACK::Initialize(AEAudioFormat &format, std::string &device)
   }
   m_format.m_dataFormat = dataFormat;
 
-  m_format.m_frameSamples = m_format.m_channelLayout.Count();
-  m_format.m_frameSize    = m_format.m_frameSamples * (CAEUtil::DataFormatToBits(m_format.m_dataFormat) >> 3);
+  m_format.m_channelLayout = m_info.m_channels;
+  m_format.m_frameSize = format.m_channelLayout.Count() * (CAEUtil::DataFormatToBits(m_format.m_dataFormat) >> 3);
 
   m_draining = false;
   // launch the process thread and wait for the
@@ -191,6 +191,7 @@ bool CAESinkAUDIOTRACK::Initialize(AEAudioFormat &format, std::string &device)
 
   // m_min_frames is volatile and has been setup by Process()
   m_format.m_frames = m_min_frames;
+  m_format.m_frameSamples = m_format.m_frames * m_format.m_channelLayout.Count();
   format = m_format;
 
   return true;
@@ -258,7 +259,7 @@ unsigned int CAESinkAUDIOTRACK::AddPackets(uint8_t *data, unsigned int frames, b
         if (!m_alignedS16LE)
           m_alignedS16LE = (int16_t*)_aligned_malloc(m_format.m_frames * m_sink_frameSize, 16);
         // neon convert AE_FMT_S16LE to AE_FMT_FLOAT
-        pa_sconv_s16le_from_f32ne_neon(write_frames * m_format.m_frameSamples, (const float32_t *)data, m_alignedS16LE);
+        pa_sconv_s16le_from_f32ne_neon(write_frames * m_format.m_channelLayout.Count(), (const float32_t *)data, m_alignedS16LE);
         m_sinkbuffer->Write((unsigned char*)m_alignedS16LE, write_frames * m_sink_frameSize);
         m_wake.Set();
         break;
@@ -332,16 +333,16 @@ void CAESinkAUDIOTRACK::Process()
   jint min_buffer_size = jenv->CallStaticIntMethod(jcAudioTrack, jmGetMinBufferSize,
     m_format.m_sampleRate, channelConfig, audioFormat);
 
-  m_sink_frameSize = m_format.m_frameSamples * CAEUtil::DataFormatToBits(AE_FMT_S16LE) >> 3;
+  m_sink_frameSize = m_format.m_channelLayout.Count() * CAEUtil::DataFormatToBits(AE_FMT_S16LE) >> 3;
   m_min_frames = min_buffer_size / m_sink_frameSize;
 
-  m_audiotrackbuffer_sec = (double)min_buffer_size / (double)m_format.m_sampleRate;
+  m_audiotrackbuffer_sec = (double)m_min_frames / (double)m_format.m_sampleRate;
   m_audiotrack_empty_sec = 0.0;
 
   // setup a 1/4 second internal sink lockless ring buffer
   m_sinkbuffer = new AERingBuffer(m_sink_frameSize * m_format.m_sampleRate / 4);
-  m_sinkbuffer_sec = (double)m_sinkbuffer->GetMaxSize() / (double)m_format.m_sampleRate;
   m_sinkbuffer_sec_per_byte = 1.0 / (double)(m_sink_frameSize * m_format.m_sampleRate);
+  m_sinkbuffer_sec = (double)m_sinkbuffer_sec_per_byte * m_sinkbuffer->GetMaxSize();
 
   jobject joAudioTrack = jenv->NewObject(jcAudioTrack, jmInit,
     GetStaticIntField(jenv, "AudioManager", "STREAM_MUSIC"),
