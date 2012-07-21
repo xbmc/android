@@ -463,7 +463,9 @@ bool CSoftAE::Initialize()
   m_running = true;
   m_thread  = new CThread(this, "CSoftAE");
   m_thread->Create();
+#if defined(TARGET_ANDROID)
   m_thread->SetPriority(THREAD_PRIORITY_ABOVE_NORMAL);
+#endif
   return true;
 }
 
@@ -878,6 +880,10 @@ void CSoftAE::Run()
       if (m_audiophile && oldMaster != m_masterStream)
         restart = true;
     }
+    else
+    {
+      usleep(10);
+    }
 
     /* if we are told to restart */
     if (m_reOpen || restart)
@@ -1193,23 +1199,8 @@ unsigned int CSoftAE::RunStreamStage(unsigned int channelCount, void *out, bool 
     else
     #endif
     {
-      /* unrolled loop for performance */
-      unsigned int blocks = channelCount & ~0x3;
-      unsigned int i      = 0;
-      for (i = 0; i < blocks; i += 4)
-      {
+      for (unsigned int i = 0; i < channelCount; ++i)
         *dst++ += *frame++ * volume;
-        *dst++ += *frame++ * volume;
-        *dst++ += *frame++ * volume;
-        *dst++ += *frame++ * volume;
-      }
-
-      switch (channelCount & 0x3)
-      {
-        case 3: *dst++ += *frame++ * volume;
-        case 2: *dst++ += *frame++ * volume;
-        case 1: *dst   += *frame++ * volume;
-      }
     }
 
     ++mixed;
