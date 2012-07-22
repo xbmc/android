@@ -1013,7 +1013,16 @@ int CSoftAE::RunOutputStage(bool hasAudio)
     m_reOpen = true;
   }
 
-  m_buffer.Shift(NULL, wroteFrames * m_sinkFormat.m_channelLayout.Count() * sizeof(float));
+  // if we only have what we wrote to sink in m_buffer,
+  // we can skip the Shift as there is nothing else
+  // in the buffer. Shift uses a memmov which can be
+  // very slow, Pop just diddles pointers.
+  unsigned int wroteBytes = wroteFrames * m_sinkFormat.m_channelLayout.Count() * sizeof(float);
+  if (m_buffer.Used() == wroteBytes)
+    m_buffer.Pop(NULL, wroteBytes);
+  else
+    m_buffer.Shift(NULL, wroteBytes);
+
   return wroteFrames;
 }
 
