@@ -856,13 +856,24 @@ void CSoftAE::Run()
   CSingleLock runningLock(m_runningLock);
   CLog::Log(LOGINFO, "CSoftAE::Run - Thread Started");
 
-  bool hasAudio = false;
+  // read/processe one stream frame of audio at at time by,
+  // 1) prep a frame of silence.
+  // 2) fetch and mix in one frame from any active streams.
+  // 3) when we have n frames ready for sink, write it to sink.
+  // 4) rinse/repeat.
+  // note: gui sounds are handled inside the m_outputStageFn,
+  // so can return m_outputStageFn > 0 even if hasAudioFrameCnt == 0.
+
+  int hasAudioFrameCnt = 0;
   while (m_running)
   {
     bool restart = false;
 
-    if ((this->*m_outputStageFn)(hasAudio) > 0)
-      hasAudio = false; /* taken some audio - reset our silence flag */
+    // when sink actually writes any frames, then we can reset
+    // our silence flag which actually counts the frames of real audio.
+    // if the hasAudioFrameCnt is zero, all stream frames sent to sink are silence.
+    if ((this->*m_outputStageFn)(hasAudioFrameCnt != 0) > 0)
+      hasAudioFrameCnt = 0;
 
     /* if we have enough room in the buffer */
     if (m_buffer.Free() >= m_frameSize)
@@ -874,7 +885,7 @@ void CSoftAE::Run()
       /* run the stream stage */
       CSoftAEStream *oldMaster = m_masterStream;
       if ((this->*m_streamStageFn)(m_chLayout.Count(), out, restart) > 0)
-        hasAudio = true; /* have some audio */
+        hasAudioFrameCnt += 1; /* this frame now has audio */
 
       /* if in audiophile mode and the master stream has changed, flag for restart */
       if (m_audiophile && oldMaster != m_masterStream)
