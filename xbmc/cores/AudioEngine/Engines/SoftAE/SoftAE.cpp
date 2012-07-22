@@ -1077,7 +1077,12 @@ int CSoftAE::RunRawOutputStage(bool hasAudio)
     m_reOpen = true;
   }
 
-  m_buffer.Shift(NULL, wroteFrames * m_sinkFormat.m_frameSize);
+  unsigned int wroteBytes = wroteFrames * m_sinkFormat.m_frameSize;
+  if (m_buffer.Used() == wroteBytes)
+    m_buffer.Pop(NULL, wroteBytes);
+  else
+    m_buffer.Shift(NULL, wroteBytes);
+
   return wroteFrames;
 }
 
@@ -1113,7 +1118,11 @@ int CSoftAE::RunTranscodeStage(bool hasAudio)
       buffer = m_buffer.Raw(block);
 
     encodedFrames = m_encoder->Encode((float*)buffer, m_encoderFormat.m_frames);
-    m_buffer.Shift(NULL, encodedFrames * m_encoderFormat.m_frameSize);
+    unsigned int encodedBytes = encodedFrames * m_encoderFormat.m_frameSize;
+    if (m_buffer.Used() == encodedBytes)
+      m_buffer.Pop(NULL, encodedBytes);
+    else
+      m_buffer.Shift(NULL, encodedBytes);
 
     uint8_t *packet;
     unsigned int size = m_encoder->GetData(&packet);
@@ -1138,7 +1147,11 @@ int CSoftAE::RunTranscodeStage(bool hasAudio)
       m_reOpen = true;
     }
 
-    m_encodedBuffer.Shift(NULL, wroteFrames * m_sinkFormat.m_frameSize);
+    unsigned int wroteBytes = wroteFrames * m_sinkFormat.m_frameSize;
+    if (m_encodedBuffer.Used() == wroteBytes)
+      m_encodedBuffer.Pop(NULL, wroteBytes);
+    else
+      m_encodedBuffer.Shift(NULL, wroteBytes);
   }
   return encodedFrames;
 }
