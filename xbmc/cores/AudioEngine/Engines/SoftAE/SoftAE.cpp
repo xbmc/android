@@ -322,6 +322,9 @@ void CSoftAE::InternalOpenSink()
     m_sinkFormatSampleRateMul = 1.0 / (float)newFormat.m_sampleRate;
     m_sinkFormatFrameSizeMul  = 1.0 / (float)newFormat.m_frameSize;
     m_sinkBlockSize           = newFormat.m_frames * newFormat.m_frameSize;
+    // check if sink controls volume, if so, init the volume.
+    m_sinkHandlesVolume       = m_sink->HasVolume();
+    if (m_sinkHandlesVolume)  m_sink->SetVolume(m_volume);
 
     /* invalidate the buffer */
     m_buffer.Empty();
@@ -839,6 +842,11 @@ float CSoftAE::GetVolume()
 void CSoftAE::SetVolume(float volume)
 {
   m_volume = volume;
+  if (m_sink && m_sinkHandlesVolume)
+  {
+    CSharedLock sinkLock(m_sinkLock);
+    m_sink->SetVolume(m_volume);
+  }
 }
 
 void CSoftAE::StopAllSounds()
@@ -972,7 +980,7 @@ bool CSoftAE::FinalizeSamples(float *buffer, unsigned int samples, bool hasAudio
   }
 
   /* deamplify */
-  if (m_volume < 1.0)
+  if (!m_sinkHandlesVolume && m_volume < 1.0)
   {
     #ifdef __SSE__
       CAEUtil::SSEMulArray(buffer, m_volume, samples);
