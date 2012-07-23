@@ -1028,15 +1028,8 @@ int CSoftAE::RunOutputStage(bool hasAudio)
     m_reOpen = true;
   }
 
-  // if we only have what we wrote to sink in m_buffer,
-  // we can skip the Shift as there is nothing else
-  // in the buffer. Shift uses a memmov which can be
-  // very slow, Pop just diddles pointers.
   unsigned int wroteBytes = wroteFrames * m_sinkFormat.m_channelLayout.Count() * sizeof(float);
-  if (m_buffer.Used() == wroteBytes)
-    m_buffer.Pop(NULL, wroteBytes);
-  else
-    m_buffer.Shift(NULL, wroteBytes);
+  m_buffer.Shift(NULL, wroteBytes);
 
   return wroteFrames;
 }
@@ -1077,10 +1070,7 @@ int CSoftAE::RunRawOutputStage(bool hasAudio)
   }
 
   unsigned int wroteBytes = wroteFrames * m_sinkFormat.m_frameSize;
-  if (m_buffer.Used() == wroteBytes)
-    m_buffer.Pop(NULL, wroteBytes);
-  else
-    m_buffer.Shift(NULL, wroteBytes);
+  m_buffer.Shift(NULL, wroteBytes);
 
   return wroteFrames;
 }
@@ -1111,10 +1101,7 @@ int CSoftAE::RunTranscodeStage(bool hasAudio)
 
     encodedFrames = m_encoder->Encode((float*)buffer, m_encoderFormat.m_frames);
     unsigned int encodedBytes = encodedFrames * m_encoderFormat.m_frameSize;
-    if (m_buffer.Used() == encodedBytes)
-      m_buffer.Pop(NULL, encodedBytes);
-    else
-      m_buffer.Shift(NULL, encodedBytes);
+    m_buffer.Shift(NULL, encodedBytes);
 
     uint8_t *packet;
     unsigned int size = m_encoder->GetData(&packet);
@@ -1140,10 +1127,7 @@ int CSoftAE::RunTranscodeStage(bool hasAudio)
     }
 
     unsigned int wroteBytes = wroteFrames * m_sinkFormat.m_frameSize;
-    if (m_encodedBuffer.Used() == wroteBytes)
-      m_encodedBuffer.Pop(NULL, wroteBytes);
-    else
-      m_encodedBuffer.Shift(NULL, wroteBytes);
+    m_encodedBuffer.Shift(NULL, wroteBytes);
   }
   return encodedFrames;
 }
