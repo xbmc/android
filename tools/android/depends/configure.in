@@ -46,6 +46,30 @@ AC_ARG_WITH([sdk-platform],
   [optional. spcify sdk platform version (for android headers). default is android-10])],
   [use_sdk_platform=$withval],use_sdk_platform=android-10)
 
+AC_PROG_CXX
+AC_PROG_CC
+AC_CHECK_LIB([z],   [main],, AC_MSG_ERROR("Missing libz development files"))
+
+AC_CHECK_PROG(HAVE_UNZIP,unzip,"yes","no",)
+if test "x$HAVE_UNZIP" = "xno" ; then
+  AC_MSG_ERROR("Missing program: unzip")
+fi
+
+AC_CHECK_PROG(HAVE_ZIP,zip,"yes","no",)
+if test "x$HAVE_ZIP" = "xno" ; then
+  AC_MSG_ERROR("Missing program: zip")
+fi
+
+AC_PATH_PROG(CURL,curl,"no")
+if test "x$CURL" = "xno" ; then
+  AC_MSG_ERROR("Missing program: curl")
+fi
+
+AC_PATH_PROG(TAR,tar,"no")
+if test "x$TAR" = "xno" ; then
+  AC_MSG_ERROR("Missing program: tar")
+fi
+
 #find host toolchain
 AC_CHECK_PROG(host_gcc,$host-gcc,yes,no,$use_toolchain/bin)
 if test "$host_gcc" = "no"; then
