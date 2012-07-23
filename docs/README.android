@@ -22,7 +22,21 @@ console (similar to the command prompt for Windows). Note that the '#'
 character itself should NOT be typed as part of the command.
 
 -----------------------------------------------------------------------------
-2. Installing and setting up the Android environment
+2. Installing the required Ubuntu packages
+-----------------------------------------------------------------------------
+These are the minimum packages necessary for building XBMC. Non-Ubuntu
+users will need to get the equivalents.
+
+   # sudo apt-get install build-essential default-jdk git curl autoconf \
+       unzip zip zlib1g-dev gawk gperf
+
+If you run a 64bit operating system you will also need to get ia32-libs
+
+   # sudo apt-get install ia32-libs
+
+
+-----------------------------------------------------------------------------
+3. Installing and setting up the Android environment
 -----------------------------------------------------------------------------
 
 To develop XBMC for Android the Android SDK and NDK are required.
@@ -31,7 +45,7 @@ which XBMC relies on for Unicode implementation, a third-party NDK
 from Crystax is being used.
 
 --------------------------------------------------------------------
-2.1. Getting the Android SDK and NDK
+3.1. Getting the Android SDK and NDK
 --------------------------------------------------------------------
 
 To get the Android SDK, go to http://developer.android.com/sdk and
@@ -50,43 +64,34 @@ Make sure you have a recent JRE and JDK installed otherwise the
 Android SDK will not work.
 
 --------------------------------------------------------------------
-2.2. Installing Android SDK packages
+3.2. Installing Android SDK packages
 --------------------------------------------------------------------
 
 After having extracted the Android SDK to <android-sdk> you need to
 install some android packages using the Android SDK Manager:
 
    # cd <android-sdk>/tools
-   # android &
-
-Install at least the following packages:
-  - Tools
-    - Android SDK Tools
-    - Android SDK Platform-tools
-  - Android 2.3.3 (API 10)
-    - SDK Platform
+   # ./android update sdk -u -t platform,platform-tool
 
 --------------------------------------------------------------------
-2.3. Setup the Android toolchain
+3.3. Setup the Android toolchain
 --------------------------------------------------------------------
 
 To be able to compile XBMC and the libraries it depends on for the
 Android platform you first need to setup an Android toolchain using
-the Android NDK which you earlier extracted to <android-ndk>.
+the Android NDK which you earlier extracted to <android-ndk>. The
+following commands will create a toolchain suitable for the most
+common scenario.
+The --install-dir option (and therefore the <android-toolchain> value)
+specifies where the resulting toolchain should be installed (your choice).
 
    # cd <android-ndk>
    # ls platforms
    # cd build/tools
-   # ./make-standalone-toolchain.sh --ndk-dir=<android-ndk> \
-     --platform=android-<x> --install-dir=<android-toolchain>/android-<x>
+   # ./make-standalone-toolchain.sh --ndk-dir=../../ \
+     --install-dir=<android-toolchain>/android-9 --platform=android-9
 
-The output of "ls platforms" gives you a list of available platforms
-which you can pass to the --platform option of the
-make-standalone-toolchain.sh script. Make sure that <x> is at least 9.
-The --install-dir option (and therefore the <android-toolchain> value)
-specifies the path whereto the script will copy the necessary files.
-
-ATTENTION FOR X86 BUILDS:
+ATTENTION FOR X86 BUILDS - THIS DOES NOT APPLY TO 99% OF BUILDS:
 If you want to build for the x86 platform there is a flaw in the mentioned
 NDK. See http://code.google.com/p/android/issues/detail?id=19851 which results
 in linker errors mentioning "sigsetjmp and siglongjmp".
@@ -99,31 +104,26 @@ And extract it to <android-toolchain>/android-<x>/sysroot/usr/lib/ and overwrite
 the libc.so there. (where <android-toolchain>/android-<x>/ is the path you have given on the
 --install-dir option above)
 
+--------------------------------------------------------------------
+3.4. Create a (new) debug key to sign debug APKs
+--------------------------------------------------------------------
+
+  All packages must be signed. The following command will generate a
+  self-signed debug key. If the result is a cryptic error, it
+  probably just means a debug key already existed, no cause for alarm.
+
+  # keytool -genkey -keystore ~/.android/debug.keystore -v -alias \
+      androiddebugkey -dname "CN=Android Debug,O=Android,C=US" -keypass \
+      android -storepass android -keyalg RSA -keysize 2048 -validity 10000
+
 -----------------------------------------------------------------------------
-3. Getting the source code
+4. Getting the source code
 -----------------------------------------------------------------------------
 
-   # sudo apt-get install git-core
    # cd $HOME
    # git clone git://github.com/xbmc/android.git xbmc-android
    # cd xbmc-android
    # git submodule update --init addons/skin.touched
-
------------------------------------------------------------------------------
-4. Installing the required Ubuntu packages
------------------------------------------------------------------------------
-
-   # sudo apt-get install build-essential
-   
-If you run a 64bit operating system you will also need to get ia32-libs
-
-  # sudo apt-get install ia32-libs
-
-*** For developers and anyone else who compiles frequently it is recommended to use ccache
-sudo apt-get install ccache
-
-*** A tip for those with multiple computers at home is to check out distcc (totally unsupported from xbmc of course)
-sudo apt-get install distcc
 
 -----------------------------------------------------------------------------
 5. How to compile
@@ -298,9 +298,6 @@ is 'tools/android/packaging' and that the proper sdk/ndk paths are set.
 
 -Filter logcat messages by a specific tag (e.g. "XBMC")
   # adb logcat -s XBMC:V
-  
--Create a (new) debug key to sign debug APKs
-  # keytool -genkey -keystore ~/.android/debug.keystore -v -alias androiddebugkey -dname "CN=Android Debug,O=Android,C=US" -keypass android -storepass android -keyalg RSA -keysize 2048 -validity 10000
   
 -Enable CheckJNI (BEFORE starting the application)
   # adb shell setprop debug.checkjni 1
