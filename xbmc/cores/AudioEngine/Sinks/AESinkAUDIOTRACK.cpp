@@ -272,6 +272,17 @@ void CAESinkAUDIOTRACK::Drain()
   m_wake.Set();
 }
 
+bool CAESinkAUDIOTRACK::HasVolume()
+{
+  return true;
+}
+
+void  CAESinkAUDIOTRACK::SetVolume(float volume)
+{
+  m_volume = volume;
+  m_volume_changed = true;
+}
+
 void CAESinkAUDIOTRACK::EnumerateDevicesEx(AEDeviceInfoList &list)
 {
   m_info.m_channels.Reset();
@@ -314,8 +325,10 @@ void CAESinkAUDIOTRACK::Process()
   jmethodID jmRelease           = jenv->GetMethodID(jcAudioTrack, "release", "()V");
   jmethodID jmWrite             = jenv->GetMethodID(jcAudioTrack, "write", "([BII)I");
   jmethodID jmPlayState         = jenv->GetMethodID(jcAudioTrack, "getPlayState", "()I");
+  jmethodID jmSetStereoVolume   = jenv->GetMethodID(jcAudioTrack, "setStereoVolume", "(FF)I");
   jmethodID jmPlayHeadPosition  = jenv->GetMethodID(jcAudioTrack, "getPlaybackHeadPosition", "()I");
   jmethodID jmGetMinBufferSize  = jenv->GetStaticMethodID(jcAudioTrack, "getMinBufferSize", "(III)I");
+
 
   jint audioFormat    = GetStaticIntField(jenv, "AudioFormat", "ENCODING_PCM_16BIT");
   jint channelConfig  = GetStaticIntField(jenv, "AudioFormat", "CHANNEL_OUT_STEREO");
@@ -358,6 +371,15 @@ void CAESinkAUDIOTRACK::Process()
 
   while (!m_bStop)
   {
+    if (m_volume_changed)
+    {
+      // check of volume changes and make them,
+      // do it here to keep jni calls local to this thread.
+      jfloat jvolume = m_volume;
+      jenv->CallIntMethod(joAudioTrack, jmSetStereoVolume, jvolume, jvolume);
+      m_volume_changed = false;
+    }
+
     if (m_draining)
     {
       unsigned char byte_drain[1024];
