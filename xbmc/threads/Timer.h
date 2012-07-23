@@ -19,8 +19,38 @@
  *
  */
 
-#include "AndroidTouch.h"
-#include "AndroidKey.h"
+#include "Event.h"
+#include "Thread.h"
 
-class IInputHandler : public CAndroidTouch, public CAndroidKey
-{};
+class ITimerCallback
+{
+public:
+  virtual ~ITimerCallback() { }
+  
+  virtual void OnTimeout() = 0;
+};
+
+class CTimer : protected CThread
+{
+public:
+  CTimer(ITimerCallback *callback);
+  virtual ~CTimer();
+
+  bool Start(uint32_t timeout, bool interval = false);
+  bool Stop(bool wait = false);
+
+  bool IsRunning() const { return CThread::IsRunning(); }
+
+  float GetElapsedSeconds() const;
+  float GetElapsedMilliseconds() const;
+  
+protected:
+  virtual void Process();
+  
+private:
+  ITimerCallback *m_callback;
+  uint32_t m_timeout;
+  bool m_interval;
+  uint32_t m_endTime;
+  CEvent m_eventTimeout;
+};
