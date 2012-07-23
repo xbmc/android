@@ -31,35 +31,25 @@
 #include <arm_neon.h>
 #include "utils/CPUInfo.h"
 // LGPLv2 from PulseAudio
-
-#define PA_UNLIKELY(x) (__builtin_expect(!!(x),0))
-#define PA_CLAMP_UNLIKELY(x, low, high)                                 \
-    __extension__ ({                                                    \
-            typeof(x) _x = (x);                                         \
-            typeof(low) _low = (low);                                   \
-            typeof(high) _high = (high);                                \
-            (PA_UNLIKELY(_x > _high) ? _high : (PA_UNLIKELY(_x < _low) ? _low : _x)); \
-    })
+// float values from AE are pre-clamped so we do not need to clamp again here
 static void pa_sconv_s16le_from_f32ne_neon(unsigned n, const float32_t *a, int16_t *b)
 {
   unsigned int i;
 
-  const float32x4_t plusone4  = vdupq_n_f32(1.0f);
-  const float32x4_t minusone4 = vdupq_n_f32(-1.0f);
   const float32x4_t half4     = vdupq_n_f32(0.5f);
   const float32x4_t scale4    = vdupq_n_f32(32767.0f);
   const uint32x4_t  mask4     = vdupq_n_u32(0x80000000);
 
   for (i = 0; i < (n & ~3); i += 4)
   {
-    const float32x4_t v4 = vmulq_f32(vmaxq_f32(vminq_f32(vld1q_f32(&a[i]), plusone4), minusone4), scale4);
+    const float32x4_t v4 = vmulq_f32(vld1q_f32(&a[i]), scale4);
     const float32x4_t w4 = vreinterpretq_f32_u32(
       vorrq_u32(vandq_u32(vreinterpretq_u32_f32(v4), mask4), vreinterpretq_u32_f32(half4)));
     vst1_s16(&b[i], vmovn_s32(vcvtq_s32_f32(vaddq_f32(v4, w4))));
   }
   // leftovers
   for ( ; i < n; i++)
-    b[i] = (int16_t) lrintf(PA_CLAMP_UNLIKELY(a[i], -1.0f, 1.0f) * 0x7FFF);
+    b[i] = (int16_t) lrintf(a[i] * 0x7FFF);
 }
 #endif
 
