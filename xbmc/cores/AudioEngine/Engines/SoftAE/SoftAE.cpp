@@ -463,9 +463,7 @@ bool CSoftAE::Initialize()
   m_running = true;
   m_thread  = new CThread(this, "CSoftAE");
   m_thread->Create();
-#if defined(TARGET_ANDROID)
   m_thread->SetPriority(THREAD_PRIORITY_ABOVE_NORMAL);
-#endif
   return true;
 }
 
