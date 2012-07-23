@@ -399,6 +399,10 @@ void CAESinkAUDIOTRACK::Process()
       frames_written = 0;
     frames_written += read_bytes / m_sink_frameSize;
     m_audiotrack_empty_sec = (double)(frames_written - frame_position) / m_format.m_sampleRate;
+    // some times, we can get frame_position
+    // ahead of frames_written, not a clue why. clamp it.
+    if (m_audiotrack_empty_sec < 0.0f)
+      m_audiotrack_empty_sec = 0.0f;
 
     if (m_sinkbuffer->GetReadSize() == 0)
     {
