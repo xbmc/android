@@ -889,6 +889,15 @@ void CSoftAE::Run()
       CLog::Log(LOGDEBUG, "CSoftAE::Run - Sink restart flagged");
       InternalOpenSink();
     }
+#if defined(TARGET_ANDROID)
+    else if (m_playingStreams.empty() && m_playing_sounds.empty())
+    {
+      // if we have nothing to do, take a nap.
+      // we do not have to take a lock just to check empty.
+      // this keeps AE from running away if nothing is going on.
+      usleep(100);
+    }
+#endif
   }
 }
 
