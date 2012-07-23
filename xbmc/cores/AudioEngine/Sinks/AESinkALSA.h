@@ -50,6 +50,8 @@ public:
   virtual double       GetCacheTotal   ();
   virtual unsigned int AddPackets      (uint8_t *data, unsigned int frames, bool hasAudio);
   virtual void         Drain           ();
+  virtual bool         HasVolume       () { return false; };
+  virtual void         SetVolume       (float volume) { };
 
   static void EnumerateDevicesEx(AEDeviceInfoList &list);
 private:

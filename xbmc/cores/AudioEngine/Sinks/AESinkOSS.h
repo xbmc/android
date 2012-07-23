@@ -44,6 +44,8 @@ public:
   virtual double       GetCacheTotal   () { return 0.0; } /* FIXME */
   virtual unsigned int AddPackets      (uint8_t *data, unsigned int frames, bool hasAudio);
   virtual void         Drain           ();
+  virtual bool         HasVolume       () { return false; };
+  virtual void         SetVolume       (float volume) { };
   static  void         EnumerateDevicesEx(AEDeviceInfoList &list);
 private:
   int m_fd;
