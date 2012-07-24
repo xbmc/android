@@ -1,6 +1,6 @@
 #include Makefile.include
 
-BUILDTOOLS = help2man autoconf automake libtool pkg-config yasm cmake
+BUILDTOOLS = help2man gettext-native autoconf automake libtool pkg-config yasm cmake
 
 SUBDIRS = \
 	ncurses pcre expat libiconv gettext readline sqlite3 libgpg-error \
