@@ -1,9 +1,9 @@
 include ../Makefile.include
-DEPS= ../Makefile.include 01-gettext_pthread_cancel.patch 02-gettext_msginit.patch Makefile
+DEPS= ../Makefile.include 02-gettext_msginit.patch Makefile
 
 # lib name, version
 LIBNAME=gettext
-VERSION=0.17
+VERSION=0.18.1.1
 SOURCE=$(LIBNAME)-$(VERSION)
 ARCHIVE=$(SOURCE).tar.gz
 
@@ -31,8 +31,7 @@ $(TARBALLS_LOCATION)/$(ARCHIVE):
 $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE) $(DEPS)
 	rm -rf $(PLATFORM)/*; mkdir -p $(PLATFORM)
 	$(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
-	cd $(PLATFORM); patch -p1 < ../01-gettext_pthread_cancel.patch
-	cd $(PLATFORM); patch -p1 < ../02-gettext_msginit.patch
+	cd $(PLATFORM); patch -p0 < ../02-gettext_msginit.patch
 	cd $(PLATFORM); $(CONFIGURE)
 
 $(LIBDYLIB): $(PLATFORM)
