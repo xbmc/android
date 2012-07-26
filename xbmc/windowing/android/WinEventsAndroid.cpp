@@ -32,7 +32,8 @@ static CCriticalSection g_inputCond;
 
 PHANDLE_EVENT_FUNC CWinEventsBase::m_pEventFunc = NULL;
 
-static std::vector<XBMC_Event> events;
+static std::deque<XBMC_Event> events;
+static std::deque<XBMC_Event> copy_events;
 
 void CWinEventsAndroid::DeInit()
 {
@@ -45,30 +46,23 @@ void CWinEventsAndroid::Init()
 void CWinEventsAndroid::MessagePush(XBMC_Event *newEvent)
 {
   CSingleLock lock(g_inputCond);
-
   events.push_back(*newEvent);
 }
 
 bool CWinEventsAndroid::MessagePump()
 {
   bool ret = false;
-  bool gotEvent = false;
   XBMC_Event pumpEvent;
-
-  CSingleLock lock(g_inputCond);
-  for (vector<XBMC_Event>::iterator it = events.begin(); it!=events.end(); ++it)
-  {
-    memcpy(&pumpEvent, (XBMC_Event *)&*it, sizeof(XBMC_Event));
-    events.erase (events.begin(),events.begin()+1);
-    gotEvent = true;
-    break;
+  { // double-buffered queue to avoid constant locking for OnEvent().
+    CSingleLock lock(g_inputCond);
+    copy_events = events;
+    events.clear();
   }
-  lock.Leave();
-
-  if (gotEvent)
+  while (!copy_events.empty())
   {
-    ret = g_application.OnEvent(pumpEvent);
+    pumpEvent = copy_events.front();
+    copy_events.pop_front();
+    ret |= g_application.OnEvent(pumpEvent);
   }
-
   return ret;
 }
