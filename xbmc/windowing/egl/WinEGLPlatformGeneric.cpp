@@ -212,7 +212,7 @@ bool CWinEGLPlatformGeneric::DestroyWindow(bool tryToPreserveContext /* = false 
 {
   EGLBoolean eglStatus;
   
-  ReleaseSurface();
+  ReleaseSurface(tryToPreserveContext);
 
   if (m_surface == EGL_NO_SURFACE)
     return true;
@@ -259,6 +259,7 @@ bool CWinEGLPlatformGeneric::BindSurface()
   };
 
   // Create an EGL context
+  bool reusingContext = false;
   if (m_context == EGL_NO_CONTEXT)
   {
     m_context = eglCreateContext(m_display, m_config, NULL, contextAttrs);
@@ -267,10 +268,39 @@ bool CWinEGLPlatformGeneric::BindSurface()
       CLog::Log(LOGERROR, "EGL couldn't create context");
       return false;
     }
+    else
+      CLog::Log(LOGDEBUG, "EGL created context");
+  }
+  else
+  {
+    reusingContext = true;
+    CLog::Log(LOGDEBUG, "EGL reusing stored context");
   }
 
   // Make the context and surface current to this thread for rendering
   eglStatus = eglMakeCurrent(m_display, m_surface, m_surface, m_context);
+  if (!eglStatus && reusingContext)
+  {
+    // possibly something is wrong with stored context
+    CLog::Log(LOGERROR, "EGL couldn't make context/surface current using stored context, try with new context: %d", eglStatus);
+
+    // TO-DO: release resources associated with stored context
+
+    eglStatus = eglDestroyContext(m_display, m_context);
+    if (!eglStatus)
+    {
+      CLog::Log(LOGERROR, "Error destroying stored EGL context");
+      return false;
+    }
+
+    m_context = eglCreateContext(m_display, m_config, NULL, contextAttrs);
+    if (!m_context)
+    {
+      CLog::Log(LOGERROR, "EGL couldn't create new context");
+      return false;
+    }
+    eglStatus = eglMakeCurrent(m_display, m_surface, m_surface, m_context);
+  }
   if (!eglStatus) 
   {
     CLog::Log(LOGERROR, "EGL couldn't make context/surface current: %d", eglStatus);
@@ -306,20 +336,25 @@ bool CWinEGLPlatformGeneric::BindSurface()
   return true;
 }
 
-bool CWinEGLPlatformGeneric::ReleaseSurface()
+bool CWinEGLPlatformGeneric::ReleaseSurface(bool tryToPreserveContext /* = false */)
 {
   EGLBoolean eglStatus;
   
   if (m_context != EGL_NO_CONTEXT)
   {
-    eglStatus = eglDestroyContext(m_display, m_context);
-    if (!eglStatus)
-      CLog::Log(LOGERROR, "Error destroying EGL context");
-    m_context = EGL_NO_CONTEXT;
+    if (tryToPreserveContext && CanPreserveContext())
+      CLog::Log(LOGDEBUG, "Preserving EGL context");
+    else
+    {
+      eglStatus = eglDestroyContext(m_display, m_context);
+      if (!eglStatus)
+        CLog::Log(LOGERROR, "Error destroying EGL context");
+      m_context = EGL_NO_CONTEXT;
+    }
   }
 
   if (m_display != EGL_NO_DISPLAY)
-    eglMakeCurrent(m_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    eglMakeCurrent(m_display, EGL_NO_SURFACE, EGL_NO_SURFACE, m_context);
 
   return true;
 }
