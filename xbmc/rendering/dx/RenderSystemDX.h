@@ -47,7 +47,7 @@ public:
 
   // CRenderBase
   virtual bool InitRenderSystem();
-  virtual bool DestroyRenderSystem();
+  virtual bool DestroyRenderSystem(bool tryToPreserveContext = false);
   virtual bool ResetRenderSystem(int width, int height, bool fullScreen, float refreshRate);
 
   virtual bool BeginRender();

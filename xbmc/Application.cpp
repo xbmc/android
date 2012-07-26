@@ -901,10 +901,10 @@ bool CApplication::InitWindow()
   return true;
 }
 
-bool CApplication::DestroyWindow()
+bool CApplication::DestroyWindow(bool tryToPreserveContext /* = false */)
 {
-  g_Windowing.DestroyRenderSystem();
-  return g_Windowing.DestroyWindow();
+  g_Windowing.DestroyRenderSystem(tryToPreserveContext);
+  return g_Windowing.DestroyWindow(tryToPreserveContext);
 }
 
 bool CApplication::InitDirectoriesLinux()

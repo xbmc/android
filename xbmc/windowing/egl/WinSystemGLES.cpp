@@ -89,7 +89,7 @@ bool CWinSystemGLES::CreateNewWindow(const CStdString& name, bool fullScreen, RE
   
   // Destroy any existing window
   if (m_bWindowCreated)
-    m_eglplatform->DestroyWindow();
+    m_eglplatform->DestroyWindow(true);
 
   // temp until split gui/display res comes in
   //m_eglplatform->SetDisplayResolution(res.iScreenWidth, res.iScreenHeight,
@@ -103,7 +103,7 @@ bool CWinSystemGLES::CreateNewWindow(const CStdString& name, bool fullScreen, RE
 
   if (!m_eglplatform->BindSurface())
   {
-    m_eglplatform->DestroyWindow();
+    m_eglplatform->DestroyWindow(false);
     return false;
   }
 
@@ -112,9 +112,9 @@ bool CWinSystemGLES::CreateNewWindow(const CStdString& name, bool fullScreen, RE
   return true;
 }
 
-bool CWinSystemGLES::DestroyWindow()
+bool CWinSystemGLES::DestroyWindow(bool tryToPreserveContext /* = false */)
 {
-  if (!m_eglplatform->DestroyWindow())
+  if (!m_eglplatform->DestroyWindow(tryToPreserveContext))
     return false;
 
   m_bWindowCreated = false;

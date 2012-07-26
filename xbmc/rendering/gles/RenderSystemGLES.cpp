@@ -151,7 +151,7 @@ bool CRenderSystemGLES::ResetRenderSystem(int width, int height, bool fullScreen
   return true;
 }
 
-bool CRenderSystemGLES::DestroyRenderSystem()
+bool CRenderSystemGLES::DestroyRenderSystem(bool tryToPreserveContext /* = false */)
 {
   CLog::Log(LOGDEBUG, "GUI Shader - Destroying Shader : %p", m_pGUIshader);
 

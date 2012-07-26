@@ -208,7 +208,7 @@ bool CWinEGLPlatformGeneric::CreateWindow()
   return true;
 }
 
-bool CWinEGLPlatformGeneric::DestroyWindow()
+bool CWinEGLPlatformGeneric::DestroyWindow(bool tryToPreserveContext /* = false */)
 {
   EGLBoolean eglStatus;
   

@@ -71,7 +71,7 @@ public:
   RenderingSystemType GetRenderingSystemType() { return m_enumRenderingSystem; }
 
   virtual bool InitRenderSystem() = 0;
-  virtual bool DestroyRenderSystem() = 0;
+  virtual bool DestroyRenderSystem(bool tryToPreserveContext = false) = 0;
   virtual bool ResetRenderSystem(int width, int height, bool fullScreen, float refreshRate) = 0;
 
   virtual bool BeginRender() = 0;

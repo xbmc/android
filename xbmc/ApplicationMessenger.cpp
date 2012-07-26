@@ -775,7 +775,7 @@ case TMSG_POWERDOWN:
     
     case TMSG_DISPLAY_DESTROY:
     {
-      *((bool*)pMsg->lpVoid) = g_application.DestroyWindow();
+      *((bool*)pMsg->lpVoid) = g_application.DestroyWindow(pMsg->dwParam1 == 1);
     }
     break;
   }
@@ -1229,11 +1229,11 @@ bool CApplicationMessenger::SetupDisplay()
   return result;
 }
 
-bool CApplicationMessenger::DestroyDisplay()
+bool CApplicationMessenger::DestroyDisplay(bool tryToPreserveContext /* = false */)
 {
   bool result;
   
-  ThreadMessage tMsg = {TMSG_DISPLAY_DESTROY};
+  ThreadMessage tMsg = {TMSG_DISPLAY_DESTROY, tryToPreserveContext ? 1 : 0};
   tMsg.lpVoid = (void*)&result;
   SendMessage(tMsg, true);
   

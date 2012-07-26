@@ -42,7 +42,7 @@ public:
   virtual bool InitializeDisplay();
   virtual bool UninitializeDisplay();
   virtual bool CreateWindow();
-  virtual bool DestroyWindow();
+  virtual bool DestroyWindow(bool tryToPreserveContext = false);
   virtual bool BindSurface();
   virtual bool ReleaseSurface();
   
