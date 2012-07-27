@@ -9,7 +9,7 @@ ARCHIVE=$(SOURCE).tar.gz
 
 LIBDYLIB=$(PLATFORM)/build/src/$(LIBNAME).so.4.2.0
 
-all: .installed
+all: .installed-$(PLATFORM)
 
 $(TARBALLS_LOCATION)/$(ARCHIVE):
 	$(RETRIEVE_TOOL) $(RETRIEVE_TOOL_FLAGS) $(BASE_URL)/$(ARCHIVE)
@@ -34,7 +34,7 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE) $(DEPS)
 $(LIBDYLIB): $(PLATFORM)
 	make -j 1 -C $(PLATFORM)/build
 
-.installed: $(LIBDYLIB)
+.installed-$(PLATFORM): $(LIBDYLIB)
 	make -C $(PLATFORM)/build install
 	rm -f $(PREFIX)/lib/libssh.so $(PREFIX)/lib/libssh.so.4.2.0 $(PREFIX)/lib/libssh.so.4
 	touch $@
