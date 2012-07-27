@@ -14,6 +14,7 @@ SRCS       = android_main.cpp \
              CPUFeatures.cpp \
              AndroidTouch.cpp \
              AndroidKey.cpp \
+             AndroidMouse.cpp \
 
 INCLUDES += -I$(GLUEPATH) -I$(CPUPATH)
 

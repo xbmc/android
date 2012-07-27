@@ -164,14 +164,19 @@ int32_t CEventLoop::processInput(AInputEvent* event)
       {
         case AINPUT_SOURCE_TOUCHSCREEN:
           return m_inputHandler->onTouchEvent(event);
+        case AINPUT_SOURCE_MOUSE:
+          return m_inputHandler->onMouseEvent(event);
       }
       break;
 
     case AINPUT_EVENT_TYPE_KEY:
-      return m_inputHandler->onKeyboardEvent(event);
-      break;
-
-    default:
+      switch (AInputEvent_getSource(event))
+      {
+        case AINPUT_SOURCE_MOUSE:
+          return m_inputHandler->onMouseEvent(event);
+        default:
+          return m_inputHandler->onKeyboardEvent(event);
+      }
       break;
   }
 

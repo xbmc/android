@@ -18,10 +18,20 @@
  *  <http://www.gnu.org/licenses/>.
  *
  */
+#include <android/input.h>
+#include "input/TouchInput.h"
 
-#include "AndroidTouch.h"
-#include "AndroidKey.h"
-#include "AndroidMouse.h"
+class CAndroidMouse : protected ITouchHandler
+{
 
-class IInputHandler : public CAndroidTouch, public CAndroidKey, public CAndroidMouse
-{};
+public:
+  CAndroidMouse();
+  virtual ~CAndroidMouse();
+  bool onMouseEvent(AInputEvent* event);
+
+protected:
+
+private:
+  void MouseMove(float x, float y);
+  void MouseButton(float x, float y, int32_t type);
+};
