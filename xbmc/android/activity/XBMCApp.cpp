@@ -519,7 +519,7 @@ bool CXBMCApp::ListApplications(vector<androidPackage> *applications)
   return true;
 }
 
-bool CXBMCApp::GetIconSize(const string &packageName, int &width, int &height)
+bool CXBMCApp::GetIconSize(const string &packageName, int *width, int *height)
 {
   if (!m_activity)
     return false;
@@ -571,7 +571,7 @@ bool CXBMCApp::GetIconSize(const string &packageName, int &width, int &height)
   env->DeleteLocalRef(cBitmap);
 
   // width = oBitmap.getWidth;
-  width = (int)env->CallIntMethod(oBitmap, mgetWidth);
+  *width = (int)env->CallIntMethod(oBitmap, mgetWidth);
 
   exc = env->ExceptionOccurred();
   if (exc)
@@ -584,7 +584,7 @@ bool CXBMCApp::GetIconSize(const string &packageName, int &width, int &height)
     return false;
   }
   // height = oBitmap.getHeight;
-  height = (int)env->CallIntMethod(oBitmap, mgetHeight);
+  *height = (int)env->CallIntMethod(oBitmap, mgetHeight);
   env->DeleteLocalRef(oBitmap);
 
   exc = env->ExceptionOccurred();
