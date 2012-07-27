@@ -36,6 +36,20 @@
 class CAESinkAUDIOTRACK;
 typedef struct _JNIEnv JNIEnv;
 
+struct androidIcon
+{
+  unsigned int width;
+  unsigned int height;
+  void *pixels;
+};  
+
+struct androidPackage
+{
+  std::string packageName;
+  std::string packageLabel;
+};
+
+
 class CXBMCApp : public IActivityHandler
 {
 public:
@@ -68,10 +82,11 @@ public:
   static int SetBuffersGeometry(int width, int height, int format);
   static int android_printf(const char *format, ...);
   
-  static bool ListApplications(std::vector <std::string> *applications);
-  static bool StartActivity(const std::string &package);
   static int GetBatteryLevel();
-  
+  static bool StartActivity(const std::string &package);
+  static bool ListApplications(std::vector <androidPackage> *applications);
+  static bool GetIconSize(const std::string &packageName, int &width, int &height);
+  static bool GetIcon(const std::string &packageName, void* buffer, unsigned int bufSize); 
   /*!
    * \brief If external storage is available, it returns the path for the external storage (for the specified type)
    * \param path will contain the path of the external storage (for the specified type)
@@ -84,18 +99,19 @@ public:
 protected:
   // limit who can access AttachCurrentThread/DetachCurrentThread
   friend class CAESinkAUDIOTRACK;
+  friend class CFileAndroidApp;
 
   static int AttachCurrentThread(JNIEnv** p_env, void* thr_args = NULL);
   static int DetachCurrentThread();
 
 private:
+  static bool HasLaunchIntent(const std::string &package);
   bool getWakeLock(JNIEnv *env);
   void acquireWakeLock();
   void releaseWakeLock();
   void run();
   void stop();
-  static bool HasLaunchIntent(JNIEnv *env, const std::string &package);
-  
+
   static ANativeActivity *m_activity;
   jobject m_wakeLock;
   
