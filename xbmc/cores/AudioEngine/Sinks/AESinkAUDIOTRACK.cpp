@@ -312,10 +312,9 @@ void CAESinkAUDIOTRACK::Process()
 
   JNIEnv *jenv = NULL;
   CXBMCApp::AttachCurrentThread(&jenv, NULL);
-  jenv->PushLocalFrame(4);
 
   jclass cls = jenv->FindClass("android/media/AudioTrack");
-  jclass jcAudioTrack = static_cast<jclass>(jenv->NewGlobalRef(cls));
+  jclass jcAudioTrack = static_cast<jclass>(jenv->NewLocalRef(cls));
   jenv->DeleteLocalRef(cls);
 
   jmethodID jmInit              = jenv->GetMethodID(jcAudioTrack, "<init>", "(IIIIII)V");
@@ -436,8 +435,6 @@ void CAESinkAUDIOTRACK::Process()
     }
   }
 
-  jenv->DeleteLocalRef(jbuffer);
-
   jenv->CallVoidMethod(joAudioTrack, jmStop);
   jenv->CallVoidMethod(joAudioTrack, jmFlush);
   jenv->CallVoidMethod(joAudioTrack, jmRelease);
@@ -450,6 +447,9 @@ void CAESinkAUDIOTRACK::Process()
     jenv->ExceptionClear();
   }
 
-  jenv->PopLocalFrame(NULL);
+  jenv->DeleteLocalRef(jbuffer);
+  jenv->DeleteLocalRef(joAudioTrack);
+  jenv->DeleteLocalRef(jcAudioTrack);
+
   CXBMCApp::DetachCurrentThread();
 }
