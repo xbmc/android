@@ -71,7 +71,7 @@ void CFileAndroidApp::Close()
 
 int64_t CFileAndroidApp::GetLength()
 {
-  CXBMCApp::GetIconSize(m_appname, m_iconWidth, m_iconHeight);
+  CXBMCApp::GetIconSize(m_appname, &m_iconWidth, &m_iconHeight);
   return m_iconWidth * m_iconHeight * 4;
 }
 
