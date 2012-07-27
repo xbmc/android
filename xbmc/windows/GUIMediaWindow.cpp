@@ -62,6 +62,9 @@
 #include "interfaces/python/XBPython.h"
 #endif
 #include "interfaces/Builtins.h"
+#if defined(TARGET_ANDROID)
+#include "xbmc/android/activity/XBMCApp.h"
+#endif
 
 #define CONTROL_BTNVIEWASICONS     2
 #define CONTROL_BTNSORTBY          3
@@ -944,6 +947,12 @@ bool CGUIMediaWindow::OnClick(int iItem)
   else if (pItem->IsPlugin() && !pItem->GetProperty("isplayable").asBoolean())
   {
     return XFILE::CPluginDirectory::RunScriptWithParams(pItem->GetPath());
+  }
+  else if (pItem->IsAndroidApp())
+  {
+    CStdString appName = URIUtils::GetFileName(pItem->GetPath());
+    CLog::Log(LOGDEBUG, "CGUIMediaWindow::OnClick Trying to run: %s",appName.c_str());
+    return CXBMCApp::StartActivity(appName);
   }
   else
   {

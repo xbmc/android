@@ -73,6 +73,7 @@ protected:
    \param thumb the skin image to use as the icon
    */
   void AddAddonsSource(const CStdString &content, const CStdString &label, const CStdString& thumb);
+  void AddAndroidSource(const CStdString &content, const CStdString &label, const CStdString& thumb);
   void AddLiveTVSources();
 
   void AddSortMethod(SORT_METHOD sortMethod, int buttonLabel, LABEL_MASKS labelmasks);

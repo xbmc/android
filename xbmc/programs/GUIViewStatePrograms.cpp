@@ -64,6 +64,9 @@ CStdString CGUIViewStateWindowPrograms::GetExtensions()
 VECSOURCES& CGUIViewStateWindowPrograms::GetSources()
 {
   AddAddonsSource("executable", g_localizeStrings.Get(1043), "DefaultAddonProgram.png");
+#if defined(TARGET_ANDROID)
+  AddAndroidSource("apps", g_localizeStrings.Get(20244), "DefaultProgram.png");
+#endif
   AddOrReplace(g_settings.m_programSources,CGUIViewState::GetSources());
   return g_settings.m_programSources;
 }
