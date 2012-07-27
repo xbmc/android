@@ -192,8 +192,7 @@ CBaseTexture *CBaseTexture::LoadFromFile(const CStdString& texturePath, unsigned
       CTexture *texture = new CTexture();
       unsigned int width = file.GetIconWidth();
       unsigned int height = file.GetIconHeight();
-      texture->LoadFromMemory(width, height, width*4, XB_FMT_A8R8G8B8, true, inputBuff);
-      texture->SwapBlueRed(texture->GetPixels(), height, width*4);
+      texture->LoadFromMemory(width, height, width*4, XB_FMT_RGBA8, true, inputBuff);
       delete [] inputBuff;
       return texture;
     }
