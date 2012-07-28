@@ -52,10 +52,10 @@ To get the Android SDK, go to http://developer.android.com/sdk and
 download the latest version for your operating system. The Crystax NDK
 can be downloaded from http://www.crystax.net/en/android/ndk
 
-[NOTICE] Compiling XBMC for Android requires at least Android NDK
-         Revision 7b. Android NDK Revision 7 and earlier do not work
+[NOTICE] Compiling XBMC for Android requires at least Crystax Android NDK
+         Revision 7b. Crystax Android NDK Revision 7 and earlier do not work
          properly for our cause. The corresponding Crystax NDK version
-         is android-ndk-r7-crystax-5.
+         is android-ndk-r7-crystax-5. Do not use the standard Android NDK.
          
 After downloading the SDK and NDK extract the files contained in the
 archives to your harddisk.
