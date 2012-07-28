@@ -1,3 +1,7 @@
+ifeq (@USE_AMLPLAYER@,1)
+INCLUDES += -I$(prefix)/include/amlplayer
+endif
+
 SRCS=PlayerCoreFactory.cpp \
      PlayerSelectionRule.cpp
 
