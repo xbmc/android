@@ -10,28 +10,28 @@
   </players>
 
   <rules name="system rules">
-    <rule name="rtv" protocols="rtv" player="DVDPlayer" />
-    <rule name="hdhomerun/myth/rtmp/mms/udp" protocols="hdhomerun|myth|cmyth|rtmp|mms|mmsh|udp" player="DVDPlayer" />
-    <rule name="lastfm/shout" protocols="lastfm|shout" player="PAPlayer" />
+    <rule name="rtv" protocols="rtv" forbiddenplayers="PAPlayer" />
+    <rule name="hdhomerun/myth/rtmp/mms/udp" protocols="hdhomerun|myth|cmyth|rtmp|mms|mmsh|udp" forbiddenplayers="PAPlayer" />
+    <rule name="lastfm/shout" protocols="lastfm|shout" forbiddenplayers="DVDPlayer" />
 
     <!-- dvdplayer can play standard rtsp streams -->
-    <rule name="rtsp" protocols="rtsp" filetypes="!(rm|ra)"  player="PAPlayer" />
+    <rule name="rtsp" protocols="rtsp" filetypes="!(rm|ra)" forbiddenplayers="DVDPlayer" />
 
     <!-- Internet streams -->
     <rule name="streams" internetstream="true">
-      <rule name="flv/aacp/sdp" mimetypes="video/x-flv|video-flv|audio/aacp|application/sdp" player="DVDPlayer" />
-      <rule name="mp2" mimetypes="application/octet-stream" filetypes="mp2" player="PAPlayer" />
+      <rule name="flv/aacp/sdp" mimetypes="video/x-flv|video-flv|audio/aacp|application/sdp" forbiddenplayers="PAPlayer" />
+      <rule name="mp2" mimetypes="application/octet-stream" filetypes="mp2" forbiddenplayers="DVDPlayer" />
     </rule>
 
     <!-- DVDs -->
-    <rule name="dvd" dvd="true" player="DVDPlayer" />
-    <rule name="dvdfile" dvdfile="true" player="DVDPlayer" />
-    <rule name="dvdimage" dvdimage="true" player="DVDPlayer" />
+    <rule name="dvd" dvd="true" player="videodefaultdvdplayer" forbiddenplayers="AMLPlayer"/>
+    <rule name="dvdfile" dvdfile="true" player="videodefaultdvdplayer" forbiddenplayers="AMLPlayer"/>
+    <rule name="dvdimage" dvdimage="true" player="videodefaultdvdplayer" forbiddenplayers="AMLPlayer"/>
 
     <!-- Only dvdplayer can handle these normally -->
-    <rule name="sdp/asf" filetypes="sdp|asf" player="DVDPlayer" />
+    <rule name="sdp/asf" filetypes="sdp|asf" forbiddenplayers="PAPlayer" />
 
     <!-- Pass these to dvdplayer as we do not know if they are audio or video -->
-    <rule name="nsv" filetypes="nsv" player="DVDPlayer" />
+    <rule name="nsv" filetypes="nsv" forbiddenplayers="PAPlayer" />
   </rules>
 </playercorefactory>
