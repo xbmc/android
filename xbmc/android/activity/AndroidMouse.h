@@ -19,9 +19,8 @@
  *
  */
 #include <android/input.h>
-#include "input/TouchInput.h"
 
-class CAndroidMouse : protected ITouchHandler
+class CAndroidMouse
 {
 
 public:
