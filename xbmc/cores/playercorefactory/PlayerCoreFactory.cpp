@@ -175,9 +175,10 @@ void CPlayerCoreFactory::GetPlayers( const CFileItem& item, VECPLAYERCORES &vecC
 
   CLog::Log(LOGDEBUG, "CPlayerCoreFactory::GetPlayers(%s)", item.GetPath().c_str());
 
+  VECPLAYERCORES vecCoresDisabled;
   // Process rules
   for(unsigned int i = 0; i < s_vecCoreSelectionRules.size(); i++)
-    s_vecCoreSelectionRules[i]->GetPlayers(item, vecCores);
+    s_vecCoreSelectionRules[i]->GetPlayers(item, vecCores, vecCoresDisabled);
 
   CLog::Log(LOGDEBUG, "CPlayerCoreFactory::GetPlayers: matched %"PRIuS" rules with players", vecCores.size());
 
@@ -251,6 +252,19 @@ void CPlayerCoreFactory::GetPlayers( const CFileItem& item, VECPLAYERCORES &vecC
 
   /* make our list unique, preserving first added players */
   unique(vecCores);
+
+  for(VECPLAYERCORES::iterator i = vecCoresDisabled.begin(); i != vecCoresDisabled.end(); i++)
+  {
+    for(VECPLAYERCORES::iterator j = vecCores.begin(); j != vecCores.end(); j++)
+    {
+      if (*i == *j)
+      {
+        CLog::Log(LOGDEBUG, "CPlayerCoreFactory::GetPlayers: removing disabled player %s (%d)", GetPlayerName(*j).c_str(),*j);
+        vecCores.erase(j);
+        break;
+      }
+    }
+  }
 
   CLog::Log(LOGDEBUG, "CPlayerCoreFactory::GetPlayers: added %"PRIuS" players", vecCores.size());
 }

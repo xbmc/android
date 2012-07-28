@@ -22,6 +22,7 @@
 
 #include "FileItem.h"
 #include "PlayerCoreFactory.h"
+#include "utils/StringUtils.h"
 
 class CRegExp;
 class TiXmlElement;
@@ -34,7 +35,7 @@ public:
 
   //bool Matches(const CFileItem& item) const;
   //CStdString GetPlayerName() const;
-  void GetPlayers(const CFileItem& item, VECPLAYERCORES &vecCores);
+  void GetPlayers(const CFileItem& item, VECPLAYERCORES &vecCores, VECPLAYERCORES &vecCoresDisabled);
 
 private:
   int GetTristate(const char* szValue) const;
@@ -67,6 +68,7 @@ private:
   CStdString m_videoAspect;
 
   CStdString m_playerName;
+  CStdStringArray m_disabledPlayerNames;
   PLAYERCOREID m_playerCoreId;
 
   std::vector<CPlayerSelectionRule *> vecSubRules;

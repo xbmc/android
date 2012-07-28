@@ -73,6 +73,8 @@ void CPlayerSelectionRule::Initialize(TiXmlElement* pRule)
   }
 
   m_playerName = pRule->Attribute("player");
+  CStdString disabledPlayerNames = pRule->Attribute("forbiddenplayers");
+  StringUtils::SplitString(disabledPlayerNames, ",", m_disabledPlayerNames);
   m_playerCoreId = 0;
 
   TiXmlElement* pSubRule = pRule->FirstChildElement("rule");
@@ -103,7 +105,7 @@ bool CPlayerSelectionRule::MatchesRegExp(const CStdString& str, CRegExp& regExp)
   return regExp.RegFind(str, 0) == 0;
 }
 
-void CPlayerSelectionRule::GetPlayers(const CFileItem& item, VECPLAYERCORES &vecCores)
+void CPlayerSelectionRule::GetPlayers(const CFileItem& item, VECPLAYERCORES &vecCores, VECPLAYERCORES &vecCoresDisabled)
 {
   CLog::Log(LOGDEBUG, "CPlayerSelectionRule::GetPlayers: considering rule: %s", m_name.c_str());
 
@@ -153,13 +155,24 @@ void CPlayerSelectionRule::GetPlayers(const CFileItem& item, VECPLAYERCORES &vec
   CLog::Log(LOGDEBUG, "CPlayerSelectionRule::GetPlayers: matches rule: %s", m_name.c_str());
 
   for (unsigned int i = 0; i < vecSubRules.size(); i++)
-    vecSubRules[i]->GetPlayers(item, vecCores);
+    vecSubRules[i]->GetPlayers(item, vecCores, vecCoresDisabled);
 
   PLAYERCOREID playerCoreId = GetPlayerCore();
   if (playerCoreId != EPC_NONE)
   {
     CLog::Log(LOGDEBUG, "CPlayerSelectionRule::GetPlayers: adding player: %s (%d) for rule: %s", m_playerName.c_str(), playerCoreId, m_name.c_str());
     vecCores.push_back(GetPlayerCore());
+  }
+
+  int playerCoreDisabledId = 0;
+  for(CStdStringArray::iterator i = m_disabledPlayerNames.begin(); i != m_disabledPlayerNames.end(); i++)
+  {
+    playerCoreDisabledId = CPlayerCoreFactory::GetPlayerCore(*i);
+    if (playerCoreDisabledId)
+    {
+      CLog::Log(LOGDEBUG, "CPlayerSelectionRule::GetPlayers: disabling player: %s (%d) for rule: %s", i->c_str(), playerCoreDisabledId, m_name.c_str());
+      vecCoresDisabled.push_back(playerCoreDisabledId);
+    }
   }
 }
 
