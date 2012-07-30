@@ -787,7 +787,21 @@ void CAMLPlayer::SeekPercentage(float fPercent)
 {
   CSingleLock lock(m_aml_csection);
 
-  // do seek here
+  // force updated to m_elapsed_ms, m_duration_ms.
+  GetStatus();
+
+  if (m_duration_ms)
+  {
+    int64_t seek_ms = fPercent * m_duration_ms / 100.0;
+    if (seek_ms <= 1000)
+      seek_ms = 1000;
+
+    // do seek here
+    g_infoManager.SetDisplayAfterSeek(100000);
+    SeekTime(seek_ms);
+    m_callback.OnPlayBackSeek((int)seek_ms, (int)(seek_ms - m_elapsed_ms));
+    g_infoManager.SetDisplayAfterSeek();
+  }
 }
 
 float CAMLPlayer::GetPercentage()
