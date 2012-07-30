@@ -133,22 +133,6 @@ static int set_sysfs_int(const char *path, const int val)
   return -1;
 }
 
-static int get_sysfs_int(const char *path)
-{
-  int val = 0;
-  char bcmd[16];
-  int fd = open(path, O_RDONLY);
-  if (fd >= 0)
-  {
-    read(fd, bcmd, sizeof(bcmd));
-    val = strtol(bcmd, NULL, 16);
-    close(fd);
-  }
-  return val;
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////////////////
 static int media_info_dump(media_info_t* minfo)
 {
