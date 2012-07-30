@@ -6,23 +6,21 @@ APP_GLUE   = android_native_app_glue.o
 CPUPATH    = $(NDKROOT)/sources/android/cpufeatures
 CPU_OBJ    = cpu-features.o
 
-SRCS       = android_main.cpp \
-             EventLoop.cpp \
-             XBMCApp.cpp \
-             unzip.cpp \
-             GraphicBuffer.cpp \
-             AndroidFeatures.cpp \
-             AndroidTouch.cpp \
-             AndroidKey.cpp \
-             AndroidMouse.cpp \
-
 INCLUDES += -I$(GLUEPATH) -I$(CPUPATH)
 
-LIB        = activity.a
+SRCS       = android_main.cpp
+SRCS      += AndroidFeatures.cpp
+SRCS      += AndroidKey.cpp
+SRCS      += AndroidTouch.cpp
+SRCS      += AndroidMouse.cpp
+SRCS      += GraphicBuffer.cpp
+SRCS      += EventLoop.cpp
+SRCS      += unzip.cpp
+SRCS      += XBMCApp.cpp
 
 OBJS      += $(APP_GLUE) $(CPU_OBJ)
 
-CXXFLAGS  += -I$(GLUEPATH)
+LIB        = activity.a
 
 $(LIB): $(OBJS)
 
