@@ -313,9 +313,7 @@ void CAESinkAUDIOTRACK::Process()
   JNIEnv *jenv = NULL;
   CXBMCApp::AttachCurrentThread(&jenv, NULL);
 
-  jclass cls = jenv->FindClass("android/media/AudioTrack");
-  jclass jcAudioTrack = static_cast<jclass>(jenv->NewLocalRef(cls));
-  jenv->DeleteLocalRef(cls);
+  jclass jcAudioTrack = jenv->FindClass("android/media/AudioTrack");
 
   jmethodID jmInit              = jenv->GetMethodID(jcAudioTrack, "<init>", "(IIIIII)V");
   jmethodID jmPlay              = jenv->GetMethodID(jcAudioTrack, "play", "()V");
@@ -327,7 +325,6 @@ void CAESinkAUDIOTRACK::Process()
   jmethodID jmSetStereoVolume   = jenv->GetMethodID(jcAudioTrack, "setStereoVolume", "(FF)I");
   jmethodID jmPlayHeadPosition  = jenv->GetMethodID(jcAudioTrack, "getPlaybackHeadPosition", "()I");
   jmethodID jmGetMinBufferSize  = jenv->GetStaticMethodID(jcAudioTrack, "getMinBufferSize", "(III)I");
-
 
   jint audioFormat    = GetStaticIntField(jenv, "AudioFormat", "ENCODING_PCM_16BIT");
   jint channelConfig  = GetStaticIntField(jenv, "AudioFormat", "CHANNEL_OUT_STEREO");
