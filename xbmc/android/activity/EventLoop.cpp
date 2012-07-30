@@ -170,14 +170,7 @@ int32_t CEventLoop::processInput(AInputEvent* event)
       break;
 
     case AINPUT_EVENT_TYPE_KEY:
-      switch (AInputEvent_getSource(event))
-      {
-        case AINPUT_SOURCE_MOUSE:
-          return m_inputHandler->onMouseEvent(event);
-        default:
-          return m_inputHandler->onKeyboardEvent(event);
-      }
-      break;
+      return m_inputHandler->onKeyboardEvent(event);
   }
 
   return 0;
