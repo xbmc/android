@@ -99,6 +99,7 @@ public:
 protected:
   // limit who can access AttachCurrentThread/DetachCurrentThread
   friend class CAESinkAUDIOTRACK;
+  friend class CAndroidFeatures;
   friend class CFileAndroidApp;
 
   static int AttachCurrentThread(JNIEnv** p_env, void* thr_args = NULL);
