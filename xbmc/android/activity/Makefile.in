@@ -11,7 +11,6 @@ SRCS       = android_main.cpp \
              XBMCApp.cpp \
              unzip.cpp \
              GraphicBuffer.cpp \
-             CPUFeatures.cpp \
              AndroidFeatures.cpp \
              AndroidTouch.cpp \
              AndroidKey.cpp \

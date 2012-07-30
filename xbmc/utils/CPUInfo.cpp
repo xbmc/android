@@ -41,7 +41,7 @@
 #endif
 
 #if defined(TARGET_ANDROID)
-#include "android/activity/CPUFeatures.h"
+#include "android/activity/AndroidFeatures.h"
 #endif
 
 #ifdef _WIN32
@@ -625,7 +625,7 @@ bool CCPUInfo::HasNeon()
   static int has_neon = -1;
 #if defined (TARGET_ANDROID)
   if (has_neon == -1)
-    has_neon = (CAndroidCPU::HasNeon()) ? 1 : 0;
+    has_neon = (CAndroidFeatures::HasNeon()) ? 1 : 0;
 
 #elif defined(TARGET_DARWIN_IOS)
   has_neon = 1;
