@@ -7,7 +7,7 @@ OBJS = libcurl.so \
   libxbogg.so libxbvorbis.so libxbvorbisfile.so libxbFLAC.so libxbmpeg2.so \
   libxbmpeg2convert.so
 
-PLATFORM_OBJS =
+PLATFORM_OBJS = libiomx-10.so libiomx-13.so libiomx-14.so
 
 XBMCROOT = $(shell cd $(CURDIR)/../../..; pwd)
 COPYDIRS = system addons language media
