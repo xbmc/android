@@ -45,12 +45,25 @@ int CFileURLProtocol::Open(AML_URLContext *h, const char *filename, int flags)
   {
     url = url.Right(url.size() - strlen("xb-"));
   }
+  else if (url.Left(strlen("xb-https://")).Equals("xb-https://"))
+  {
+    url = url.Right(url.size() - strlen("xb-"));
+  }
+  else if (url.Left(strlen("xb-ftp://")).Equals("xb-ftp://"))
+  {
+    url = url.Right(url.size() - strlen("xb-"));
+  }
+  else if (url.Left(strlen("xb-ftps://")).Equals("xb-ftps://"))
+  {
+    url = url.Right(url.size() - strlen("xb-"));
+  }
+
   CLog::Log(LOGDEBUG, "CFileURLProtocol::Open filename2(%s)", url.c_str());
   // open the file, always in read mode, calc bitrate
   unsigned int cflags = READ_BITRATE;
   XFILE::CFile *cfile = new XFILE::CFile();
 
-  if (CFileItem(url, false).IsInternetStream())
+  if (CFileItem(url, true).IsInternetStream())
     cflags |= READ_CACHED;
 
   // open file in binary mode

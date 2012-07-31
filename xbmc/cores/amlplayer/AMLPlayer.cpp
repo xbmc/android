@@ -1331,10 +1331,31 @@ void CAMLPlayer::Process()
       static const char *rar_name = "rar";
       vfs_protocol.name = rar_name;
     }
+    else if (url.Left(strlen("ftp://")).Equals("ftp://"))
+    {
+      // the name string needs to persist
+      static const char *http_name = "xb-ftp";
+      vfs_protocol.name = http_name;
+      url = "xb-" + url;
+    }
+    else if (url.Left(strlen("ftps://")).Equals("ftps://"))
+    {
+      // the name string needs to persist
+      static const char *http_name = "xb-ftps";
+      vfs_protocol.name = http_name;
+      url = "xb-" + url;
+    }
     else if (url.Left(strlen("http://")).Equals("http://"))
     {
       // the name string needs to persist
       static const char *http_name = "xb-http";
+      vfs_protocol.name = http_name;
+      url = "xb-" + url;
+    }
+    else if (url.Left(strlen("https://")).Equals("https://"))
+    {
+      // the name string needs to persist
+      static const char *http_name = "xb-https";
       vfs_protocol.name = http_name;
       url = "xb-" + url;
     }
