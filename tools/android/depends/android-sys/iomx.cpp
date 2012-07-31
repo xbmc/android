@@ -29,6 +29,8 @@
 #include <binder/MemoryDealer.h>
 #include <OMX_Component.h>
 
+using namespace android;
+
 extern "C" {
 
 int android_printf(const char *format, ...)
@@ -40,6 +42,7 @@ int android_printf(const char *format, ...)
   va_end(args);
   return result;
 }
+
 }
 
 //#define PREFIX(x) I ## x
@@ -134,6 +137,8 @@ void OMXCodecObserver::onMessage(const omx_message &msg)
 
 static OMX_ERRORTYPE get_error(status_t err)
 {
+  //android_printf("get_error, err(0x%x)\n", err);
+
     if (err == OK)
         return OMX_ErrorNone;
     return OMX_ErrorUndefined;
@@ -206,36 +211,58 @@ static int get_config_size(OMX_INDEXTYPE param_index)
 
 static OMX_ERRORTYPE iomx_send_command(OMX_HANDLETYPE component, OMX_COMMANDTYPE command, OMX_U32 param1, OMX_PTR)
 {
-  android_printf("iomx_send_command\n");
+  //android_printf("iomx_send_command\n");
     OMXNode* node = (OMXNode*) ((OMX_COMPONENTTYPE*)component)->pComponentPrivate;
     return get_error(ctx->iomx->sendCommand(node->node, command, param1));
 }
 
 static OMX_ERRORTYPE iomx_get_parameter(OMX_HANDLETYPE component, OMX_INDEXTYPE param_index, OMX_PTR param)
 {
-  android_printf("iomx_get_parameter\n");
+  //android_printf("iomx_get_parameter, component(%p), param_index(%d), param(%p), get_param_size(%d)\n",
+  //  component, param_index, param, get_param_size(param_index));
     OMXNode* node = (OMXNode*) ((OMX_COMPONENTTYPE*)component)->pComponentPrivate;
     return get_error(ctx->iomx->getParameter(node->node, param_index, param, get_param_size(param_index)));
 }
 
 static OMX_ERRORTYPE iomx_set_parameter(OMX_HANDLETYPE component, OMX_INDEXTYPE param_index, OMX_PTR param)
 {
-  android_printf("iomx_set_parameter\n");
+  //android_printf("iomx_set_parameter\n");
     OMXNode* node = (OMXNode*) ((OMX_COMPONENTTYPE*)component)->pComponentPrivate;
     return get_error(ctx->iomx->setParameter(node->node, param_index, param, get_param_size(param_index)));
 }
 
 static OMX_ERRORTYPE iomx_get_state(OMX_HANDLETYPE component, OMX_STATETYPE *ptr)
 {
-  android_printf("iomx_get_state\n");
+  //android_printf("iomx_get_state\n");
     OMXNode* node = (OMXNode*) ((OMX_COMPONENTTYPE*)component)->pComponentPrivate;
     *ptr = node->state;
     return OMX_ErrorNone;
 }
 
+static OMX_ERRORTYPE iomx_use_buffer(OMX_HANDLETYPE component, OMX_BUFFERHEADERTYPE **bufferptr, OMX_U32 port_index, OMX_PTR app_private, OMX_U32 size, OMX_U8* in_buffer)
+{
+  //android_printf("iomx_use_buffer\n");
+    OMXNode* node = (OMXNode*) ((OMX_COMPONENTTYPE*)component)->pComponentPrivate;
+    OMXBuffer* info = new OMXBuffer;
+    info->dealer = new MemoryDealer(size + 4096); // Do we need to keep this around, or is it kept alive via the IMemory that references it?
+    sp<IMemory> mem = info->dealer->allocate(size);
+    int ret = ctx->iomx->useBuffer(node->node, port_index, mem, &info->id);
+    if (ret != OK)
+        return OMX_ErrorUndefined;
+    OMX_BUFFERHEADERTYPE *buffer = (OMX_BUFFERHEADERTYPE*) calloc(1, sizeof(OMX_BUFFERHEADERTYPE));
+    if(bufferptr)
+      *bufferptr = buffer;
+    buffer->pPlatformPrivate = info;
+    buffer->pAppPrivate = app_private;
+    buffer->nAllocLen = size;
+    buffer->pBuffer = (OMX_U8*) mem->pointer();
+    node->buffers.push_back(buffer);
+    return OMX_ErrorNone;
+}
+
 static OMX_ERRORTYPE iomx_allocate_buffer(OMX_HANDLETYPE component, OMX_BUFFERHEADERTYPE **bufferptr, OMX_U32 port_index, OMX_PTR app_private, OMX_U32 size)
 {
-  android_printf("iomx_allocate_buffer\n");
+  //android_printf("iomx_allocate_buffer\n");
     OMXNode* node = (OMXNode*) ((OMX_COMPONENTTYPE*)component)->pComponentPrivate;
     OMXBuffer* info = new OMXBuffer;
     info->dealer = new MemoryDealer(size + 4096); // Do we need to keep this around, or is it kept alive via the IMemory that references it?
@@ -244,7 +271,8 @@ static OMX_ERRORTYPE iomx_allocate_buffer(OMX_HANDLETYPE component, OMX_BUFFERHE
     if (ret != OK)
         return OMX_ErrorUndefined;
     OMX_BUFFERHEADERTYPE *buffer = (OMX_BUFFERHEADERTYPE*) calloc(1, sizeof(OMX_BUFFERHEADERTYPE));
-    *bufferptr = buffer;
+    if(bufferptr)
+      *bufferptr = buffer;
     buffer->pPlatformPrivate = info;
     buffer->pAppPrivate = app_private;
     buffer->nAllocLen = size;
@@ -255,7 +283,7 @@ static OMX_ERRORTYPE iomx_allocate_buffer(OMX_HANDLETYPE component, OMX_BUFFERHE
 
 static OMX_ERRORTYPE iomx_free_buffer(OMX_HANDLETYPE component, OMX_U32 port, OMX_BUFFERHEADERTYPE *buffer)
 {
-  android_printf("iomx_free_buffer\n");
+  //android_printf("iomx_free_buffer\n");
     OMXNode* node = (OMXNode*) ((OMX_COMPONENTTYPE*)component)->pComponentPrivate;
     OMXBuffer* info = (OMXBuffer*) buffer->pPlatformPrivate;
     status_t ret = ctx->iomx->freeBuffer(node->node, port, info->id);
@@ -272,7 +300,7 @@ static OMX_ERRORTYPE iomx_free_buffer(OMX_HANDLETYPE component, OMX_U32 port, OM
 
 static OMX_ERRORTYPE iomx_empty_this_buffer(OMX_HANDLETYPE component, OMX_BUFFERHEADERTYPE *buffer)
 {
-  android_printf("iomx_empty_this_buffer\n");
+  //android_printf("iomx_empty_this_buffer\n");
     OMXNode* node = (OMXNode*) ((OMX_COMPONENTTYPE*)component)->pComponentPrivate;
     OMXBuffer* info = (OMXBuffer*) buffer->pPlatformPrivate;
     return get_error(ctx->iomx->emptyBuffer(node->node, info->id, buffer->nOffset, buffer->nFilledLen, buffer->nFlags, buffer->nTimeStamp));
@@ -280,7 +308,7 @@ static OMX_ERRORTYPE iomx_empty_this_buffer(OMX_HANDLETYPE component, OMX_BUFFER
 
 static OMX_ERRORTYPE iomx_fill_this_buffer(OMX_HANDLETYPE component, OMX_BUFFERHEADERTYPE *buffer)
 {
-  android_printf("iomx_fill_this_buffer\n");
+  //android_printf("iomx_fill_this_buffer\n");
     OMXNode* node = (OMXNode*) ((OMX_COMPONENTTYPE*)component)->pComponentPrivate;
     OMXBuffer* info = (OMXBuffer*) buffer->pPlatformPrivate;
     return get_error(ctx->iomx->fillBuffer(node->node, info->id));
@@ -288,7 +316,7 @@ static OMX_ERRORTYPE iomx_fill_this_buffer(OMX_HANDLETYPE component, OMX_BUFFERH
 
 static OMX_ERRORTYPE iomx_component_role_enum(OMX_HANDLETYPE component, OMX_U8 *role, OMX_U32 index)
 {
-  android_printf("iomx_component_role_enum\n");
+  //android_printf("iomx_component_role_enum\n");
     OMXNode* node = (OMXNode*) ((OMX_COMPONENTTYPE*)component)->pComponentPrivate;
     for( List<IOMX::ComponentInfo>::iterator it = ctx->components.begin(); it != ctx->components.end(); it++ ) {
         if (node->component_name == it->mName) {
@@ -307,21 +335,21 @@ static OMX_ERRORTYPE iomx_component_role_enum(OMX_HANDLETYPE component, OMX_U8 *
 
 static OMX_ERRORTYPE iomx_get_extension_index(OMX_HANDLETYPE component, OMX_STRING parameter, OMX_INDEXTYPE *index)
 {
-  android_printf("iomx_get_extension_index\n");
+  //android_printf("iomx_get_extension_index\n");
     OMXNode* node = (OMXNode*) ((OMX_COMPONENTTYPE*)component)->pComponentPrivate;
     return get_error(ctx->iomx->getExtensionIndex(node->node, parameter, index));
 }
 
 static OMX_ERRORTYPE iomx_set_config(OMX_HANDLETYPE component, OMX_INDEXTYPE index, OMX_PTR param)
 {
-  android_printf("iomx_set_config\n");
+  //android_printf("iomx_set_config\n");
     OMXNode* node = (OMXNode*) ((OMX_COMPONENTTYPE*)component)->pComponentPrivate;
     return get_error(ctx->iomx->setConfig(node->node, index, param, get_config_size(index)));
 }
 
 static OMX_ERRORTYPE iomx_get_config(OMX_HANDLETYPE component, OMX_INDEXTYPE index, OMX_PTR param)
 {
-  android_printf("iomx_get_config\n");
+  //android_printf("iomx_get_config, get_config_size(%d)\n", get_config_size(index));
     OMXNode* node = (OMXNode*) ((OMX_COMPONENTTYPE*)component)->pComponentPrivate;
     return get_error(ctx->iomx->getConfig(node->node, index, param, get_config_size(index)));
 }
@@ -329,7 +357,7 @@ static OMX_ERRORTYPE iomx_get_config(OMX_HANDLETYPE component, OMX_INDEXTYPE ind
 extern "C" {
 OMX_ERRORTYPE PREFIX(OMX_GetHandle)(OMX_HANDLETYPE *handle_ptr, OMX_STRING component_name, OMX_PTR app_data, OMX_CALLBACKTYPE *callbacks)
 {
-  android_printf("OMX_GetHandle\n");
+  //android_printf("OMX_GetHandle\n");
     OMXNode* node = new OMXNode();
     node->app_data = app_data;
     node->callbacks = *callbacks;
@@ -342,7 +370,7 @@ OMX_ERRORTYPE PREFIX(OMX_GetHandle)(OMX_HANDLETYPE *handle_ptr, OMX_STRING compo
     memset(component, 0, sizeof(OMX_COMPONENTTYPE));
     component->nSize = sizeof(OMX_COMPONENTTYPE);
     component->nVersion.s.nVersionMajor = 1;
-    component->nVersion.s.nVersionMinor = 0;
+    component->nVersion.s.nVersionMinor = 1;
     component->nVersion.s.nRevision = 0;
     component->nVersion.s.nStep = 0;
     component->pComponentPrivate = node;
@@ -353,6 +381,7 @@ OMX_ERRORTYPE PREFIX(OMX_GetHandle)(OMX_HANDLETYPE *handle_ptr, OMX_STRING compo
     component->EmptyThisBuffer = iomx_empty_this_buffer;
     component->FillThisBuffer = iomx_fill_this_buffer;
     component->GetState = iomx_get_state;
+    component->UseBuffer = iomx_use_buffer;
     component->AllocateBuffer = iomx_allocate_buffer;
     component->ComponentRoleEnum = iomx_component_role_enum;
     component->GetExtensionIndex = iomx_get_extension_index;
@@ -369,7 +398,7 @@ OMX_ERRORTYPE PREFIX(OMX_GetHandle)(OMX_HANDLETYPE *handle_ptr, OMX_STRING compo
 
 OMX_ERRORTYPE PREFIX(OMX_FreeHandle)(OMX_HANDLETYPE handle)
 {
-  android_printf("OMX_FreeHandle\n");
+  //android_printf("OMX_FreeHandle\n");
     OMXNode* node = (OMXNode*) ((OMX_COMPONENTTYPE*)handle)->pComponentPrivate;
     ctx->iomx->freeNode( node->node );
     node->observer->setNode(NULL);
@@ -380,7 +409,7 @@ OMX_ERRORTYPE PREFIX(OMX_FreeHandle)(OMX_HANDLETYPE handle)
 
 OMX_ERRORTYPE PREFIX(OMX_Init)(void)
 {
-  android_printf("OMX_Init\n");
+  //android_printf("OMX_Init\n");
     OMXClient client;
     if (client.connect() != OK)
         return OMX_ErrorUndefined;
@@ -397,7 +426,7 @@ OMX_ERRORTYPE PREFIX(OMX_Init)(void)
       for (List<String8>::const_iterator role_it = info.mRoles.begin(); role_it != info.mRoles.end(); role_it++)
       {
         const char* componentRole = (*role_it).string();
-        android_printf("componentName:%s,componentRole:%s\n", componentName, componentRole);
+        //android_printf("componentName:%s,componentRole:%s\n", componentName, componentRole);
       }
     }
     return OMX_ErrorNone;
@@ -405,7 +434,7 @@ OMX_ERRORTYPE PREFIX(OMX_Init)(void)
 
 OMX_ERRORTYPE PREFIX(OMX_Deinit)(void)
 {
-  android_printf("OMX_Deinit\n");
+  //android_printf("OMX_Deinit\n");
     ctx->iomx = NULL;
     delete ctx;
     ctx = NULL;
@@ -414,7 +443,7 @@ OMX_ERRORTYPE PREFIX(OMX_Deinit)(void)
 
 OMX_ERRORTYPE PREFIX(OMX_ComponentNameEnum)(OMX_STRING component_name, OMX_U32 name_length, OMX_U32 index)
 {
-  android_printf("OMX_ComponentNameEnum\n");
+  //android_printf("OMX_ComponentNameEnum\n");
    if (index >= ctx->components.size())
         return OMX_ErrorNoMore;
     List<IOMX::ComponentInfo>::iterator it = ctx->components.begin();
@@ -427,7 +456,7 @@ OMX_ERRORTYPE PREFIX(OMX_ComponentNameEnum)(OMX_STRING component_name, OMX_U32 n
 
 OMX_ERRORTYPE PREFIX(OMX_GetRolesOfComponent)(OMX_STRING component_name, OMX_U32 *num_roles, OMX_U8 **roles)
 {
-  android_printf("OMX_GetRolesOfComponent\n");
+  //android_printf("OMX_GetRolesOfComponent\n");
     for( List<IOMX::ComponentInfo>::iterator it = ctx->components.begin(); it != ctx->components.end(); it++ ) {
         if (!strcmp(component_name, it->mName.string())) {
             if (!roles) {
@@ -450,7 +479,7 @@ OMX_ERRORTYPE PREFIX(OMX_GetRolesOfComponent)(OMX_STRING component_name, OMX_U32
 
 OMX_ERRORTYPE PREFIX(OMX_GetComponentsOfRole)(OMX_STRING role, OMX_U32 *num_comps, OMX_U8 **comp_names)
 {
-  android_printf("OMX_GetComponentsOfRole\n");
+  //android_printf("OMX_GetComponentsOfRole\n");
     OMX_U32 i = 0;
     for( List<IOMX::ComponentInfo>::iterator it = ctx->components.begin(); it != ctx->components.end(); it++ ) {
         for( List<String8>::iterator it2 = it->mRoles.begin(); it2 != it->mRoles.end(); it2++ ) {
