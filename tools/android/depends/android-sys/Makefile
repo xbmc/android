@@ -31,7 +31,7 @@ INCLUDES_13+=-I$(PLATFORM)/$(SDK_PLATFORM_13)/frameworks/base/include
 INCLUDES_13+=-I$(PLATFORM)/$(SDK_PLATFORM_13)/frameworks/base/native/include
 INCLUDES_13+=-I$(PLATFORM)/$(SDK_PLATFORM_13)/hardware/libhardware/include
 INCLUDES_13+=-I$(PLATFORM)/$(SDK_PLATFORM_13)/frameworks/base/include/media/stagefright/openmax
-INCLUDES_13+=-I$(PLATFORM)/$(SDK_PLATFORM_10)/hardware/libhardware/include
+INCLUDES_13+=-I$(PLATFORM)/$(SDK_PLATFORM_13)/hardware/libhardware/include
 
 INCLUDES_14=$(INCLUDES)
 INCLUDES_14+=-I$(PLATFORM)/$(SDK_PLATFORM_14)/system/core/include
@@ -39,7 +39,7 @@ INCLUDES_14+=-I$(PLATFORM)/$(SDK_PLATFORM_14)/frameworks/base/include
 INCLUDES_14+=-I$(PLATFORM)/$(SDK_PLATFORM_14)/frameworks/base/native/include
 INCLUDES_14+=-I$(PLATFORM)/$(SDK_PLATFORM_14)/hardware/libhardware/include
 INCLUDES_14+=-I$(PLATFORM)/$(SDK_PLATFORM_14)/frameworks/base/include/media/stagefright/openmax
-INCLUDES_14+=-I$(PLATFORM)/$(SDK_PLATFORM_10)/hardware/libhardware/include
+INCLUDES_14+=-I$(PLATFORM)/$(SDK_PLATFORM_14)/hardware/libhardware/include
 
 all: .installed-$(PLATFORM)
 
