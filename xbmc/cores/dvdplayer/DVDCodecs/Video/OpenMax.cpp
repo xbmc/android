@@ -25,17 +25,13 @@
 #include "system.h"
 #endif
 
-#if defined(HAVE_LIBOPENMAX)
 #include "OpenMax.h"
 #include "DynamicDll.h"
-#include "DVDClock.h"
-#include "DVDStreamInfo.h"
-#include "windowing/WindowingFactory.h"
-#include "DVDVideoCodec.h"
 #include "utils/log.h"
-#include "utils/TimeUtils.h"
-#include "ApplicationMessenger.h"
-#include "Application.h"
+
+#if defined(TARGET_ANDROID)
+#include "xbmc/android/activity/AndroidFeatures.h"
+#endif
 
 #include <OMX_Core.h>
 #include <OMX_Component.h>
@@ -44,6 +40,28 @@
 
 #define CLASSNAME "COpenMax"
 
+static const struct
+{
+    CodecID codec;
+    OMX_VIDEO_CODINGTYPE omx_codec;
+    const char *role;
+
+} g_codec_formats[] =
+{
+    { CODEC_ID_MPEG1VIDEO,  OMX_VIDEO_CodingMPEG2, "video_decoder.mpeg2" },
+    { CODEC_ID_MPEG2VIDEO,  OMX_VIDEO_CodingMPEG2, "video_decoder.mpeg2" },
+    { CODEC_ID_MSMPEG4V1,   OMX_VIDEO_CodingMPEG4, "video_decoder.mpeg4" },
+    { CODEC_ID_MSMPEG4V2,   OMX_VIDEO_CodingMPEG4, "video_decoder.mpeg4" },
+    { CODEC_ID_MSMPEG4V3,   OMX_VIDEO_CodingMPEG4, "video_decoder.mpeg4" },
+    { CODEC_ID_MPEG4,       OMX_VIDEO_CodingMPEG4, "video_decoder.mpeg4" },
+    { CODEC_ID_H264,        OMX_VIDEO_CodingAVC,   "video_decoder.avc"   },
+    { CODEC_ID_H263,        OMX_VIDEO_CodingH263,  "video_decoder.h263"  },
+    { CODEC_ID_WMV1,        OMX_VIDEO_CodingWMV,   "video_decoder.wmv"   },
+    { CODEC_ID_WMV2,        OMX_VIDEO_CodingWMV,   "video_decoder.wmv"   },
+    { CODEC_ID_WMV3,        OMX_VIDEO_CodingWMV,   "video_decoder.wmv"   },
+    { CODEC_ID_VC1,         OMX_VIDEO_CodingWMV,   "video_decoder.vc1"   },
+    { CODEC_ID_NONE,        OMX_VIDEO_CodingUnused, 0 }
+};
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 class DllLibOpenMaxInterface
@@ -63,7 +81,11 @@ public:
 
 class DllLibOpenMax : public DllDynamic, DllLibOpenMaxInterface
 {
+#if defined(TARGET_ANDROID)
+  DECLARE_DLL_WRAPPER(DllLibOpenMax, CAndroidFeatures::GetLibiomxName().c_str())
+#else
   DECLARE_DLL_WRAPPER(DllLibOpenMax, "/usr/lib/libnvomx.so")
+#endif
 
   DEFINE_METHOD0(OMX_ERRORTYPE, OMX_Init)
   DEFINE_METHOD0(OMX_ERRORTYPE, OMX_Deinit)
@@ -82,15 +104,6 @@ class DllLibOpenMax : public DllDynamic, DllLibOpenMaxInterface
     RESOLVE_METHOD(OMX_ComponentNameEnum)
   END_METHOD_RESOLVE()
 };
-
-////////////////////////////////////////////////////////////////////////////////////////////
-#define OMX_INIT_STRUCTURE(a) \
-  memset(&(a), 0, sizeof(a)); \
-  (a).nSize = sizeof(a); \
-  (a).nVersion.s.nVersionMajor = OMX_VERSION_MAJOR; \
-  (a).nVersion.s.nVersionMinor = OMX_VERSION_MINOR; \
-  (a).nVersion.s.nRevision = OMX_VERSION_REVISION; \
-  (a).nVersion.s.nStep = OMX_VERSION_STEP
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -163,8 +176,6 @@ OMX_ERRORTYPE COpenMax::DecoderFillBufferDoneCallback(
   return ctx->DecoderFillBufferDone(hComponent, pAppData, pBuffer);
 }
 
-
-
 // Wait for a component to transition to the specified state
 OMX_ERRORTYPE COpenMax::WaitForState(OMX_STATETYPE state)
 {
@@ -198,12 +209,18 @@ OMX_ERRORTYPE COpenMax::WaitForState(OMX_STATETYPE state)
 OMX_ERRORTYPE COpenMax::SetStateForComponent(OMX_STATETYPE state)
 {
   OMX_ERRORTYPE omx_err;
+  OMX_STATETYPE state_current = OMX_StateMax;
+
+  // do not set state on same state
+  OMX_GetState(m_omx_decoder, &state_current);
+  if (state == state_current)
+    return OMX_ErrorNone;
 
   #if defined(OMX_DEBUG_VERBOSE)
   CLog::Log(LOGDEBUG, "%s::%s - state(%d)\n", CLASSNAME, __func__, state);
   #endif
   omx_err = OMX_SendCommand(m_omx_decoder, OMX_CommandStateSet, state, 0);
-  if (omx_err)
+  if (omx_err != OMX_ErrorNone)
     CLog::Log(LOGERROR, "%s::%s - OMX_CommandStateSet failed with omx_err(0x%x)\n",
       CLASSNAME, __func__, omx_err);
   else
@@ -212,29 +229,129 @@ OMX_ERRORTYPE COpenMax::SetStateForComponent(OMX_STATETYPE state)
   return omx_err;
 }
 
-bool COpenMax::Initialize( const CStdString &decoder_name)
+std::string COpenMax::GetOmxRole(CodecID codec)
+{
+  int i = 0;
+  std::string role = "";
+  
+  for (i = 0; ;i++)
+  {
+    if (g_codec_formats[i].codec == CODEC_ID_NONE && g_codec_formats[i].omx_codec == OMX_VIDEO_CodingUnused && g_codec_formats[i].role == 0)
+      break;
+    if (g_codec_formats[i].codec == codec)
+    {
+      role = std::string(g_codec_formats[i].role);
+      break;
+    }
+  }
+  return role;
+}
+
+OMX_VIDEO_CODINGTYPE COpenMax::GetOmxCodingType(CodecID codec)
+{
+  int i = 0;
+  OMX_VIDEO_CODINGTYPE omx_codec = OMX_VIDEO_CodingUnused;
+
+  for (i = 0; ; i++)
+  {
+    if (g_codec_formats[i].codec == CODEC_ID_NONE && g_codec_formats[i].omx_codec == OMX_VIDEO_CodingUnused && g_codec_formats[i].role == 0)
+      break;
+    if (g_codec_formats[i].codec == codec)
+    {
+      omx_codec = g_codec_formats[i].omx_codec;
+      break;
+    }
+  }
+  return omx_codec;
+}
+
+bool COpenMax::Initialize( const CStdString &role_name)
 {
   OMX_ERRORTYPE omx_err = m_dll->OMX_Init();
-  if (omx_err)
+  if (omx_err != OMX_ErrorNone)
   {
-    CLog::Log(LOGERROR,
-      "%s::%s - OpenMax failed to init, status(%d), ", // codec(%d), profile(%d), level(%d)
-      CLASSNAME, __func__, omx_err );//, hints.codec, hints.profile, hints.level);
+    CLog::Log(LOGERROR, "%s::%s - OpenMax failed to init, status(%d), ", CLASSNAME, __func__, omx_err );
     return false;
   }
 
+  char name[OMX_MAX_STRINGNAME_SIZE];
+  OMX_U32 roles = 0;
+  OMX_U8 **proles = 0;
+  unsigned int i = 0, j = 0;
+  std::string component_name = "";
+  bool bFound = false;
+
+  CLog::Log(LOGDEBUG, "%s::%s - OpenMax search component for role : %s", CLASSNAME, __func__, role_name.c_str());
+  if (role_name != "")
+  {
+    for (i = 0; ; i++)
+    {
+      omx_err = m_dll->OMX_ComponentNameEnum(name, OMX_MAX_STRINGNAME_SIZE, i);
+      if (omx_err != OMX_ErrorNone)
+        break;
+
+      CLog::Log(LOGDEBUG, "%s::%s - OpenMax component : %s", CLASSNAME, __func__, name);
+
+      omx_err = m_dll->OMX_GetRolesOfComponent(name, &roles, 0);
+      if (omx_err != OMX_ErrorNone || !roles)
+        continue;
+
+      proles = (OMX_U8**)malloc(roles * (sizeof(OMX_U8*) + OMX_MAX_STRINGNAME_SIZE));
+      if (!proles)
+        continue;
+
+      for (j = 0; j < roles; j++)
+        proles[j] = ((OMX_U8 *)(&proles[roles])) + j * OMX_MAX_STRINGNAME_SIZE;
+
+      omx_err = m_dll->OMX_GetRolesOfComponent(name, &roles, proles);
+      if (omx_err != OMX_ErrorNone)
+        roles = 0;
+
+      for (j = 0; j < roles; j++)
+      {
+        CLog::Log(LOGDEBUG, "%s::%s - OpenMax component : %s role : %s", CLASSNAME, __func__, name, (char *)proles[j]);
+        if (!strncmp((char *)proles[j], role_name, role_name.length()))
+        {
+          if (!strncmp(name, "OMX.PV.", 7))
+            continue;
+          if (!strncmp(name, "OMX.google.", 11))
+            continue;
+          if (!strncmp(name, "OMX.ARICENT.", 12))
+            continue;
+          if (!strncmp(name, "OMX.Nvidia.h264.decode.secure", 29))
+            continue;
+
+          component_name = name;
+          bFound = true;
+          break;
+        }
+      }
+      
+      free(proles);
+
+      if (bFound)
+        break;
+    }
+  }
+
+  if (component_name == "")
+    return false;
+
+  CLog::Log(LOGINFO, "%s::%s - Found omx decoder : %s\n", CLASSNAME, __func__, component_name.c_str());
+
   // Get video decoder handle setting up callbacks, component is in loaded state on return.
-  static OMX_CALLBACKTYPE decoder_callbacks = {
-    &DecoderEventHandlerCallback, &DecoderEmptyBufferDoneCallback, &DecoderFillBufferDoneCallback };
-  omx_err = m_dll->OMX_GetHandle(&m_omx_decoder, (char*)decoder_name.c_str(), this, &decoder_callbacks);
-  if (omx_err)
+  m_callbacks.EventHandler    = &COpenMax::DecoderEventHandlerCallback;
+  m_callbacks.EmptyBufferDone = &COpenMax::DecoderEmptyBufferDoneCallback;
+  m_callbacks.FillBufferDone  = &COpenMax::DecoderFillBufferDoneCallback;
+
+  omx_err = m_dll->OMX_GetHandle(&m_omx_decoder, (char*)component_name.c_str(), this, &m_callbacks);
+  if (omx_err != OMX_ErrorNone)
   {
     CLog::Log(LOGERROR,
       "%s::%s - could not get decoder handle\n", CLASSNAME, __func__);
     m_dll->OMX_Deinit();
     return false;
   }
-
   return true;
 }
 
@@ -263,6 +380,3 @@ OMX_ERRORTYPE COpenMax::DecoderFillBufferDone(OMX_HANDLETYPE hComponent, OMX_PTR
 {
   return OMX_ErrorNone;
 }
-
-#endif
-

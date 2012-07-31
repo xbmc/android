@@ -20,9 +20,18 @@
  *
  */
 
-#if defined(HAVE_LIBOPENMAX)
+#include "system_gl.h"
 
 #include "OpenMax.h"
+#include "DVDVideoCodec.h"
+#include "threads/Thread.h"
+
+#include <OMX_Core.h>
+#include <OMX_Component.h>
+#include <OMX_Index.h>
+#include <OMX_Image.h>
+#include <OMX_IVCommon.h>
+
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 
@@ -36,9 +45,14 @@ typedef struct OpenMaxVideoBuffer {
   // used for egl based rendering if active
   EGLImageKHR egl_image;
   GLuint texture_id;
+  void *graphic_handle;
+  void *native_buffer;
 } OpenMaxVideoBuffer;
 
-class COpenMaxVideo : public COpenMax
+class CDVDStreamInfo;
+class CDVDVideoCodec;
+
+class COpenMaxVideo : public COpenMax, public CThread
 {
 public:
   COpenMaxVideo();
@@ -51,6 +65,8 @@ public:
   void Reset(void);
   bool GetPicture(DVDVideoPicture *pDvdVideoPicture);
   void SetDropState(bool bDrop);
+  int ReadyCount();
+  int GetError() { return m_error; };
 protected:
   void QueryCodec(void);
   OMX_ERRORTYPE PrimeFillBuffers(void);
@@ -80,13 +96,14 @@ protected:
   EGLContext        m_egl_context;
 
   // Video format
-  DVDVideoPicture   m_videobuffer;
   bool              m_drop_state;
   int               m_decoded_width;
   int               m_decoded_height;
+  int               m_scaled_width;
+  int               m_scaled_height;
 
-  std::queue<double> m_dts_queue;
-  std::queue<omx_demux_packet> m_demux_queue;
+  pthread_mutex_t   m_omx_packet_mutex;
+  std::queue<omx_demux_packet *> m_demux_queue;
 
   // OpenMax input buffers (demuxer packets)
   pthread_mutex_t   m_omx_input_mutex;
@@ -94,7 +111,6 @@ protected:
   std::vector<OMX_BUFFERHEADERTYPE*> m_omx_input_buffers;
   bool              m_omx_input_eos;
   int               m_omx_input_port;
-  //sem_t             *m_omx_flush_input;
   CEvent            m_input_consumed_event;
 
   // OpenMax output buffers (video frames)
@@ -102,14 +118,36 @@ protected:
   std::queue<OpenMaxVideoBuffer*> m_omx_output_busy;
   std::queue<OpenMaxVideoBuffer*> m_omx_output_ready;
   std::vector<OpenMaxVideoBuffer*> m_omx_output_buffers;
+
   bool              m_omx_output_eos;
   int               m_omx_output_port;
-  //sem_t             *m_omx_flush_output;
 
   bool              m_portChanging;
 
   volatile bool     m_videoplayback_done;
-};
 
-// defined(HAVE_LIBOPENMAX)
-#endif
+  OMX_PARAM_PORTDEFINITIONTYPE m_outputPortFormat;
+  OMX_CONFIG_RECTTYPE          m_cropRect;
+
+  int               m_packetCount;
+  int               m_readyCount;
+  bool              m_firstPicture;
+  bool              m_firstDemuxPacket;
+
+  bool SendDecoderConfig(uint8_t *extradata, int extrasize);
+
+  virtual void      Process(void);
+
+  int               m_error;
+
+  OMX_U32           m_xFramerate;
+
+  bool              m_abort;
+  int               m_BufferSize;
+  sem_t             *m_omx_empty_done;
+  sem_t             *m_omx_fill_done;
+  sem_t             *m_omx_flush;
+  sem_t             *m_omx_cmd_complete;
+
+  pthread_mutex_t   m_omx_lock_decoder;
+};

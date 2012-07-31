@@ -43,7 +43,6 @@
 #include "dialogs/GUIDialogKaiToast.h"
 #include "guilib/Texture.h"
 #include "lib/DllSwScale.h"
-#include "../dvdplayer/DVDCodecs/Video/OpenMaxVideo.h"
 #include "threads/SingleLock.h"
 #include "RenderCapture.h"
 #include "RenderFormats.h"
@@ -51,6 +50,9 @@
 #if defined(__ARM_NEON__)
 #include "yuv2rgb.neon.h"
 #include "utils/CPUInfo.h"
+#endif
+#ifdef HAVE_LIBOPENMAX
+#include "xbmc/cores/dvdplayer/DVDCodecs/Video/OpenMaxVideo.h"
 #endif
 #ifdef HAVE_VIDEOTOOLBOXDECODER
 #include "DVDCodecs/Video/DVDVideoCodecVideoToolBox.h"

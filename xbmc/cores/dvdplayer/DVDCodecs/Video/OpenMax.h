@@ -20,15 +20,12 @@
  *
  */
 
-#if defined(HAVE_LIBOPENMAX)
-
 #include "cores/dvdplayer/DVDStreamInfo.h"
-#include "DVDVideoCodec.h"
-#include "threads/Event.h"
 
 #include <queue>
 #include <semaphore.h>
 #include <OMX_Core.h>
+#include <OMX_Video.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // debug spew defines
@@ -38,6 +35,13 @@
 #define OMX_DEBUG_FILLBUFFERDONE
 #define OMX_DEBUG_EMPTYBUFFERDONE
 #endif
+
+#define OMX_DEBUG_EVENTHANDLER
+
+#define OMX_ComponentRoleEnum(hComponent, cRole, nIndex) \
+  ((OMX_COMPONENTTYPE*)hComponent)->ComponentRoleEnum ? \
+  ((OMX_COMPONENTTYPE*)hComponent)->ComponentRoleEnum(  \
+  hComponent, cRole, nIndex ) : OMX_ErrorNotImplemented
 
 typedef struct omx_codec_capability {
     // level is OMX_VIDEO_AVCPROFILETYPE, OMX_VIDEO_H263PROFILETYPE, 
@@ -75,8 +79,13 @@ protected:
       ERROR
   };
 
+  OMX_CALLBACKTYPE  m_callbacks;
+
+  std::string GetOmxRole(CodecID codec);
+  OMX_VIDEO_CODINGTYPE GetOmxCodingType(CodecID codec);
+
   // initialize OpenMax and get decoder component
-  bool Initialize( const CStdString &decoder_name);
+  bool Initialize( const CStdString &role_name);
   void Deinitialize();
 
   // OpenMax Decoder delegate callback routines.
@@ -109,5 +118,3 @@ protected:
   sem_t             *m_omx_decoder_state_change;
   std::vector<omx_codec_capability> m_omx_decoder_capabilities;
 };
-
-#endif

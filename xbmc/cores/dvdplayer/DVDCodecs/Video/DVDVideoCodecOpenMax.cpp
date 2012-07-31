@@ -25,15 +25,17 @@
 #include "system.h"
 #endif
 
-#if defined(HAVE_LIBOPENMAX)
-#include "DVDClock.h"
-#include "settings/GUISettings.h"
-#include "DVDStreamInfo.h"
 #include "DVDVideoCodecOpenMax.h"
+#include "DVDClock.h"
 #include "OpenMaxVideo.h"
+#include "settings/GUISettings.h"
 #include "utils/log.h"
 
-#define CLASSNAME "COpenMax"
+#if defined(TARGET_ANDROID)
+#include "xbmc/android/activity/AndroidFeatures.h"
+#endif
+
+#define CLASSNAME "CDVDVideoCodecOpenMax"
 ////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////
 CDVDVideoCodecOpenMax::CDVDVideoCodecOpenMax() : CDVDVideoCodec()
@@ -52,6 +54,14 @@ CDVDVideoCodecOpenMax::~CDVDVideoCodecOpenMax()
 
 bool CDVDVideoCodecOpenMax::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options)
 {
+#if defined(TARGET_ANDROID)
+  if (CAndroidFeatures::GetLibiomxName() == "unknown")
+  {
+    CLog::Log(LOGINFO, "%s::%s - openmax not supported on your device\n", CLASSNAME, __func__);
+    return false;
+  }
+#endif
+
   // we always qualify even if DVDFactoryCodec does this too.
   if (g_guiSettings.GetBool("videoplayer.useomx") && !hints.software)
   {
@@ -99,13 +109,15 @@ bool CDVDVideoCodecOpenMax::Open(CDVDStreamInfo &hints, CDVDCodecOptions &option
     // allocate a YV12 DVDVideoPicture buffer.
     // first make sure all properties are reset.
     memset(&m_videobuffer, 0, sizeof(DVDVideoPicture));
-    unsigned int luma_pixels = hints.width * hints.height;
-    unsigned int chroma_pixels = luma_pixels/4;
 
     m_videobuffer.dts = DVD_NOPTS_VALUE;
     m_videobuffer.pts = DVD_NOPTS_VALUE;
-    //m_videobuffer.format = RENDER_FMT_YUV420P;
+#if defined(TARGET_ANDROID)
+    m_videobuffer.format = RENDER_FMT_YUV420P;
+#else
     m_videobuffer.format = RENDER_FMT_OMXEGL;
+#endif
+
     m_videobuffer.color_range  = 0;
     m_videobuffer.color_matrix = 4;
     m_videobuffer.iFlags  = DVP_FLAG_ALLOCATED;
@@ -149,9 +161,24 @@ void CDVDVideoCodecOpenMax::SetDropState(bool bDrop)
 
 int CDVDVideoCodecOpenMax::Decode(BYTE* pData, int iSize, double dts, double pts)
 {
+  /*
+  if (!pData)
+  {
+    // if pData is nil, we are in dvdplayervideo's special loop
+    // where it checks for more picture frames, you must pass
+    // VC_BUFFER to get it to break out of this loop.
+    int ready_cnt = m_omx_decoder->ReadyCount();
+    if (ready_cnt == 1)
+      return VC_PICTURE | VC_BUFFER;
+    if (ready_cnt > 2)
+      return VC_PICTURE;
+    else
+      return VC_BUFFER;
+  }
+  */
+
   if (pData)
   {
-    int rtn;
     int demuxer_bytes = iSize;
     uint8_t *demuxer_content = pData;
     bool bitstream_convered  = false;
@@ -171,15 +198,23 @@ int CDVDVideoCodecOpenMax::Decode(BYTE* pData, int iSize, double dts, double pts
       }
     }
 
-    rtn = m_omx_decoder->Decode(demuxer_content, demuxer_bytes, dts, pts);
+    m_omx_decoder->Decode(demuxer_content, demuxer_bytes, dts, pts);
 
     if (bitstream_convered)
       free(demuxer_content);
-
-    return rtn;
   }
+
+  if (m_omx_decoder->GetError() == VC_ERROR)
+    return VC_ERROR;
+
+  if (m_omx_decoder->ReadyCount() > 2)
+    return VC_PICTURE;
   
-  return VC_BUFFER;
+  int rtn = 0;
+  if (m_omx_decoder->ReadyCount())
+    rtn = VC_PICTURE;
+
+  return rtn | VC_BUFFER;
 }
 
 void CDVDVideoCodecOpenMax::Reset(void)
@@ -187,12 +222,12 @@ void CDVDVideoCodecOpenMax::Reset(void)
   m_omx_decoder->Reset();
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////
 bool CDVDVideoCodecOpenMax::GetPicture(DVDVideoPicture* pDvdVideoPicture)
 {
   m_omx_decoder->GetPicture(&m_videobuffer);
   *pDvdVideoPicture = m_videobuffer;
-
-  return VC_PICTURE | VC_BUFFER;
+  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -348,5 +383,3 @@ void CDVDVideoCodecOpenMax::bitstream_alloc_and_copy(
     (*poutbuf + offset + sps_pps_size)[2] = 1;
   }
 }
-
-#endif

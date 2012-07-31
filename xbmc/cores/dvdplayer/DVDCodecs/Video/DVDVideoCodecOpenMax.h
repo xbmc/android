@@ -20,11 +20,9 @@
  *
  */
 
-#if defined(HAVE_LIBOPENMAX)
-
 #include "DVDVideoCodec.h"
 
-class COpenVideoMax;
+class COpenMaxVideo;
 class CDVDVideoCodecOpenMax : public CDVDVideoCodec
 {
 public:
@@ -62,5 +60,3 @@ protected:
   omx_bitstream_ctx m_sps_pps_context;
   bool              m_convert_bitstream;
 };
-
-#endif

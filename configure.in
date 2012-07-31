@@ -637,6 +637,13 @@ if test "$target_platform" = "target_android" ; then
   CFLAGS="$CFLAGS -Wno-psabi"
   CXXFLAGS="$CXXFLAGS -Wno-psabi"
   AC_DEFINE(HAS_EGLGLES, [1], [Define if supporting EGL based GLES Framebuffer])
+  if test "x$use_openmax" = "xyes"; then
+    USE_OPENMAX=1
+    AC_DEFINE([HAVE_LIBOPENMAX],[1],["Define to 1 if you have the OpenMax library"])
+  else
+    use_openmax=no
+    AC_MSG_NOTICE($openmax_disabled)
+  fi
 fi
 
 if test "$build_shared_lib" = "yes"; then
@@ -1626,7 +1633,7 @@ if test "$host_vendor" = "apple" ; then
   use_openmax="no"
   USE_OPENMAX=0
   AC_MSG_NOTICE($openmax_disabled)
-else
+elif test "$target_platform" != "target_android" ; then
   if test "$use_gles" = "yes" && test "$use_openmax" = "auto"; then
     PKG_CHECK_MODULES([OPENMAX], [libomxil-bellagio],
                       USE_OPENMAX=1;[INCLUDES="$INCLUDES $OPENMAX_CFLAGS"; LIBS="$LIBS $OPENMAX_LIBS"],
@@ -1799,7 +1806,7 @@ else
   final_message="$final_message\n  VTBDecoder:\tNo"
 fi
 
-if test "$use_openmax" != "no"; then
+if test "x$use_openmax" != "xno"; then
   final_message="$final_message\n  OpenMax:\tYes"
 else
   final_message="$final_message\n  OpenMax:\tNo"

@@ -240,7 +240,7 @@ CDVDVideoCodec* CDVDFactoryCodec::CreateVideoCodec(CDVDStreamInfo &hint, unsigne
 #if defined(HAVE_LIBOPENMAX)
   if (g_guiSettings.GetBool("videoplayer.useomx") && !hint.software )
   {
-      if (hint.codec == CODEC_ID_H264 || hint.codec == CODEC_ID_MPEG2VIDEO || hint.codec == CODEC_ID_VC1)
+      if (hint.codec == CODEC_ID_H264 || hint.codec == CODEC_ID_MPEG2VIDEO || hint.codec == CODEC_ID_VC1 || hint.codec == CODEC_ID_MPEG4)
     {
       CLog::Log(LOGINFO, "Trying OpenMax Decoder...");
       if ( (pCodec = OpenCodec(new CDVDVideoCodecOpenMax(), hint, options)) ) return pCodec;
