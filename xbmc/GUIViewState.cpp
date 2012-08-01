@@ -377,6 +377,7 @@ void CGUIViewState::AddAddonsSource(const CStdString &content, const CStdString 
   }
 }
 
+#if defined(TARGET_ANDROID)
 void CGUIViewState::AddAndroidSource(const CStdString &content, const CStdString &label, const CStdString &thumb)
 {
   CFileItemList items;
@@ -393,6 +394,7 @@ void CGUIViewState::AddAndroidSource(const CStdString &content, const CStdString
     m_sources.push_back(source);
   }
 }
+#endif
 
 void CGUIViewState::AddLiveTVSources()
 {
