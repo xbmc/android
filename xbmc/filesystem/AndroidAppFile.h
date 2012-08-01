@@ -24,6 +24,7 @@
 
 #if defined(TARGET_ANDROID)
 #include "IFile.h"
+#include "URL.h"
 #include "utils/StdString.h"
 namespace XFILE
 {

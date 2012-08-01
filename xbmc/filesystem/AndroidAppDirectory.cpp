@@ -29,6 +29,7 @@
 #include "utils/URIUtils.h"
 #include <vector>
 #include "utils/log.h"
+#include "URL.h"
 
 using namespace XFILE;
 using namespace std;
