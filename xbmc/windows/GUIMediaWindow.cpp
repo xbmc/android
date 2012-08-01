@@ -948,12 +948,14 @@ bool CGUIMediaWindow::OnClick(int iItem)
   {
     return XFILE::CPluginDirectory::RunScriptWithParams(pItem->GetPath());
   }
+#if defined(TARGET_ANDROID)
   else if (pItem->IsAndroidApp())
   {
     CStdString appName = URIUtils::GetFileName(pItem->GetPath());
     CLog::Log(LOGDEBUG, "CGUIMediaWindow::OnClick Trying to run: %s",appName.c_str());
     return CXBMCApp::StartActivity(appName);
   }
+#endif
   else
   {
     m_iSelectedItem = m_viewControl.GetSelectedItem();
