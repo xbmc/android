@@ -20,9 +20,9 @@
 
 #include "AndroidTouch.h"
 #include "XBMCApp.h"
-#include "Application.h"
 #include "guilib/GUIWindowManager.h"
 #include "windowing/WinEvents.h"
+#include "ApplicationMessenger.h"
 
 CAndroidTouch::CAndroidTouch()
 {
@@ -161,11 +161,11 @@ void CAndroidTouch::XBMC_TouchGesture(int32_t action, float posX, float posY, fl
 {
   CXBMCApp::android_printf("XBMC_TouchGesture(%d, %f, %f, %f, %f)", action, posX, posY, offsetX, offsetY);
   if (action == ACTION_GESTURE_BEGIN)
-    g_application.getApplicationMessenger().SendAction(CAction(action, 0, posX, posY, 0, 0), WINDOW_INVALID, false);
+    CApplicationMessenger::Get().SendAction(CAction(action, 0, posX, posY, 0, 0), WINDOW_INVALID, false);
   else if (action == ACTION_GESTURE_PAN)
-    g_application.getApplicationMessenger().SendAction(CAction(action, 0, posX, posY, offsetX, offsetY), WINDOW_INVALID, false);
+    CApplicationMessenger::Get().SendAction(CAction(action, 0, posX, posY, offsetX, offsetY), WINDOW_INVALID, false);
   else if (action == ACTION_GESTURE_END)
-    g_application.getApplicationMessenger().SendAction(CAction(action, 0, posX, posY, offsetX, offsetY), WINDOW_INVALID, false);
+    CApplicationMessenger::Get().SendAction(CAction(action, 0, posX, posY, offsetX, offsetY), WINDOW_INVALID, false);
   else if (action == ACTION_GESTURE_ZOOM)
-    g_application.getApplicationMessenger().SendAction(CAction(action, 0, posX, posY, offsetX, 0), WINDOW_INVALID, false);
+    CApplicationMessenger::Get().SendAction(CAction(action, 0, posX, posY, offsetX, 0), WINDOW_INVALID, false);
 }

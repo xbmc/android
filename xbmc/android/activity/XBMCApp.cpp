@@ -42,6 +42,7 @@
 #include "windowing/WinEvents.h"
 #include "guilib/GUIWindowManager.h"
 #include "utils/log.h"
+#include "ApplicationMessenger.h"
 
 #define GIGABYTES       1073741824
 
@@ -391,26 +392,26 @@ void CXBMCApp::XBMC_Pause(bool pause)
   android_printf("XBMC_Pause(%s)", pause ? "true" : "false");
   // Only send the PAUSE action if we are pausing XBMC and something is currently playing
   if (pause && g_application.IsPlaying() && !g_application.IsPaused())
-    g_application.getApplicationMessenger().SendAction(CAction(ACTION_PAUSE), WINDOW_INVALID, true);
+    CApplicationMessenger::Get().SendAction(CAction(ACTION_PAUSE), WINDOW_INVALID, true);
 
   g_application.m_AppActive = g_application.m_AppFocused = !pause;
 }
 
 void CXBMCApp::XBMC_Stop()
 {
-  g_application.getApplicationMessenger().Quit();
+  CApplicationMessenger::Get().Quit();
 }
 
 bool CXBMCApp::XBMC_SetupDisplay()
 {
   android_printf("XBMC_SetupDisplay()");
-  return g_application.getApplicationMessenger().SetupDisplay();
+  return CApplicationMessenger::Get().SetupDisplay();
 }
 
 bool CXBMCApp::XBMC_DestroyDisplay()
 {
   android_printf("XBMC_DestroyDisplay()");
-  return g_application.getApplicationMessenger().DestroyDisplay();
+  return CApplicationMessenger::Get().DestroyDisplay();
 }
 
 int CXBMCApp::AttachCurrentThread(JNIEnv** p_env, void* thr_args /* = NULL */)
