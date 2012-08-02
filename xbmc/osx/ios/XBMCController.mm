@@ -68,8 +68,6 @@ extern NSString* kBRScreenSaverDismissed;
 @implementation XBMCController
 @synthesize animating;
 @synthesize lastGesturePoint;
-@synthesize lastPinchScale;
-@synthesize currentPinchScale;
 @synthesize screenScale;
 @synthesize lastEvent;
 @synthesize touchBeginSignaled;
@@ -193,8 +191,6 @@ extern NSString* kBRScreenSaverDismissed;
   pinch.delaysTouchesBegan = YES;
   [self.view addGestureRecognizer:pinch];
   [pinch release];
-  lastPinchScale = 1.0;
-  currentPinchScale = lastPinchScale;
 }
 //--------------------------------------------------------------
 -(void)handlePinch:(UIPinchGestureRecognizer*)sender 
@@ -204,21 +200,23 @@ extern NSString* kBRScreenSaverDismissed;
     CGPoint point = [sender locationOfTouch:0 inView:m_glView];  
     point.x *= screenScale;
     point.y *= screenScale;
-    currentPinchScale += [sender scale] - lastPinchScale;
-    lastPinchScale = [sender scale];  
   
     switch(sender.state)
     {
       case UIGestureRecognizerStateBegan:  
-      break;
+        CApplicationMessenger::Get().SendAction(CAction(ACTION_GESTURE_BEGIN, 0, (float)point.x, (float)point.y,
+                                                        0, 0), WINDOW_INVALID,false);
+        break;
       case UIGestureRecognizerStateChanged:
         g_application.getApplicationMessenger().SendAction(CAction(ACTION_GESTURE_ZOOM, 0, (float)point.x, (float)point.y, 
-          currentPinchScale, 0), WINDOW_INVALID,false);    
-      break;
+                                                                   [sender scale], 0), WINDOW_INVALID,false);
+        break;
       case UIGestureRecognizerStateEnded:
-      break;
+        CApplicationMessenger::Get().SendAction(CAction(ACTION_GESTURE_END, 0, 0, 0,
+                                                        0, 0), WINDOW_INVALID,false);
+        break;
       default:
-      break;
+        break;
     }
   }
 }
