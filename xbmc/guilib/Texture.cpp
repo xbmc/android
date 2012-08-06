@@ -198,7 +198,10 @@ CBaseTexture *CBaseTexture::LoadFromFile(const CStdString& texturePath, unsigned
       unsigned int inputBuffSize = file.Read(inputBuff, imgsize);
       file.Close();
       if (inputBuffSize != imgsize)
+      {
+        delete [] inputBuff;
         return NULL;
+      }
       CTexture *texture = new CTexture();
       unsigned int width = file.GetIconWidth();
       unsigned int height = file.GetIconHeight();
