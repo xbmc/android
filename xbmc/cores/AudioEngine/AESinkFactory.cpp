@@ -143,8 +143,6 @@ void CAESinkFactory::EnumerateEx(AESinkInfoList &list)
 #if defined(TARGET_WINDOWS)
   if (g_sysinfo.IsVistaOrHigher() && !g_advancedSettings.m_audioForceDirectSound)
     ENUMERATE_SINK(WASAPI);
-  else
-    ENUMERATE_SINK(DirectSound);
 #elif defined(TARGET_ANDROID)
     ENUMERATE_SINK(AUDIOTRACK);
 #elif defined(TARGET_LINUX) || defined(TARGET_FREEBSD)
