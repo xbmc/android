@@ -73,7 +73,7 @@
 #endif
 #if defined(TARGET_ANDROID)
 #include "android/loader/AndroidDyload.h"
-#else
+#elif !defined(_WIN32)
 #include <dlfcn.h>
 #endif
 using namespace std;
@@ -462,8 +462,10 @@ extern "C"
 #if defined(TARGET_ANDROID)
     CAndroidDyload temp;
     return temp.Open(filename);
-#else
+#elif !defined(_WIN32)
     return dlopen(filename, flag);
+#else
+    return;
 #endif
   }
 
