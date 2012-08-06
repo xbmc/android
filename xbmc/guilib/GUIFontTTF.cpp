@@ -28,7 +28,6 @@
 #include "utils/MathUtils.h"
 #include "utils/log.h"
 #include "windowing/WindowingFactory.h"
-#include "filesystem/File.h"
 
 #include <math.h>
 
@@ -67,7 +66,6 @@ public:
   {
     if (m_library)
       FT_Done_FreeType(m_library);
-    delete [] m_fontBuff;
   }
 
   FT_Face GetFont(const CStdString &filename, float size, float aspect)
@@ -81,39 +79,11 @@ public:
       return NULL;
     }
 
-     FT_Face face;
-    XFILE::CFile file;
-    int64_t fontBuffSize;
+    FT_Face face;
+
     // ok, now load the font face
-    if (file.Open(filename, 0))
-    {
-      int64_t fontsize;
-      fontsize = file.GetLength();
-      m_fontBuff = new unsigned char[fontsize];
-      fontBuffSize = file.Read(m_fontBuff, fontsize);
-      file.Close();
-
-      if (fontsize != fontBuffSize)
-        CLog::Log(LOGERROR,"CFreeTypeLibrary::GetFont:fontsize(%llu) != fontBuffSize(%llu)",
-          fontsize, fontBuffSize);
-
-      if (fontBuffSize <= 0)
-      {
-        delete [] m_fontBuff;
-        return NULL;
-      }
-    }
-    else
-    {
-      CLog::Log(LOGERROR, "Unable to open file: %s", filename.c_str());
+    if (FT_New_Face( m_library, CSpecialProtocol::TranslatePath(filename).c_str(), 0, &face ))
       return NULL;
-    }
-
-    if (FT_New_Memory_Face( m_library, m_fontBuff, fontBuffSize, 0, &face ))
-    {
-      delete [] m_fontBuff;
-      return NULL;
-    }
 
     unsigned int ydpi = GetDPI();
     unsigned int xdpi = (unsigned int)MathUtils::round_int(ydpi * aspect);
@@ -125,7 +95,6 @@ public:
     if (FT_Set_Char_Size( face, 0, (int)(size*64 + 0.5f), xdpi, ydpi ))
     {
       FT_Done_Face(face);
-      delete [] m_fontBuff;
       return NULL;
     }
 
@@ -163,7 +132,6 @@ public:
 
 private:
   FT_Library   m_library;
-  unsigned char *m_fontBuff;
 };
 
 CFreeTypeLibrary g_freeTypeLibrary; // our freetype library
