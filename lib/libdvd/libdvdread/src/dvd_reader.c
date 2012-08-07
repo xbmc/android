@@ -31,7 +31,9 @@
 #include <unistd.h>
 #include <limits.h>
 #include <dirent.h>
+#ifndef WIN32
 #include <paths.h>
+#endif
 
 #define WITH_CACHE
 
