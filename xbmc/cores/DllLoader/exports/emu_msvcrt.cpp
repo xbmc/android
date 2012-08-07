@@ -465,7 +465,7 @@ extern "C"
 #elif !defined(_WIN32)
     return dlopen(filename, flag);
 #else
-    return;
+    return NULL;
 #endif
   }
 
