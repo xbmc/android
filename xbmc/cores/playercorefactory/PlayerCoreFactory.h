@@ -70,6 +70,7 @@ public:
   static void GetPlayers( VECPLAYERCORES &vecCores, bool audio, bool video ); //All audio players and/or video players
   static void GetPlayers( VECPLAYERCORES &vecCores );                         //All players
 
+  static void GetPlatfomDefaultPlayers();
   static PLAYERCOREID GetDefaultPlayer( const CFileItem& item );
 
   static PLAYERCOREID SelectPlayerDialog(VECPLAYERCORES &vecCores, float posX = 0, float posY = 0);
@@ -80,4 +81,8 @@ public:
 private:
   static std::vector<CPlayerCoreConfig *> s_vecCoreConfigs;
   static std::vector<CPlayerSelectionRule *> s_vecCoreSelectionRules;
+
+  static CStdString m_platformAudioPlayer;
+  static CStdString m_platformVideoPlayer;
+  static CStdString m_platformDVDPlayer;
 };

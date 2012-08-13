@@ -36,11 +36,17 @@
 #include "PlayerCoreConfig.h"
 #include "PlayerSelectionRule.h"
 #include "guilib/LocalizeStrings.h"
-
+#if defined(HAS_AMLPLAYER)
+#include "cores/amlplayer/DllLibamplayer.h"
+#endif
 using namespace AUTOPTR;
 
 std::vector<CPlayerCoreConfig *> CPlayerCoreFactory::s_vecCoreConfigs;
 std::vector<CPlayerSelectionRule *> CPlayerCoreFactory::s_vecCoreSelectionRules;
+
+CStdString CPlayerCoreFactory::m_platformAudioPlayer = "";
+CStdString CPlayerCoreFactory::m_platformVideoPlayer = "";
+CStdString CPlayerCoreFactory::m_platformDVDPlayer = "";
 
 CPlayerCoreFactory::CPlayerCoreFactory()
 {}
@@ -79,8 +85,31 @@ IPlayer* CPlayerCoreFactory::CreatePlayer(const PLAYERCOREID eCore, IPlayerCallb
   return s_vecCoreConfigs[eCore-1]->CreatePlayer(callback);
 }
 
+void CPlayerCoreFactory::GetPlatfomDefaultPlayers()
+{
+  if (!m_platformAudioPlayer.empty() &&
+      !m_platformVideoPlayer.empty() &&
+      !m_platformDVDPlayer.empty())
+    return;
+
+  m_platformAudioPlayer = "paplayer";
+  m_platformVideoPlayer = "dvdplayer";
+  m_platformDVDPlayer =   "dvdplayer";
+#if defined(TARGET_ANDROID)
+#if defined(HAS_AMLPLAYER)
+  if (XFILE::CFile::Exists("/system/lib/libamlplayer.so"))
+  {
+    m_platformAudioPlayer = "amlplayer";
+    m_platformVideoPlayer = "amlplayer";
+    m_platformDVDPlayer = "dvdplayer";
+  }
+#endif
+#endif
+}
+
 PLAYERCOREID CPlayerCoreFactory::GetPlayerCore(const CStdString& strCoreName)
 {
+  GetPlatfomDefaultPlayers();
   if (!strCoreName.empty())
   {
     // Dereference "*default*player" aliases
@@ -89,6 +118,13 @@ PLAYERCOREID CPlayerCoreFactory::GetPlayerCore(const CStdString& strCoreName)
     else if (strCoreName.Equals("videodefaultplayer", false)) strRealCoreName = g_advancedSettings.m_videoDefaultPlayer;
     else if (strCoreName.Equals("videodefaultdvdplayer", false)) strRealCoreName = g_advancedSettings.m_videoDefaultDVDPlayer;
     else strRealCoreName = strCoreName;
+
+    if (strRealCoreName.Equals("platformaudioplayer", false))
+      strRealCoreName = m_platformAudioPlayer;
+    if (strRealCoreName.Equals("platformvideoplayer", false))
+      strRealCoreName = m_platformVideoPlayer;
+    if (strRealCoreName.Equals("platformdvdplayer", false))
+      strRealCoreName = m_platformDVDPlayer;
 
     for(PLAYERCOREID i = 0; i < s_vecCoreConfigs.size(); i++)
     {
@@ -139,9 +175,10 @@ void CPlayerCoreFactory::GetPlayers( const CFileItem& item, VECPLAYERCORES &vecC
 
   CLog::Log(LOGDEBUG, "CPlayerCoreFactory::GetPlayers(%s)", item.GetPath().c_str());
 
+  VECPLAYERCORES vecCoresDisabled;
   // Process rules
   for(unsigned int i = 0; i < s_vecCoreSelectionRules.size(); i++)
-    s_vecCoreSelectionRules[i]->GetPlayers(item, vecCores);
+    s_vecCoreSelectionRules[i]->GetPlayers(item, vecCores, vecCoresDisabled);
 
   CLog::Log(LOGDEBUG, "CPlayerCoreFactory::GetPlayers: matched %"PRIuS" rules with players", vecCores.size());
 
@@ -215,6 +252,19 @@ void CPlayerCoreFactory::GetPlayers( const CFileItem& item, VECPLAYERCORES &vecC
 
   /* make our list unique, preserving first added players */
   unique(vecCores);
+
+  for(VECPLAYERCORES::iterator i = vecCoresDisabled.begin(); i != vecCoresDisabled.end(); i++)
+  {
+    for(VECPLAYERCORES::iterator j = vecCores.begin(); j != vecCores.end(); j++)
+    {
+      if (*i == *j)
+      {
+        CLog::Log(LOGDEBUG, "CPlayerCoreFactory::GetPlayers: removing disabled player %s (%d)", GetPlayerName(*j).c_str(),*j);
+        vecCores.erase(j);
+        break;
+      }
+    }
+  }
 
   CLog::Log(LOGDEBUG, "CPlayerCoreFactory::GetPlayers: added %"PRIuS" players", vecCores.size());
 }
