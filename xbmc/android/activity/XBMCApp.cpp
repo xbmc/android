@@ -61,6 +61,7 @@ CXBMCApp::CXBMCApp(ANativeActivity *nativeActivity)
   : m_wakeLock(NULL)
 {
   m_activity = nativeActivity;
+  m_isJustPausing = false;
   
   if (m_activity == NULL)
   {
@@ -125,7 +126,9 @@ ActivityResult CXBMCApp::onActivate()
     default:
       break;
   }
-  
+
+  m_isJustPausing = false;
+
   return ActivityOK;
 }
 
@@ -171,6 +174,11 @@ void CXBMCApp::onSaveState(void **data, size_t *size)
 {
   android_printf("%s: %d", __PRETTY_FUNCTION__, m_state.appState);
   // no need to save anything as XBMC is running in its own thread
+
+  // onSaveState will be called if we are just pausing app
+  // set isJustPausing flag so we can try to not release
+  // egl context, shaders, textures if we are just pausing
+  m_isJustPausing = true;
 }
 
 void CXBMCApp::onConfigurationChanged()
@@ -410,7 +418,7 @@ bool CXBMCApp::XBMC_SetupDisplay()
 bool CXBMCApp::XBMC_DestroyDisplay()
 {
   android_printf("XBMC_DestroyDisplay()");
-  return g_application.getApplicationMessenger().DestroyDisplay();
+  return g_application.getApplicationMessenger().DestroyDisplay(m_isJustPausing);
 }
 
 int CXBMCApp::AttachCurrentThread(JNIEnv** p_env, void* thr_args /* = NULL */)

@@ -149,7 +149,7 @@ bool CWinSystemX11::CreateNewWindow(const CStdString& name, bool fullScreen, RES
   return true;
 }
 
-bool CWinSystemX11::DestroyWindow()
+bool CWinSystemX11::DestroyWindow(bool tryToPreserveContext /* = false */)
 {
   return true;
 }

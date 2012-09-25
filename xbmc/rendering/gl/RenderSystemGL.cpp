@@ -236,7 +236,7 @@ bool CRenderSystemGL::ResetRenderSystem(int width, int height, bool fullScreen, 
   return true;
 }
 
-bool CRenderSystemGL::DestroyRenderSystem()
+bool CRenderSystemGL::DestroyRenderSystem(bool tryToPreserveContext /* = false */)
 {
   m_bRenderCreated = false;
 

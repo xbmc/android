@@ -214,7 +214,7 @@ public:
   void SetSplashMessage(int stringID);
   
   bool SetupDisplay();
-  bool DestroyDisplay();
+  bool DestroyDisplay(bool tryToPreserveContext = false);
 
 private:
   void ProcessMessage(ThreadMessage *pMsg);

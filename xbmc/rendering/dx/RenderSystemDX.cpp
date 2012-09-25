@@ -304,7 +304,7 @@ void CRenderSystemDX::BuildPresentParameters()
   }
 }
 
-bool CRenderSystemDX::DestroyRenderSystem()
+bool CRenderSystemDX::DestroyRenderSystem(bool tryToPreserveContext /* = false */)
 {
   DeleteDevice();
 

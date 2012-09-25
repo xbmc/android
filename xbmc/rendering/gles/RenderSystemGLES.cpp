@@ -151,8 +151,11 @@ bool CRenderSystemGLES::ResetRenderSystem(int width, int height, bool fullScreen
   return true;
 }
 
-bool CRenderSystemGLES::DestroyRenderSystem()
+bool CRenderSystemGLES::DestroyRenderSystem(bool tryToPreserveContext /* = false */)
 {
+  if (tryToPreserveContext)
+    return true;
+
   CLog::Log(LOGDEBUG, "GUI Shader - Destroying Shader : %p", m_pGUIshader);
 
   if (m_pGUIshader)
@@ -570,7 +573,7 @@ void CRenderSystemGLES::InitialiseGUIShader()
   }
   else
   {
-    CLog::Log(LOGDEBUG, "GUI Shader - Tried to Initialise again. Was this intentional?");
+    CLog::Log(LOGDEBUG, "GUI Shader - Already initalised, skipping ...");
   }
 }
 

@@ -898,13 +898,21 @@ bool CApplication::InitWindow()
   }
   // set GUI res and force the clear of the screen
   g_graphicsContext.SetVideoResolution(g_guiSettings.m_LookAndFeelResolution);
+
+  // If we are resuming we have to reload fonts or we will freeze and crash.
+  // If we are first starting then this will be no-op.
+  g_fontManager.ReloadTTFFonts();
   return true;
 }
 
-bool CApplication::DestroyWindow()
+bool CApplication::DestroyWindow(bool tryToPreserveContext /* = false */)
 {
-  g_Windowing.DestroyRenderSystem();
-  return g_Windowing.DestroyWindow();
+  // If we pause app we will need to unload font files so we can reload them
+  // on app resume. If we quit app then unloading font files won't hurt.
+  g_fontManager.UnloadTTFFonts();
+
+  g_Windowing.DestroyRenderSystem(tryToPreserveContext);
+  return g_Windowing.DestroyWindow(tryToPreserveContext);
 }
 
 bool CApplication::InitDirectoriesLinux()

@@ -641,7 +641,7 @@ bool CWinSystemOSX::CreateNewWindow(const CStdString& name, bool fullScreen, RES
   return true;
 }
 
-bool CWinSystemOSX::DestroyWindow()
+bool CWinSystemOSX::DestroyWindow(bool tryToPreserveContext /* = false */)
 {
   return true;
 }

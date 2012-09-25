@@ -144,6 +144,7 @@ private:
   } State;
 
   State m_state;
+  bool m_isJustPausing;
   
   void setAppState(AppState state);
     

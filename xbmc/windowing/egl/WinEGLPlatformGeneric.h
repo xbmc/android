@@ -42,9 +42,9 @@ public:
   virtual bool InitializeDisplay();
   virtual bool UninitializeDisplay();
   virtual bool CreateWindow();
-  virtual bool DestroyWindow();
+  virtual bool DestroyWindow(bool tryToPreserveContext = false);
   virtual bool BindSurface();
-  virtual bool ReleaseSurface();
+  virtual bool ReleaseSurface(bool tryToPreserveContext = false);
   
   virtual bool ShowWindow(bool show);
   virtual void SwapBuffers();
@@ -56,6 +56,7 @@ public:
 
 protected:
   virtual EGLNativeWindowType getNativeWindow();
+  virtual bool CanPreserveContext() { return true; }
 
   EGLNativeWindowType   m_nativeWindow;
   EGLNativeDisplayType  m_nativeDisplay;

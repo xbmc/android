@@ -121,7 +121,7 @@ public:
 
   bool CreateGUI();
   bool InitWindow();
-  bool DestroyWindow();
+  bool DestroyWindow(bool tryToPreserveContext = false);
   void StartServices();
   void StopServices();
   bool StartWebServer();
